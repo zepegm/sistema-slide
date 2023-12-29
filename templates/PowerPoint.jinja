@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <title>Musical de Natal 2023</title>
+        <style>
+            #myVideo {
+                position: fixed;
+                right: 0;
+                bottom: 0;
+                min-width: 100%;
+                min-height: 100%;
+            }
+
+            #slide1 {
+                background-image: url("{{ url_for('static', filename='images/slides/' + index|string + '.png') }}");
+            }
+
+            .slide {
+                background-size: contain;
+                background-repeat: no-repeat;
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                background-size: 100% 100%;
+                top:0%;    
+                left:0%;            
+            }     
+            
+            .in {
+                animation-name: fade-in;
+                animation-duration: 0.5s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 0.5s;
+                opacity: 0;
+            }   
+            
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            } 
+        </style>
+    </head>
+    <body>
+        <video autoplay muted loop id="myVideo">
+            <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
+        </video>
+
+        <div class="slide in" id="slide1"></div>
+        <div class="slide" id="slide2"></div>        
+
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script>
+        var key = 0;
+
+        const slide1 = document.getElementById("slide1");
+        const slide2 = document.getElementById("slide2");
+        const source = document.getElementById("myVideo");
+
+        var socket = io();
+        socket.on('update', function(index) {
+            if (key == 0) {
+                slide1.classList.remove("in");
+                slide1.classList.add("out");
+
+                slide2.classList.remove("out");
+                slide2.classList.add('in');
+                slide2.style.backgroundImage = "url('/static/images/slides/" + index + ".png')";
+
+                key = 1;
+            } else {
+                slide2.classList.remove("in");
+                slide2.classList.add("out");
+
+                slide1.classList.remove("out");
+                slide1.classList.add('in');
+                slide1.style.backgroundImage = "url('/static/images/slides/" + index + ".png')";
+
+                key = 0;                    
+            } 
+        });        
+     
+        socket.on('change', function(completo) {
+            console.log(completo);
+            source.src = completo;
+        });
+
+    </script>
+
+    </body>    
+</html>
