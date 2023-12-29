@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Controlador Principal</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+        font-weight: bold;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #anterior,
+    #proximo {
+      color: white;
+    }
+
+    </style>
+
+    
+  </head>
+
+  <body>
+    
+  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav me-auto mb-2 mb-md-0">
+          <li class="nav-item">
+            <a class="nav-link" href="../slide"><i class="fa-solid fa-display">&nbsp;</i>Abrir Slide</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../subtitle"><i class="fa-solid fa-closed-captioning">&nbsp;</i>Abrir Legenda</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+		<div class="wrapper d-flex align-items-stretch">
+			<nav id="sidebar">
+				<div class="custom-menu">
+					<button type="button" id="sidebarCollapse" class="btn btn-primary">
+					<i class="fa fa-bars"></i>
+					<span class="sr-only">Toggle Menu</span>
+					</button>
+				</div>
+				<div class="p-4 pt-5">
+		  		<h1><a href="index.html" class="logo">Slides</a></h1>
+	        <ul class="list-unstyled components mb-5">
+
+	          <li class="active">
+	            <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Home</a>
+	            <ul class="collapse list-unstyled" id="homeSubmenu">
+                <li>
+                    <a href="#">Home 1</a>
+                </li>
+                <li>
+                    <a href="#">Home 2</a>
+                </li>
+                <li>
+                    <a href="#">Home 3</a>
+                </li>
+	            </ul>
+	          </li>
+
+            {% for sld in listaSlideShow %}
+            <li>
+              <a href="#page{{sld['slides'][0]['index']}}" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">{{sld['musica']}}</a>
+              <ul class="collapse list-unstyled" id="page{{sld['slides'][0]['index']}}">
+                {% for slide in sld['slides'] %}
+                  <a href="javascript:goto({{slide['index']}})">Slide {{slide['index']}}</a>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endfor %}
+
+	        </ul>
+
+	        <div class="mb-5">
+						<h3 class="h6">Alterar Fundo</h3>
+	            <div class="form-group d-flex">
+	              <select id="changeBackground" class="form-select" aria-label="Default select example">
+                  {% for item in videos %}
+                    <option value="{{item['file']}}">{{item['nome']}}</option>
+                  {% endfor %}
+                </select>
+	            </div>
+					</div>
+
+	        <!--<div class="footer">
+	        	<p> Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0.
+						  Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib.com</a>
+					    Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. </p>
+	        </div> -->
+
+	      </div>
+    	</nav>
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="text-center container">
+          <div class="row">
+            <h1 class="fw-light">Editor de Slide Música</h1>
+            <div class="col-lg-6 col-md-8 mx-auto">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h1 class="card-text text-center" id="slideAtual">Prévia Slide</h1>
+                </div>
+              </div>        
+            </div>
+            <div class="col-sm-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Prévia Legenda</h4>
+                </div>
+              </div>        
+            </div> 
+            <div class="col-sm-12">          
+                <h1 class="h2 mb-4">Submit issue</h1>
+                <label>Describe the issue in detail</label>
+                <div class="form-group">
+                    <textarea id="editor"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>              
+            </div>
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="https://cdn.tiny.cloud/1/i8v36brw6kzsf1xyo1ryq4m8inhrl5a1n63zglfl63kqqt2w/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+  
+<script>
+  tinymce.init({
+    selector: 'textarea#editor',
+    plugins: 'ai tinycomments mentions anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed permanentpen footnotes advtemplate advtable advcode editimage tableofcontents mergetags powerpaste tinymcespellchecker autocorrect a11ychecker typography inlinecss',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | align lineheight | tinycomments | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+    tinycomments_mode: 'embedded',
+    tinycomments_author: 'Author name',
+    mergetags_list: [
+      { value: 'First.Name', title: 'First Name' },
+      { value: 'Email', title: 'Email' },
+    ],
+    ai_request: (request, respondWith) => respondWith.string(() => Promise.reject("See docs to implement AI Assistant")),
+  });
+</script>
+      
+  </body>
+</html>

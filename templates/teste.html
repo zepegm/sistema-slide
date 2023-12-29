@@ -1,0 +1,71 @@
+<html>
+    <head>
+        <title>Teste de Digitação</title>
+        <style>
+            .slide {
+                background-size: contain;
+                
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                background-size: 100% 100%;
+                top:0%;    
+                left:0%;
+                text-align: center;
+            }     
+            
+            .texto {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: bold;
+                font-size: clamp(14px, 2vw, 200px)
+            }
+
+            .underline {
+                text-decoration: underline;
+            }
+
+            .in {
+                animation-name: fade-in;
+                animation-duration: 0.5s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 0.5s;
+                opacity: 0;
+            }   
+            
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            } 
+
+        </style>
+    </head>
+    <body>
+
+        <div class="slide in texto" id="slide1">
+            <!-- Doce presença<br>És meu abrigo<br>Meu protetor<br>Em Ti confio -->
+            <!-- Mesmo sem ver, <br>eu posso crer<br>Que Tua promessa está de pé -->
+            <!-- <span class="underline">Quem sou eu<br>pra questionar<br>um Deus fiel?</span> -->
+            <!-- <span class="underline">Tu és Deus e Tua palavra está de pé!</span> -->
+            <!-- És minha <span class="underline">âncora</span>,<br>A minha <span class="underline">esperança!</span> -->
+            <span class="underline">Em que minha fé firmada está!<br>Eu não temerei</span>,<span class="underline"> eu não temerei!</span>
+
+        </div>
+        <div class="slide" id="slide2"></div>        
+        
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+    <script>
+        textFit($('#slide1'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});
+    </script>
+
+    </body>    
+</html>

@@ -146,7 +146,7 @@ def exibirLegenda():
 
 @app.route('/teste')
 def teste():
-    return render_template('index.html')
+    return render_template('editor_nova_musica.jinja')
 
 
 if __name__ == '__main__':
