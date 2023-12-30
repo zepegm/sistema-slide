@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from threading import Lock
 from waitress import serve
+from PowerPoint import getListText
 import os
 import DB
 
@@ -144,9 +145,14 @@ def exibirLegenda():
 
     return render_template('subtitle.jinja', legenda=legenda, tamanho=tamanho)
 
-@app.route('/teste')
-def teste():
-    return render_template('editor_nova_musica.jinja')
+@app.route('/edit_musica')
+def edit_musica():
+    return render_template('editor_musica.jinja')
+
+@app.route('/teste_2')
+def teste_2():
+    return render_template('teste.html')
+
 
 
 if __name__ == '__main__':
