@@ -18,6 +18,7 @@ thread_lock = Lock()
 
 index = 1
 total_slides = DB.executarConsulta('Musicas.db', 'select max(slide) from lista')[0]
+musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -145,9 +146,25 @@ def exibirLegenda():
 
     return render_template('subtitle.jinja', legenda=legenda, tamanho=tamanho)
 
-@app.route('/edit_musica')
+@app.route('/edit_musica', methods=['GET', 'POST'])
 def edit_musica():
-    return render_template('editor_musica.jinja')
+
+    lista_texto = []
+    blocks = []
+    blocks_s = []
+    titulo = ''
+
+    if request.method == "POST":
+        nome = request.form.getlist('file')[0]
+        lista_texto = getListText(musicas_dir + nome)
+        titulo = nome.replace('.pptx', '')
+
+        # recriar lista pro editor
+        for item in lista_texto:
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+            blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+    return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo)
 
 @app.route('/teste_2')
 def teste_2():
@@ -156,8 +173,8 @@ def teste_2():
 
 
 if __name__ == '__main__':
-    #app.run('0.0.0.0',port=80)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run('0.0.0.0',port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

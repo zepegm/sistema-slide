@@ -20,6 +20,7 @@ def getListText(dir):
             continue
 
         text_slide = ""
+        plain_text = ""
 
         key_b = False
         key_u = False
@@ -47,10 +48,14 @@ def getListText(dir):
                         key_u = False
 
                     if cont > 0:
-                        text_slide += "<br>" + run.text
+                        text_slide += " " + run.text
+                        plain_text += " " + run.text.strip()
                     else:
                         text_slide += run.text
+                        plain_text += run.text.strip()
                         cont += 1
+
+                text_slide += "<br>"
 
 
         if key_b:
@@ -58,7 +63,7 @@ def getListText(dir):
         if key_u:
             text_slide += "</u>"
 
-        text_runs.append(text_slide)
+        text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text})
 
 
     return text_runs
