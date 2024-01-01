@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Controlador Principal</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+      .obs {
+        border: solid;
+        border-color: rgb(0, 0, 0, 0.3)
+      }
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+        font-weight: bold;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #anterior,
+    #proximo {
+      color: white;
+    }
+
+    #txt_titulo {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }    
+
+    #previewSlide {
+      width: 426px; /* or whatever width you want. */
+      height: 240px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: black;
+      color: white;
+      line-height: normal;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #previewSubtitle {
+      width: 426px; /* or whatever width you want. */
+      height: 50px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: rgb(0, 0, 0, 0.8); 
+      color: white;
+      line-height: normal;
+      font-family: Arial;      
+    }
+
+    .arrows,
+    .preview {
+      width: 426px;
+    }
+
+    .view-marker {
+      color:rgba(255,207,102);
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
+
+    .arrow {
+      font-size: xx-large;
+    }
+
+    #editorjs {
+      color:black;
+    }
+
+    </style>
+    
+  </head>
+
+  <body>
+
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
+
+		<div class="wrapper d-flex align-items-stretch">
+      {% block menu_lateral %}
+        {% include 'menu_lateral.html' %}
+      {% endblock %}
+
+      <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row">
+            <div class="col-sm-6">
+              <h3 class="fw-bold text-center">Lista dos Slides</h3>
+              <table class="table table-striped">
+                <thead>
+                  <th>Nº</th>
+                  <th>Texto</th>
+                  <th>Categoria</th>
+                  <th>OBS</th>
+                </thead>
+                <tbody>
+                  {% for sld in info['slides'] %}
+                    <tr class="text-center">
+                      <th class="align-middle text-danger">{{sld['pos']}}</th>
+                      <td class="align-middle">{{sld['text-slide']}}</td>
+                      <td class="align-middle">
+                        <select id="slide{{sld['pos']}}">
+                          {% for cat in cat_slides %}
+                          <option value="{{cat['id']}}">{{cat['descricao']}}</option>
+                          {% endfor %}
+                        </select>
+                      </td>
+                      <td class="align-middle">
+                        <textarea id="obs{{sld['pos']}}" class="form-control obs"></textarea>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="col-sm-6">
+              <h3 class="fw-bold text-center">Texto de Exibição das Letras</h3>
+              <div id="editorjs"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica"><input id="json_data_send" name="json_data_send" type="hidden"></form>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/marker.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/underline.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script>
+
+  
+<script>
+
+  const editor = new EditorJS({
+    /**
+    * Id of Element that should contain Editor instance
+    */
+    holder: 'editorjs',
+
+    inlineToolbar: ['bold', 'italic', 'underline', 'Marker'],
+
+    tools: {
+      // ...
+      underline: Underline,
+      Marker: {
+        class: Marker,
+        shortcut: 'CMD+SHIFT+M',
+      }
+    },
+    data: {
+      blocks: {{blocks}}
+    }
+  });
+
+</script>
+      
+  </body>
+</html>

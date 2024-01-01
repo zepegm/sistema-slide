@@ -4,6 +4,8 @@ from flask_cors import CORS
 from threading import Lock
 from waitress import serve
 from PowerPoint import getListText
+from MySQL import db
+import json
 import os
 import DB
 
@@ -19,6 +21,11 @@ thread_lock = Lock()
 index = 1
 total_slides = DB.executarConsulta('Musicas.db', 'select max(slide) from lista')[0]
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
+
+banco = db({'host':"localhost",    # your host, usually localhost
+            'user':"root",         # your username
+            'passwd':"Yasmin",  # your password
+            'db':"sistema-slide"})
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -165,6 +172,20 @@ def edit_musica():
             blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
     return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo)
+
+
+@app.route('/enviarDadosNovaMusica', methods=['GET', 'POST'])
+def enviarDadosNovaMusica():
+    if request.method == "POST":
+        info = json.loads(request.form.getlist('json_data_send')[0])
+        cat_slides = banco.executarConsulta('select * from categoria_slide')
+
+        blocks = []
+        for item in info['slides']:
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+
+        return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks)
+
 
 @app.route('/teste_2')
 def teste_2():

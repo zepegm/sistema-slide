@@ -148,68 +148,22 @@
           Deseja confirmar Digitação e Avançar para Próxima Etapa?
         </div>
         <div class="modal-footer">
-          <button id="btn_confirmar_avanco" type="button" class="btn btn-primary">Sim</button>
+          <button id="btn_confirmar_avanco" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
         </div>
       </div>
     </div>
   </div>  
 
-  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-    <div class="container-fluid">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarCollapse">
-        <ul class="navbar-nav me-auto mb-2 mb-md-0">
-          <li class="nav-item">
-            <a class="nav-link" href="../slide"><i class="fa-solid fa-display">&nbsp;</i>Abrir Slide</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="../subtitle"><i class="fa-solid fa-closed-captioning">&nbsp;</i>Abrir Legenda</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
 
 		<div class="wrapper d-flex align-items-stretch">
-			<nav id="sidebar">
-				<div class="custom-menu">
-					<button type="button" id="sidebarCollapse" class="btn btn-primary">
-					<i class="fa fa-bars"></i>
-					<span class="sr-only">Toggle Menu</span>
-					</button>
-				</div>
-				<div class="p-4 pt-5">
-		  		<h1><a href="index.html" class="logo">Slides</a></h1>
-	        <ul class="list-unstyled components mb-5">
-
-	          <li class="active">
-	            <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Home</a>
-	            <ul class="collapse list-unstyled" id="homeSubmenu">
-                <li>
-                    <a href="#">Home 1</a>
-                </li>
-                <li>
-                    <a href="#">Home 2</a>
-                </li>
-                <li>
-                    <a href="#">Home 3</a>
-                </li>
-	            </ul>
-	          </li>
-
-	        </ul>
-
-	        <!--<div class="footer">
-	        	<p> Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0.
-						  Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib.com</a>
-					    Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. </p>
-	        </div> -->
-
-	      </div>
-    	</nav>
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}
 
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
@@ -241,6 +195,7 @@
         </section>
         <div class="row">
             <div class="col-sm-12"><hr></div>
+            <div id="status" class="col-sm-12"></div>
             <div class="col-sm-6">
               <label for="txt_titulo" class="form-label">Título da Música:</label>
               <input type="text" class="form-control" id="txt_titulo" placeholder="Digite o Nome da Música" value="{{titulo}}">
@@ -262,6 +217,8 @@
         </div>
       </div>
 		</div>
+
+  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica"><input id="json_data_send" name="json_data_send" type="hidden"></form>
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
@@ -370,14 +327,18 @@ window.onload = function() {
               }
 
               load();
+            } else {
+              $("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
             }
           })
           .catch((error) => {
             console.error('Saving error', error);
+            $("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
           });
       })
       .catch((error) => {
         console.error('Saving error', error);
+        $("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
       });
 
   });
@@ -393,7 +354,13 @@ window.onload = function() {
   btn_confirmar_avanco.addEventListener('click', function() {
     var titulo = $("#txt_titulo").val();
     
-    
+    if (titulo == "") {
+      $("#status").append('<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor digite o título da Música.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+    } else {
+      info = {'titulo':titulo, 'slides':slide};
+      $("#json_data_send").val(JSON.stringify(info));
+      $("#formEnviarDados").submit();
+    }
   });
 
   function next() {
