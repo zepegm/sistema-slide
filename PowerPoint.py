@@ -11,6 +11,10 @@ def getListText(dir):
 
     for slide in prs.slides:
 
+        anotacao = ''
+        if slide.has_notes_slide:
+            anotacao = slide.notes_slide.notes_text_frame.text
+
         slide_pos += 1
 
         if slide_pos == 1:
@@ -63,7 +67,7 @@ def getListText(dir):
         if key_u:
             text_slide += "</u>"
 
-        text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text})
+        text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text, 'anotacao':anotacao})
 
 
     return text_runs

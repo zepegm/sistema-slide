@@ -135,6 +135,13 @@ def changeBackground():
 
             socketio.emit('change', completo)
             return jsonify(True)
+        
+@app.route('/addMusica', methods=['GET', 'POST'])
+def addMusica():
+    if request.method == 'POST':    
+        info = request.form.getlist('json_send')
+        print(info)
+        return 'Hello World!'
 
 
 
@@ -162,9 +169,15 @@ def edit_musica():
     titulo = ''
 
     if request.method == "POST":
-        nome = request.form.getlist('file')[0]
-        lista_texto = getListText(musicas_dir + nome)
-        titulo = nome.replace('.pptx', '')
+
+        if 'json_back' in request.form:
+            info = json.loads(request.form.getlist('json_back')[0])
+            titulo = info['titulo']
+            lista_texto = info['slides']
+        else:
+            nome = request.form.getlist('file')[0]
+            lista_texto = getListText(musicas_dir + nome)
+            titulo = nome.replace('.pptx', '')
 
         # recriar lista pro editor
         for item in lista_texto:
@@ -179,12 +192,14 @@ def enviarDadosNovaMusica():
     if request.method == "POST":
         info = json.loads(request.form.getlist('json_data_send')[0])
         cat_slides = banco.executarConsulta('select * from categoria_slide')
+        categoria = banco.executarConsulta('select * from subcategoria_departamentos')
+        status = banco.executarConsulta('select * from status_vinculo')
 
         blocks = []
         for item in info['slides']:
             blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
 
-        return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks)
+        return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks, categoria=categoria, status=status)
 
 
 @app.route('/teste_2')

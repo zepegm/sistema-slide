@@ -38,11 +38,6 @@
         background-color: black;
       }
 
-      .obs {
-        border: solid;
-        border-color: rgb(0, 0, 0, 0.3)
-      }
-
       .box-index {
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
         color: blue;
@@ -100,8 +95,58 @@
       font-size: xx-large;
     }
 
-    #editorjs {
+    .doc {
+      background-color: white;      
+      border: solid;
+      border-width: thin;
+      border-color: rgb(0, 0, 0);
+      color: black;
+    }
+
+    .box {
+      padding:10px;
+      padding-bottom: 20px;
       color:black;
+      border-top: solid;
+      border-bottom: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }
+
+    .blue {
+      background-color:#b2d6ff;
+      border-left: solid;
+      border-right: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }   
+
+    .yellow {
+      background-color:#fffed8;
+    }   
+
+    .pink {
+      background-color:#ffe9ff;
+      border-left: solid;
+      border-right: solid;
+      border-color: rgb(0, 0, 0, 0.3);      
+    }   
+
+    .txt-vinc {
+      width: 100%;
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);      
+    } 
+
+    .txt-vinc:hover:enabled {
+      border-color: rgba(0, 162, 255, 0.7);  
+    }
+
+    .txt-vinc:focus {
+      outline: none;
+      border-color: rgba(0, 162, 255, 0.7);  
+    }    
+
+    textarea {
+      resize: none;
     }
 
     </style>
@@ -124,6 +169,104 @@
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
           <div class="row">
+            <div class="col-sm-12">
+              <h3><span class="fw-bold">Título:</span> {{info['titulo']}}</h3>
+            </div>
+            <div class="col-sm-12"><h3 class="fw-bold">Vínculos:</h3></div>
+            <div class="col-sm-4">
+                <div class="row box blue">
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Vínculo 1 (Obrigatório):</div>
+                        <select id="vinc1" class="form-select" aria-label="Default select example" name="vinc1" required>
+                            {% for item in categoria %}
+                                <option value="{{item['id']}}">{{item['descricao']}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Status 1:</div>
+                        <select id="status1" class="form-select" aria-label="Default select example" name="status1" required>
+                            {% for item in status %}
+                                <option value="{{item['id']}}">{{item['descricao']}}</option>
+                            {% endfor %}
+                        </select>                    
+                    </div>
+
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Descrição:</div>
+                    </div>
+                    <div class="col-sm-12">
+                        <textarea name="desc1" class="txt-vinc" id="desc_vinc1" rows="3" placeholder="Digite a descrição:" maxlength="200" required></textarea>
+                    </div>
+                </div>     
+            </div>
+            <div class="col-sm-4">
+                <div class="row box yellow">
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Vínculo 2:</div>
+                        <select id="add_vinc2" class="form-select vincopt" name="vinc2" aria-label="Default select example">
+                            <option value="0">-</option>
+                            {% for item in categoria %}
+                                <option value="{{item['id']}}">{{item['descricao']}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Status 2:</div>
+                        <select id="status2" class="form-select form-vinc2" aria-label="Default select example" name="status2" disabled>
+                            {% for item in status %}
+                                <option value="{{item['id']}}">{{item['descricao']}}</option>
+                            {% endfor %}
+                        </select>                    
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Descrição:</div>
+                    </div>
+                    <div class="col-sm-12">
+                        <textarea name="desc2" class="txt-vinc" id="desc_vinc2" rows="3" placeholder="Digite a descrição:" maxlength="200" disabled required></textarea>
+                    </div>                    
+                </div>  
+            </div>
+
+            <div class="col-sm-4">
+                <div class="row box pink">
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Vínculo 3:</div>
+                        <select id="add_vinc3" class="form-select vincopt" name="vinc3" aria-label="Default select example" disabled>
+                            <option value="0">-</option>
+                            {% for item in categoria %}
+                                <option value="{{item['id']}}">{{item['descricao']}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Status 3:</div>
+                        <select id="status3" name="status3" class="form-select form-vinc3" aria-label="Default select example" disabled>
+                            {% for item in status %}
+                                <option value="{{item['id']}}">{{item['descricao']}}</option>
+                            {% endfor %}
+                        </select>                    
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="fw-bold">Descrição:</div>
+                    </div>
+                    <div class="col-sm-12">
+                        <textarea name="desc3" class="txt-vinc" id="desc_vinc3" rows="3" placeholder="Digite a descrição:" maxlength="200" disabled required></textarea>
+                    </div>                    
+                </div>              
+            </div>
+
+          </div>
+          <div class="row">
+            <div class="col-sm-12"><hr></div>
+            <div class="col-sm-12">
+              <button id="btn_back" class="btn btn-secondary"><i class="fa-solid fa-circle-left"></i> Retorar para Edição</button>
+              <button id="btn_confirm" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Confirmar Salvamento</button>
+            </div>
+            <div class="col-sm-12"><hr></div>
+          </div>
+          
+          <div class="row">
             <div class="col-sm-6">
               <h3 class="fw-bold text-center">Lista dos Slides</h3>
               <table class="table table-striped">
@@ -131,7 +274,6 @@
                   <th>Nº</th>
                   <th>Texto</th>
                   <th>Categoria</th>
-                  <th>OBS</th>
                 </thead>
                 <tbody>
                   {% for sld in info['slides'] %}
@@ -145,9 +287,6 @@
                           {% endfor %}
                         </select>
                       </td>
-                      <td class="align-middle">
-                        <textarea id="obs{{sld['pos']}}" class="form-control obs"></textarea>
-                      </td>
                     </tr>
                   {% endfor %}
                 </tbody>
@@ -155,15 +294,18 @@
             </div>
 
             <div class="col-sm-6">
-              <h3 class="fw-bold text-center">Texto de Exibição das Letras</h3>
-              <div id="editorjs"></div>
+              <div class="row">
+                <div class="col-sm-12"><h3 class="fw-bold text-center">Texto de Exibição das Letras</h3></div>
+                <div class="col-sm-12 doc"><div id="editorjs"></div></div>
+              </div>
             </div>
           </div>
         </section>
       </div>
 		</div>
 
-  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica"><input id="json_data_send" name="json_data_send" type="hidden"></form>
+  <form id="formBack" method="post" action="edit_musica"><input id="json_back" name="json_back" type="hidden"></form>
+  <form id="formSend" method="post" action="addMusica"><input id="json_send" name="json_send" type="hidden"></form>
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
@@ -178,6 +320,61 @@
 
   
 <script>
+
+  function getInfo() {
+
+    titulo = '{{info['titulo']}}';
+    vinculos = [{'vinc':$("#vinc1").val(), 'status':$("#status1").val(), 'descricao':$("#desc_vinc1").val()}];
+    slides = {{info['slides']}};
+
+    if ($("#add_vinc2").val() != 0) {
+      vinculos.push({'vinc':$("#add_vinc2").val(), 'status':$("#status2").val(), 'descricao':$("#desc_vinc2").val()});
+    }
+
+    if ($("#add_vinc3").val() != 0) {
+      vinculos.push({'vinc':$("#add_vinc3").val(), 'status':$("#status3").val(), 'descricao':$("#desc_vinc3").val()});
+    }
+
+    return {'titulo':titulo, 'vinculos':vinculos, 'slides':slides};
+
+  }
+
+  $("#btn_back").on('click', function() {
+    listaGeral = getInfo();
+    $("#json_back").val(JSON.stringify(listaGeral));
+    $("#formBack").submit();
+  });
+
+  $("#btn_confirm").on('click', function() {
+    listaGeral = getInfo();
+    $("#json_send").val(JSON.stringify(listaGeral));
+    $("#formSend").submit();
+  });
+
+  $("#add_vinc2").on('change', function() {
+    if ($(this).val() != 0) {
+      $("#status2").removeAttr('disabled');
+      $("#desc_vinc2").removeAttr('disabled');
+      $("#add_vinc3").removeAttr('disabled');
+    } else {
+      $("#status2").attr('disabled', '');
+      $("#desc_vinc2").attr('disabled', '');
+      $("#add_vinc3").val(0);
+      $("#add_vinc3").attr('disabled', '');
+      $("#status3").attr('disabled', '');
+      $("#desc_vinc3").attr('disabled', '');      
+    }
+  });
+
+  $("#add_vinc3").on('change', function() {
+    if ($(this).val() != 0) {
+      $("#status3").removeAttr('disabled');
+      $("#desc_vinc3").removeAttr('disabled');
+    } else {
+      $("#status3").attr('disabled', '');
+      $("#desc_vinc3").attr('disabled', '');
+    }
+  });  
 
   const editor = new EditorJS({
     /**
