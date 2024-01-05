@@ -321,11 +321,39 @@
   
 <script>
 
+  function getTexto() {
+    var texto = [];
+
+        editor.save()
+          .then( data => {
+
+            cont = 1;
+
+            for (item in data['blocks']) {
+              texto.push({'paragrafo':cont, 'texto':data['blocks'][item]['data']['text']})
+              cont++;
+            }
+
+            listaGeral = getInfo();
+            listaGeral['letra'] = texto;
+
+            $("#json_send").val(JSON.stringify(listaGeral));
+            $("#formSend").submit();
+
+          })
+          .catch((error) => {
+            console.error('Saving error', error);
+          });
+          
+
+  }
+
   function getInfo() {
 
     titulo = '{{info['titulo']}}';
     vinculos = [{'vinc':$("#vinc1").val(), 'status':$("#status1").val(), 'descricao':$("#desc_vinc1").val()}];
     slides = {{info['slides']}};
+    letras = [];
 
     if ($("#add_vinc2").val() != 0) {
       vinculos.push({'vinc':$("#add_vinc2").val(), 'status':$("#status2").val(), 'descricao':$("#desc_vinc2").val()});
@@ -346,9 +374,7 @@
   });
 
   $("#btn_confirm").on('click', function() {
-    listaGeral = getInfo();
-    $("#json_send").val(JSON.stringify(listaGeral));
-    $("#formSend").submit();
+    getTexto();
   });
 
   $("#add_vinc2").on('change', function() {

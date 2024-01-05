@@ -139,9 +139,17 @@ def changeBackground():
 @app.route('/addMusica', methods=['GET', 'POST'])
 def addMusica():
     if request.method == 'POST':    
-        info = request.form.getlist('json_send')
-        print(info)
-        return 'Hello World!'
+        info = json.loads(request.form.getlist('json_send')[0])
+        result = banco.inserirNovaMusica(info)
+
+        if result['id'] > 0:       
+            titulo = banco.executarConsulta('select titulo from musicas where id = %s' % result['id'])[0]['titulo']
+            letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % result['id'])
+            return render_template('result_musica.jinja', titulo=titulo, letras=letras)
+        else :
+            return render_template('erro.jinja', log=result['log'])
+    else:
+        return redirect("/", code=302)
 
 
 
@@ -204,7 +212,7 @@ def enviarDadosNovaMusica():
 
 @app.route('/teste_2')
 def teste_2():
-    return render_template('teste.html')
+    return render_template('erro.jinja', log='Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>Yes!')
 
 
 

@@ -39,22 +39,44 @@ class db:
 
         return result
     
-    def inserirNovaTurma(self, turma):   
-        
-        sql = "INSERT INTO turma VALUES(" + str(turma.values()).replace("'", '').replace('"', "'")[13:-2] + ")"
+    def inserirNovaMusica(self, musica):   
 
         try:
             database = mysql.connector.connect(host=self.cred['host'], user=self.cred['user'], passwd=self.cred['passwd'], db=self.cred['db'])
-        
             cur = database.cursor()
+            
+            # primeira etapa é inserir a música
+            sql = "INSERT INTO musicas(titulo) VALUES('%s')" % musica['titulo']
             cur.execute(sql)
-            database.commit()
 
+            id = cur.lastrowid
+
+            # agora preciso inserir os slides
+            for sld in musica['slides']:
+                anotacao = 'null'
+
+                if sld['anotacao'] != '':
+                    anotacao = "'%s'" % sld['anotacao']
+
+                sql = "INSERT INTO slides VALUES(%s, %s, '%s', '%s', %s)" % (id, sld['pos'], sld['text-slide'], sld['subtitle'], anotacao)
+                cur.execute(sql)
+
+            # agora irei inserir os vínculos
+            for vin in musica['vinculos']:
+                sql = "INSERT INTO vinculos_x_musicas VALUES(%s, %s, %s, '%s')" % (id, vin['vinc'], vin['status'], vin['descricao'])
+                cur.execute(sql)
+
+            # por último inserir as letras para visualização
+            for letra in musica['letra']:
+                sql = "INSERT INTO letras VALUES(%s, %s, '%s')" % (id, letra['paragrafo'], letra['texto'])
+                cur.execute(sql)
+
+            database.commit()
             database.close()
-            return True
+            return {'id':id, 'log':'Operação realizada com sucesso!'}
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
-            return False  
+            return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error)}
         
 
     def insertOrUpdate(self, dados, tabela):
