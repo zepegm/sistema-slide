@@ -113,29 +113,34 @@
 
     .Forte {
       background-color: rgb(115, 249, 139);
-      border-radius: 15px;
+      border-radius: 5px;
       padding: 2%;
     }
 
     .Médio {
       background-color: rgb(250, 191, 135);
-      border-radius: 15px;
+      border-radius: 5px;
       padding: 2%;
     }
 
     .Fraco {
       background-color: rgb(249, 159, 237);
-      border-radius: 15px;
+      border-radius: 5px;
       padding: 2%;
     }
 
     .text {
       background-color: rgb(255, 255, 255);
-      border-radius: 15px;
-      padding: 2%;
+      border-radius: 5px;
+      padding: 1%;
       margin-top: 10px;
     }
 
+    .cdx-marker {
+      color:rgba(192,0,0);
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
 
     </style>
     
@@ -205,7 +210,14 @@
             console.log(data);
             // adicionar vínculos
             for (vinc in data['vinculos']) {
-              $("#detalhes_musicas").append('<div class="' + data['vinculos'][vinc]['desc_status'] + '"><div><strong>Vínculo: </strong>' + data['vinculos'][vinc]['vinculo'] + '</div><div><strong>Status: </strong>' + data['vinculos'][vinc]['desc_status'] + '</div><div class="text">' + data['vinculos'][vinc]['descricao'] + '</div></div>');
+              $("#detalhes_musicas").append('<div class="' + data['vinculos'][vinc]['desc_status'] + '"><div><strong>Vínculo: </strong>' + data['vinculos'][vinc]['vinculo'] + '</div><div><strong>Status: </strong>' + data['vinculos'][vinc]['desc_status'] + '</div><div class="text">' + data['vinculos'][vinc]['descricao'] + '</div></div><br>');
+            }
+            
+            $("#detalhes_musicas").append('<div id="pagina_texto"></div>');
+
+
+            for (letra in data['letras']) {
+              $("#pagina_texto").append('<p>' + data['letras'][letra]['texto'] + '</p>');
             }
         },
     });
