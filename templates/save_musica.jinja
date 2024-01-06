@@ -295,7 +295,7 @@
 
             <div class="col-sm-6">
               <div class="row">
-                <div class="col-sm-12"><h3 class="fw-bold text-center">Texto de Exibição das Letras</h3></div>
+                <div class="col-sm-12"><h3 class="fw-bold text-center">Prévia das Letras <button id="btn_gerar_pdf" class="btn btn-danger"><i class="fa-solid fa-file-pdf"></i></button></h3></div>
                 <div class="col-sm-12 doc"><div id="editorjs"></div></div>
               </div>
             </div>
@@ -318,12 +318,42 @@
   <script src="{{ url_for('static', filename='js/underline.umd.js') }}"></script>
   <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script>
 
+  <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
+  <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
+  <script src="{{ url_for('static', filename='js/gerador_pdf.js') }}"></script>  
+
   
 <script>
 
-  /* window.onload = function() {
-    console.log(getInfo());
-  }; */
+  $("#btn_gerar_pdf").on('click', function() {
+    editor.save()
+      .then( data => {
+
+        var texto = [];
+
+        for (item in data['blocks']) {
+          texto.push({'texto':data['blocks'][item]['data']['text']})
+        }
+
+        data = {'titulo':"{{info['titulo']}}", 'texto_bruto':texto}
+
+        $.ajax({
+            type: "POST",
+            url: "converto_to_pdf_list",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            dataType: "json",
+            success: function(data) {
+                gerarPDF(data);
+            },
+        });
+
+      })
+      .catch((error) => {
+        console.error('Saving error', error);
+      });    
+  });
 
   function getTexto() {
     var texto = [];

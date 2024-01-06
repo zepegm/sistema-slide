@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Abrir Músicas</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+        font-weight: bold;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #anterior,
+    #proximo {
+      color: white;
+    }
+
+    .ce-paragraph {
+        border-bottom: solid;
+    }
+
+    #txt_anotacao,
+    #txt_titulo {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }    
+
+    #previewSlide {
+      width: 426px; /* or whatever width you want. */
+      height: 240px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: black;
+      color: white;
+      line-height: normal;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #previewSubtitle {
+      width: 426px; /* or whatever width you want. */
+      height: 50px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: rgb(0, 0, 0, 0.8); 
+      color: white;
+      line-height: normal;
+      font-family: Arial;      
+    }
+
+    .arrows,
+    .preview {
+      width: 426px;
+    }
+
+    .view-marker {
+      color:rgba(255,207,102);
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
+
+    .arrow {
+      font-size: xx-large;
+    }
+
+    #editorjs_s,
+    #editorjs {
+      color:black;
+    }
+
+    #detalhes_musicas {
+      color: black;
+    }
+
+    .Forte {
+      background-color: rgb(115, 249, 139);
+      border-radius: 15px;
+      padding: 2%;
+    }
+
+    .Médio {
+      background-color: rgb(250, 191, 135);
+      border-radius: 15px;
+      padding: 2%;
+    }
+
+    .Fraco {
+      background-color: rgb(249, 159, 237);
+      border-radius: 15px;
+      padding: 2%;
+    }
+
+    .text {
+      background-color: rgb(255, 255, 255);
+      border-radius: 15px;
+      padding: 2%;
+      margin-top: 10px;
+    }
+
+
+    </style>
+    
+  </head>
+
+  <body>
+
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row"><div class="col-sm-12 text-center"><h2 class="fw-bold">Abrir Músicas</h2></div></div>
+          <div class="row">
+            <div class="col-sm-3">
+              <div id="lista_geral" class="list-group">
+                {% for item in musicas %}
+                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}" data-vinc="{{item['vinc']}}">
+                    {{item['titulo']}}
+                  </a>
+                {% endfor %}
+              </div>              
+            </div>
+            <div id="detalhes_musicas" class="col-sm-9">
+
+            </div>
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica"><input id="json_data_send" name="json_data_send" type="hidden"></form>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  
+<script>
+
+  $("#lista_geral").on('click', '.list-group-item', function() {
+    $(".list-group-item").removeClass('active');
+    $(this).addClass('active');
+
+    $("#detalhes_musicas").empty();
+    $("#detalhes_musicas").append('<h4><span class="fw-bold">Título:</span> ' + $(this).text() + '</h4>');
+
+    info = {'id':$(this).attr('data-id')};
+
+    $.ajax({
+        type: "POST",
+        url: "get_info_musica",
+        contentType: "application/json",
+        data: JSON.stringify(info),
+        dataType: "json",
+        success: function(data) {
+            console.log(data);
+            // adicionar vínculos
+            for (vinc in data['vinculos']) {
+              $("#detalhes_musicas").append('<div class="' + data['vinculos'][vinc]['desc_status'] + '"><div><strong>Vínculo: </strong>' + data['vinculos'][vinc]['vinculo'] + '</div><div><strong>Status: </strong>' + data['vinculos'][vinc]['desc_status'] + '</div><div class="text">' + data['vinculos'][vinc]['descricao'] + '</div></div>');
+            }
+        },
+    });
+
+  });
+
+</script>
+      
+  </body>
+</html>

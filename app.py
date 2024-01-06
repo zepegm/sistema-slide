@@ -60,6 +60,13 @@ def home():
 
     return render_template('index.jinja', total_slides=total_slides, index=index, listaSlideShow=lista_final, videos=ls_final_videos)
 
+@app.route('/abrir_musica', methods=['GET', 'POST'])
+def abrir_musica():
+
+    musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+
+    return render_template('musicas.jinja', musicas=musicas)
+
 @app.route('/slide', methods=['GET', 'POST'])
 def slide():
 
@@ -223,10 +230,48 @@ def upload_capa():
 
     return jsonify('./static/images/capas/' + filename)
 
+@app.route('/converto_to_pdf_list', methods=['GET', 'POST'])
+def converto_to_pdf_list():
+    texto = request.json
+    print(texto)
+    lista = []
+    
+    texto_formatado = []
+
+    for txt in texto['texto_bruto']:
+        texto_formatado.append(converHTML_to_List(txt['texto']))
+
+    lista.append({'titulo':texto['titulo'], 'letras':texto_formatado})
+
+    return jsonify(lista)
+
+@app.route('/get_info_musica', methods=['GET', 'POST'])
+def get_info_musica():
+
+    if request.method == "POST":
+        if request.is_json:
+
+            id = request.json
+
+            sql = 'select ' + \
+                    "concat(categoria_departamentos.descricao, ' - ', subcategoria_departamentos.descricao) as vinculo, " + \
+                    "status_vinculo.descricao as desc_status, " + \
+                    "vinculos_x_musicas.descricao " + \
+                "from vinculos_x_musicas " + \
+                "inner join subcategoria_departamentos ON subcategoria_departamentos.id = vinculos_x_musicas.id_vinculo " + \
+                "inner join  status_vinculo on status_vinculo.id = vinculos_x_musicas.id_status " + \
+                "inner join categoria_departamentos ON categoria_departamentos.id = subcategoria_departamentos.supercategoria " + \
+                "where id_musica = %s" % id['id']
+            
+            vinculos = banco.executarConsulta(sql)
+            letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % id['id'])
+
+            return jsonify({'vinculos':vinculos, 'letras':letras})
+
 
 @app.route('/teste_2')
 def teste_2():
-    id = 5
+    id = 8
     titulo = banco.executarConsulta('select titulo from musicas where id = %s' % id)[0]['titulo']
     letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % id)
     return render_template('result_musica.jinja', titulo=titulo, letras=letras, id=id)
