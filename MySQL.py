@@ -58,7 +58,7 @@ class db:
                 if sld['anotacao'] != '':
                     anotacao = "'%s'" % sld['anotacao']
 
-                sql = "INSERT INTO slides VALUES(%s, %s, '%s', '%s', %s)" % (id, sld['pos'], sld['text-slide'], sld['subtitle'], anotacao)
+                sql = "INSERT INTO slides VALUES(%s, %s, '%s', '%s', %s, %s)" % (id, sld['pos'], sld['text-slide'], sld['subtitle'], sld['cat'], anotacao)
                 cur.execute(sql)
 
             # agora irei inserir os vínculos
@@ -93,7 +93,7 @@ class db:
                 keys += item + ", "
                 data += dados[item] + ", "
 
-                if item != 'codigo_disciplina':
+                if item != 'id_musica':
                     update += item + "=" + dados[item] + ", "
 
             sql = "INSERT INTO " + tabela + " (" + keys[:-2] + ") VALUES(" + data[:-2] + ") ON DUPLICATE KEY UPDATE " + update[:-2]

@@ -281,7 +281,7 @@
                       <th class="align-middle text-danger">{{sld['pos']}}</th>
                       <td class="align-middle">{{sld['text-slide']}}</td>
                       <td class="align-middle">
-                        <select id="slide{{sld['pos']}}">
+                        <select id="slide_cat_{{sld['pos']}}">
                           {% for cat in cat_slides %}
                           <option value="{{cat['id']}}">{{cat['descricao']}}</option>
                           {% endfor %}
@@ -321,6 +321,10 @@
   
 <script>
 
+  /* window.onload = function() {
+    console.log(getInfo());
+  }; */
+
   function getTexto() {
     var texto = [];
 
@@ -332,6 +336,7 @@
             for (item in data['blocks']) {
               texto.push({'paragrafo':cont, 'texto':data['blocks'][item]['data']['text']})
               cont++;
+              //console.log(data['blocks'][item]['data']['text']);
             }
 
             listaGeral = getInfo();
@@ -353,6 +358,12 @@
     titulo = '{{info['titulo']}}';
     vinculos = [{'vinc':$("#vinc1").val(), 'status':$("#status1").val(), 'descricao':$("#desc_vinc1").val()}];
     slides = {{info['slides']}};
+
+    // acrescentando as categorias a lista
+    for (item in slides) {
+      slides[item]['cat'] = $("#slide_cat_" + slides[item]['pos']).val();
+    }
+
     letras = [];
 
     if ($("#add_vinc2").val() != 0) {

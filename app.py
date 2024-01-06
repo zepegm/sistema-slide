@@ -5,9 +5,11 @@ from threading import Lock
 from waitress import serve
 from PowerPoint import getListText
 from MySQL import db
+from HTML_U import converHTML_to_List
 import json
 import os
 import DB
+import os.path
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -145,7 +147,7 @@ def addMusica():
         if result['id'] > 0:       
             titulo = banco.executarConsulta('select titulo from musicas where id = %s' % result['id'])[0]['titulo']
             letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % result['id'])
-            return render_template('result_musica.jinja', titulo=titulo, letras=letras)
+            return render_template('result_musica.jinja', titulo=titulo, letras=letras, id=result['id'])
         else :
             return render_template('erro.jinja', log=result['log'])
     else:
@@ -209,10 +211,41 @@ def enviarDadosNovaMusica():
 
         return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks, categoria=categoria, status=status)
 
+@app.route('/upload_capa',  methods=['GET', 'POST'])
+def upload_capa():
+    isthisFile = request.files.get('file')
+    id = request.form.getlist('id')[0]
+    filename = str(id) + os.path.splitext(isthisFile.filename)[1]
+
+    isthisFile.save('./static/images/capas/' + filename)
+
+    banco.insertOrUpdate({'id_musica':id, 'filename':"'" + filename + "'"}, 'capas')
+
+    return jsonify('./static/images/capas/' + filename)
+
 
 @app.route('/teste_2')
 def teste_2():
-    return render_template('erro.jinja', log='Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>Yes!')
+    id = 5
+    titulo = banco.executarConsulta('select titulo from musicas where id = %s' % id)[0]['titulo']
+    letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % id)
+    return render_template('result_musica.jinja', titulo=titulo, letras=letras, id=id)
+
+@app.route('/teste')
+def teste():
+    lista = []
+    musicas = banco.executarConsulta('select * from musicas order by titulo')
+    
+    for musica in musicas:
+        letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % musica['id'])
+        texto_formatado = []
+        for l in letras:
+            texto_formatado.append(converHTML_to_List(l['texto']))
+        
+        lista.append({'titulo':musica['titulo'], 'letras':texto_formatado})
+        print(lista)
+
+    return render_template('gerar_pdf.jinja', lista=lista)
 
 
 
