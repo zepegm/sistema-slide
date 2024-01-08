@@ -219,11 +219,53 @@
             <div class="col-sm-12">
               <hr>
             </div>
+            <div class="col-sm-12">
+              <div class="tree well">
+                <p>
+                  <a class="btn btn-primary" data-toggle="collapse" href="#categorias" role="button" aria-expanded="false" aria-controls="categorias">Filtro por Vínculos</a>
+                  <button class="btn btn-secondary" id="btn-limparFiltro" type="button">Limpar Filtros</button>
+                  <button id="btn_iniciar_apresentacao" class="btn btn-info" disabled>Iniciar Apresentação</button>
+                  <button id="btn_adicionar_roteiro" class="btn btn-success" disabled>Adicionar ao Roteiro</button>
+                </p>
+                <div class="row">
+                  <div class="col">
+                    <div class="collapse" id="categorias">
+                      <div class="card card-body">
+                        {% for cat in categoria %}
+                          <p>
+                            <button data-toggle="collapse" href="#cat{{cat['id']}}" role="button" aria-expanded="false" aria-controls="cat{{cat['id']}}" class="btn btn-dark">{{cat['descricao']}}</button>
+                            <a href="javascript:selectallCat({{cat['id']}}, true)">Todos</a>
+                            <a href="javascript:selectallCat({{cat['id']}}, false)">Nenhum</a>
+                          </p>
+                          <div class="row">
+                            <div class="col">
+                              <div class="collapse show" id="cat{{cat['id']}}">
+                                <div class="card card-body">
+                                {% for item in cat['subcategoria'] %}
+                                  <p>&nbsp;
+                                    <input id="check{{item['id']}}" class="form-check-input filtro-vinculo-check check-{{cat['id']}}" type="checkbox" value="{{item['id']}}">
+                                    <label class="form-check-label" for="check{{item['id']}}">
+                                      {{item['descricao']}}
+                                    </label>      
+                                  </p>                                                              
+                                {% endfor %}
+                                </div>
+                                <br>
+                              </div>
+                            </div>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>            
+            </div>
           </div>
           <div class="row">
             <div class="col-sm-3">
               <div id="lista_geral" class="list-group">
-                <label for="txt_filtro" class="form-label">Filtro:</label>
+                <label for="txt_filtro" class="form-label">Pesquisa por Titulo:</label>
                 <input type="text" class="form-control" id="txt_filtro" placeholder="Digite o Nome da Música" value="{{titulo}}">                
                 <br>
                 {% for item in musicas %}
@@ -253,6 +295,111 @@
 
   
 <script>
+
+  $("#btn_iniciar_apresentacao").on('click', function() {
+    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'musica'};
+    
+    $.ajax({
+        type: "POST",
+        url: "iniciar_apresentacao",
+        contentType: "application/json",
+        data: JSON.stringify(info),
+        dataType: "json",
+        success: function(data) {
+            console.log(data);
+        },
+    });    
+
+  });
+
+  // Function definition with passing two arrays
+  function findCommonElement(array1, array2) {
+  
+      // Loop for array1
+      for (let i = 0; i < array1.length; i++) {
+  
+          // Loop for array2
+          for (let j = 0; j < array2.length; j++) {
+  
+              // Compare the element of each and
+              // every element from both of the
+              // arrays
+              if (array1[i] === array2[j]) {
+  
+                  // Return if common element found
+                  return true;
+              }
+          }
+      }
+  
+      // Return if no common element exist
+      return false;
+  }
+
+  function selectallCat(cat, select) {
+
+    console.log('yes');
+
+    $('.check-' + cat).each(function() { this.checked = select; });
+
+    lista = []
+    $('.filtro-vinculo-check:checked').filter(function(index) {
+      lista.push($(this).val())
+    });
+    
+    if (lista.length > 0) {
+
+      $("#lista_geral a").toggleClass('toggled-vinc', true);
+
+      $("#lista_geral a").filter(function () {
+
+        lst_element = $(this).attr('data-vinc').split(',');
+        
+        if (findCommonElement(lst_element, lista)) {
+          $(this).removeClass('toggled-vinc');
+        }
+    
+      });
+
+    } else {
+      $("#lista_geral a").removeClass('toggled-vinc');
+    }            
+  }
+
+  $('#btn-limparFiltro').click(function (e) {
+    $('#txt_filtro').val("");
+    $("#lista_geral a").removeClass('toggled');
+
+    $('.form-check-input').each(function() { this.checked = false; });
+    $("#lista_geral a").removeClass('toggled-vinc');
+  });  
+
+  $('.form-check-input').on('change', function (e) {
+    lista = []
+    $('.filtro-vinculo-check:checked').filter(function(index) {
+      lista.push($(this).val())
+    });
+    
+    console.log(lista);
+
+    if (lista.length > 0) {
+      $("#lista_geral a").toggleClass('toggled-vinc', true);
+
+      $("#lista_geral a").filter(function () {
+
+        lst_element = $(this).attr('data-vinc').split(',');
+        
+        if (findCommonElement(lst_element, lista)) {
+          $(this).removeClass('toggled-vinc');
+        }
+    
+      });
+    
+    } else {
+      $("#lista_geral a").removeClass('toggled-vinc');
+    }
+
+  });
 
   $("#btn_nova_musica").on('click', function() {
     $("#destino").val('1');
@@ -315,7 +462,7 @@
 
             // adicionar vínculos
             for (vinc in data['vinculos']) {
-              $("#detalhes_musicas").append('<div class="' + data['vinculos'][vinc]['desc_status'] + '"><div><strong>Vínculo: </strong>' + data['vinculos'][vinc]['vinculo'] + '</div><div><strong>Status: </strong>' + data['vinculos'][vinc]['desc_status'] + '</div><div class="text">' + data['vinculos'][vinc]['descricao'] + '</div></div><br>');
+              $("#detalhes_musicas").append('<div class="' + data['vinculos'][vinc]['desc_status'] + '"><div><strong>Vínculo: </strong>' + data['vinculos'][vinc]['vinculo'] + '</div><div><strong>Status do Vínculo: </strong>' + data['vinculos'][vinc]['desc_status'] + '</div><div class="text">' + data['vinculos'][vinc]['descricao'] + '</div></div><br>');
             }
             
             $("#letras_musicas").append('<div id="pagina_texto"></div>');
@@ -326,6 +473,8 @@
             }
 
             $("#btn_editar_musica").removeAttr('disabled');
+            $("#btn_iniciar_apresentacao").removeAttr('disabled');
+            $("#btn_adicionar_roteiro").removeAttr('disabled');
         },
     });
 

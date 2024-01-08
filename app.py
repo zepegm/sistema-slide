@@ -20,8 +20,10 @@ CORS(app)
 thread = None
 thread_lock = Lock()
 
-index = 1
-total_slides = DB.executarConsulta('Musicas.db', 'select max(slide) from lista')[0]
+estado = 0
+current_presentation = {'id':0, 'tipo':''}
+index = 0
+
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 
 banco = db({'host':"localhost",    # your host, usually localhost
@@ -31,47 +33,62 @@ banco = db({'host':"localhost",    # your host, usually localhost
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    listaSlideShow = DB.executarConsultaGeral('Musicas.db', 'select slide as `index`, id_musica, sub_linha_1 from lista')
+    return 'Hello World!'
 
-    lista_final = []
-    temp = []
+@app.route('/controlador', methods=['GET', 'POST'])
+def controlador():
 
-    id_musica = listaSlideShow[0]['id_musica']
+    global estado
+    global current_presentation
+    global index
 
-    for item in listaSlideShow:
-        if id_musica != item['id_musica'] and len(temp) > 0:
-            lista_final.append({'musica':temp[0]['title'], 'slides':temp})
-            temp = []
-            id_musica = item['id_musica']
-            
-        temp.append({'index':item['index'], 'title':item['sub_linha_1']})
+    if estado == 0:
+        return redirect('/')
+    else:
 
-    lista_final.append({'musica':temp[0]['title'], 'slides':temp})
+        if (current_presentation['tipo'] == 'musica'):
+            fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
 
-    dir = os.getcwd() + r'\static\videos'
+            if len(fundo) < 1:
+                fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
+            else:
+                fundo = 'images/capas/' + fundo[0]['filename']
 
-    lista_videos = [arq for arq in os.listdir(dir)]
+            lista_slides = banco.executarConsulta('select `text-slide`, categoria, anotacao from slides where id_musica = %s order by pos' % current_presentation['id'])
 
-    ls_final_videos = []
-    cont = 1
-    for item in lista_videos:
-        ls_final_videos.append({'file':item, 'nome':'Fundo ' + str(cont)})
-        cont += 1    
-
-    return render_template('index.jinja', total_slides=total_slides, index=index, listaSlideShow=lista_final, videos=ls_final_videos)
+            return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo)
 
 @app.route('/abrir_musica', methods=['GET', 'POST'])
 def abrir_musica():
 
     musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+    categoria = banco.executarConsulta('select * from categoria_departamentos')
+    for item in categoria:
+        item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
 
-    return render_template('musicas.jinja', musicas=musicas, status='')
+    return render_template('musicas.jinja', musicas=musicas, status='', categoria=categoria)
 
 @app.route('/slide', methods=['GET', 'POST'])
 def slide():
 
-    global index
-    return render_template('PowerPoint.jinja', index=index)
+    global estado
+    global current_presentation
+
+    if estado == 0:
+        fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
+        return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[])
+    elif estado == 1: # se iniciou uma apresentação
+        if (current_presentation['tipo'] == 'musica'):
+            fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
+
+            if len(fundo) < 1:
+                fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
+            else:
+                fundo = 'images/capas/' + fundo[0]['filename']
+
+            lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides where id_musica = %s order by pos' % current_presentation['id'])
+
+            return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=lista_slides)
 
 
 @app.route('/proximoSlide', methods=['GET', 'POST'])
@@ -154,6 +171,7 @@ def addMusica():
         if result['id'] > 0:       
             titulo = banco.executarConsulta('select titulo from musicas where id = %s' % result['id'])[0]['titulo']
             letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % result['id'])
+            
             return render_template('result_musica.jinja', titulo=titulo, letras=letras, id=result['id'])
         else :
             return render_template('erro.jinja', log=result['log'])
@@ -284,7 +302,12 @@ def verificarSenha():
             if destino == '1' or destino == '2':
                 musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
                 status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
-                return render_template('musicas.jinja', musicas=musicas, status=status)
+
+                categoria = banco.executarConsulta('select * from categoria_departamentos')
+                for item in categoria:
+                    item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
+
+                return render_template('musicas.jinja', musicas=musicas, status=status, categoria=categoria)
 
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 
@@ -303,6 +326,23 @@ def getTexto_PDF():
         lista.append({'titulo':musica['titulo'], 'letras':texto_formatado})
 
     return jsonify(lista)
+
+@app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
+def iniciar_apresentacao():
+
+    global current_presentation
+    global estado
+    global index
+
+    if request.method == 'POST':
+        if request.is_json:
+            info = request.json
+            current_presentation = {'id':info['id'], 'tipo':info['tipo']}
+            estado = 1
+            index = 0
+
+
+    return jsonify(True)
 
 
 

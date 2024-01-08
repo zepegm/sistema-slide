@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Musical de Natal 2023</title>
+        <title>SlideShow</title>
         <style>
             #myVideo {
                 position: fixed;
@@ -11,7 +11,7 @@
             }
 
             #slide1 {
-                background-image: url("{{ url_for('static', filename='images/slides/' + index|string + '.png') }}");
+                background-image: url("{{ url_for('static', filename=fundo) }}");
             }
 
             .slide {
@@ -48,15 +48,19 @@
         </style>
     </head>
     <body>
-        <video autoplay muted loop id="myVideo">
+        <!-- <video autoplay muted loop id="myVideo">
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
-        </video>
+        </video> -->
 
         <div class="slide in" id="slide1"></div>
         <div class="slide" id="slide2"></div>        
 
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script>
+
+        var slides = {{lista_slides}}
+        console.log(slides);
+
         var key = 0;
 
         const slide1 = document.getElementById("slide1");
