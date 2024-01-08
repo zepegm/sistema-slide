@@ -64,7 +64,8 @@ def getListText(dir):
         if key_u:
             text_slide += "</u>"
 
-        #text_slide = text_slide.replace('  ', '')
+        text_slide = text_slide.replace('  ', ' ')
+        plain_text = plain_text.replace('  ', ' ')
 
         text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text, 'anotacao':anotacao})
 

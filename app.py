@@ -65,7 +65,7 @@ def abrir_musica():
 
     musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
 
-    return render_template('musicas.jinja', musicas=musicas)
+    return render_template('musicas.jinja', musicas=musicas, status='')
 
 @app.route('/slide', methods=['GET', 'POST'])
 def slide():
@@ -261,25 +261,38 @@ def get_info_musica():
                 "inner join subcategoria_departamentos ON subcategoria_departamentos.id = vinculos_x_musicas.id_vinculo " + \
                 "inner join  status_vinculo on status_vinculo.id = vinculos_x_musicas.id_status " + \
                 "inner join categoria_departamentos ON categoria_departamentos.id = subcategoria_departamentos.supercategoria " + \
-                "where id_musica = %s" % id['id']
+                "where id_musica = %s " % id['id'] + \
+                "order by vinculos_x_musicas.id_status "                
             
             vinculos = banco.executarConsulta(sql)
             letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % id['id'])
+            capa = '/static/images/capas/' + banco.executarConsulta('select * from capas where id_musica = %s' % id['id'])[0]['filename']
 
-            return jsonify({'vinculos':vinculos, 'letras':letras})
+            return jsonify({'vinculos':vinculos, 'letras':letras, 'capa':capa})
+
+@app.route('/verificarSenha', methods=['GET', 'POST'])
+def verificarSenha():
+    if request.method == "POST":
+        senha = request.form.getlist('senha')[0]
+        destino = request.form.getlist('destino')[0]
+        
+        if senha == '120393':
+            if destino == '1':
+                return render_template('editor_musica.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='')
+            
+        else:
+            if destino == '1' or destino == '2':
+                musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+                status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                return render_template('musicas.jinja', musicas=musicas, status=status)
+
+    return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 
 
-@app.route('/teste_2')
-def teste_2():
-    id = 8
-    titulo = banco.executarConsulta('select titulo from musicas where id = %s' % id)[0]['titulo']
-    letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % id)
-    return render_template('result_musica.jinja', titulo=titulo, letras=letras, id=id)
-
-@app.route('/teste')
-def teste():
+@app.route('/getTexto_PDF', methods=['GET', 'POST'])
+def getTexto_PDF():
     lista = []
-    musicas = banco.executarConsulta('select * from musicas order by titulo')
+    musicas = request.json
     
     for musica in musicas:
         letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % musica['id'])
@@ -288,14 +301,13 @@ def teste():
             texto_formatado.append(converHTML_to_List(l['texto']))
         
         lista.append({'titulo':musica['titulo'], 'letras':texto_formatado})
-        print(lista)
 
-    return render_template('gerar_pdf.jinja', lista=lista)
+    return jsonify(lista)
 
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0',port=80)
+    app.run('0.0.0.0',port=120)
     #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
