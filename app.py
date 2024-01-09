@@ -54,7 +54,7 @@ def controlador():
             else:
                 fundo = 'images/capas/' + fundo[0]['filename']
 
-            lista_slides = banco.executarConsulta('select `text-slide`, categoria, anotacao from slides where id_musica = %s order by pos' % current_presentation['id'])
+            lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') from slides where id_musica = %s order by pos" % current_presentation['id'])
 
             return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo)
 

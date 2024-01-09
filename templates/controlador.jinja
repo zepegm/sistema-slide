@@ -57,24 +57,32 @@
     }
 
     #slidePrincipal {
+      width: 640px; /* or whatever width you want. */
+      height: 360px; /* or whatever width you want. */
+    }
+
+    #slideProx {
+      width: 426; /* or whatever width you want. */
+      height: 240px; /* or whatever width you want. */
+    }
+
+    .capa {
       background-image: url("{{ url_for('static', filename=fundo) }}");  
       background-size: contain;
       background-repeat: no-repeat;
-      width: 639px; /* or whatever width you want. */
-      height: 360px; /* or whatever width you want. */
       background-size: 100% 100%;
+    }
+
+    .letra {
+      background-color: rgb(0,0,0);
+      background-size: 100% 100%;
+      color:white;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: normal; 
     }
 
     #card_principal {
       width: 641px; /* or whatever width you want. */
-    }
-
-    #slideProx {
-      background-color: rgb(0,0,0);
-      width: 426; /* or whatever width you want. */
-      height: 240px; /* or whatever width you want. */
-      background-size: 100% 100%;
-      color:white;
     }
 
     #card_prox {
@@ -85,6 +93,11 @@
       color:rgba(255,207,102);
       font-weight:bold;
       background:rgba(0,0,0,0)
+    }
+
+    .arrow {
+      font-size: xx-large;
+      color:black;
     }
 
     </style>
@@ -109,25 +122,31 @@
           <div class="row">
             <h1 class="fw-light">Apresentador de Slides</h1>
               <p class="lead text-muted">Abaixo você vê o slide atual e prévia do próximo.</p>
-              <div class="col-lg-6 col-md-8 mx-auto">
+              <div class="col-sm-7">
                 <div id="card_principal" class="card shadow-sm">
-                    <div id="slidePrincipal"></div>
+                    {% if index == 0%}
+                      <div class="capa" id="slidePrincipal"></div>
+                    {% else %}
+                      <div class="letra" id="slidePrincipal"></div>
+                    {% endif %}
                   <div class="card-body">
                     <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
                   </div>
                 </div>        
               </div>
             {% if index < lista_slides|length  %}
-            <div class="col-sm-4">
+            <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
-                <div id="slideProx">{{lista_slides[0]['text-slide']}}</div>
+                <div id="slideProx" class="letra">{{lista_slides[0]['text-slide']}}</div>
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
                 </div>
-              </div>        
+              </div> 
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
             </div> 
             {% else %} 
-            <div class="col-sm-4">
+            <div class="col-sm-5">
               <div class="card shadow-sm">
                 <img class="bd-placeholder-img card-img-top" id="imgProx" width="100%" height="100%" src="{{ url_for('static', filename='images/Fim.jpg') }}" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#55595c"/></img>
                 <div class="card-body">
@@ -136,15 +155,6 @@
               </div>        
             </div>       
             {% endif %} 
-            <div class="col-sm-8">          
-              <form id="update" method="POST" action="{{ url_for('home') }}">
-                <input type="hidden" value="{{index}}" id="index_atual" name="index_atual">
-              <p>
-                <a id="anterior" class="btn btn-secondary my-2">Anterior</a>
-                <a id="proximo" class="btn btn-primary my-2">Próximo</a>
-              </p>
-            </form>
-            </div>
           </div>
         </section>
       </div>
@@ -160,8 +170,23 @@
   
   <script>
 
+    var index = {{index}};
+    var slides = {{lista_slides}};
+
     window.onload = function() {
       textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});
+
+      if (index > 0) {
+        $("#btn_previous").removeAttr('disabled');
+      } else {
+        $("#btn_previous").attr('disabled', '');
+      }
+
+      if (index < slides.length) {
+        $("#btn_next").removeAttr('disabled');
+      } else {
+        $("#btn_next").attr('disabled', '');
+      }
     };
 
     function goto(index) {
@@ -209,7 +234,47 @@
     }
 
     function next() {
-      $.ajax({
+
+      index++;
+
+      if (index == 1) { // preciso retirar o background da imagem
+        $("#slidePrincipal").addClass('letra');
+        $("#slidePrincipal").removeClass('capa');
+      }
+
+      if (index <= slides.length) {
+        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});        
+      } else {
+        $("#slidePrincipal").empty();
+        $("#slidePrincipal").addClass('capa');
+        $("#slidePrincipal").removeClass('letra');        
+      }
+
+
+      if (index < slides.length) {
+        $("#slideProx").html(slides[index]['text-slide']);
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});
+      } else if (index == slides.length) {
+        $("#slideProx").empty();
+        $("#slideProx").addClass('capa');
+        $("#slideProx").removeClass('letra');
+      } else {
+        $("#slideProx").addClass('letra');
+        $("#slideProx").removeClass('capa');
+        $("#slideProx").html('<b>Fim</b>');
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});        
+      }
+
+      $("#slideAtual").text("Slide Atual: " + (index + 1));
+
+      if (index <= slides.length) {
+        $("#btn_next").removeAttr('disabled');
+      } else {
+        $("#btn_next").attr('disabled', '');
+      }      
+
+      /*$.ajax({
         type: "POST",
         url: "{{ url_for('proximoSlide') }}",
         contentType: "application/json",
@@ -229,10 +294,10 @@
         error: function(err) {
           console.log(err);
         }
-      });      
+      });*/   
     }
 
-    $("#proximo").on('click', function() {
+    $("#btn_next").on('click', function() {
       next();
     });
 
@@ -240,21 +305,6 @@
       previous();
     });    
 
-    $("#changeBackground").on('change', function() {
-      $.ajax({
-        type: "POST",
-        url: "{{ url_for('changeBackground') }}",
-        contentType: "application/json",
-        data: JSON.stringify($(this).val()),
-        dataType: "json",
-        success: function(response) {
-          console.log(response);
-        },
-        error: function(err) {
-          console.log(err);
-        }
-      });      
-    });
 
     document.onkeydown = checkKey;
 
