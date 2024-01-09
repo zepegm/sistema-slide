@@ -215,7 +215,49 @@
     }
 
     function previous() {
-      $.ajax({
+
+      index--;
+
+      $("#slideAtual").text("Slide Atual: " + (index + 1));
+      $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
+
+      // verificar estado do slidePrincipal
+
+      if (index == slides.length) {
+        $("#slidePrincipal").addClass('letra');
+        $("#slidePrincipal").removeClass('capa');     
+
+        $("#slideProx").empty();
+        $("#slideProx").addClass('capa');
+        $("#slideProx").removeClass('letra');             
+      } else {
+        $("#slideProx").addClass('letra');
+        $("#slideProx").removeClass('capa');          
+
+        $("#slideProx").html(slides[index]['text-slide']);
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});             
+      }
+
+      if (index == 0) {
+        $("#slidePrincipal").empty();
+        $("#slidePrincipal").addClass('capa');
+        $("#slidePrincipal").removeClass('letra');        
+      } else {
+        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});          
+      }
+
+      if (index == 0) {
+        $("#btn_previous").attr('disabled', '');
+      } else {
+        $("#btn_previous").removeAttr('disabled');
+      }
+
+      $("#btn_next").removeAttr('disabled');
+
+
+
+      /*$.ajax({
         type: "POST",
         url: "{{ url_for('anteriorSlide') }}",
         contentType: "application/json",
@@ -230,12 +272,15 @@
         error: function(err) {
           console.log(err);
         }
-      });       
+      });*/
     }
 
     function next() {
 
       index++;
+
+      $("#slideAtual").text("Slide Atual: " + (index + 1));
+      $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
 
       if (index == 1) { // preciso retirar o background da imagem
         $("#slidePrincipal").addClass('letra');
@@ -245,7 +290,7 @@
       if (index <= slides.length) {
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
         textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});        
-      } else {
+      } else { // recolocar o background da imagem
         $("#slidePrincipal").empty();
         $("#slidePrincipal").addClass('capa');
         $("#slidePrincipal").removeClass('letra');        
@@ -263,45 +308,38 @@
         $("#slideProx").addClass('letra');
         $("#slideProx").removeClass('capa');
         $("#slideProx").html('<b>Fim</b>');
+        $("#proximoSlide").text('Próximo Slide: -');
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});        
       }
-
-      $("#slideAtual").text("Slide Atual: " + (index + 1));
 
       if (index <= slides.length) {
         $("#btn_next").removeAttr('disabled');
       } else {
         $("#btn_next").attr('disabled', '');
-      }      
+      }  
 
-      /*$.ajax({
+      $("#btn_previous").removeAttr('disabled');
+
+      $.ajax({
         type: "POST",
         url: "{{ url_for('proximoSlide') }}",
         contentType: "application/json",
-        data: JSON.stringify(1),
+        data: JSON.stringify(index),
         dataType: "json",
         success: function(response) {
-          $("#slideAtual").text("Slide Atual: " + response)
-          $("#imgAtual").attr('src', '/static/images/slides/' + response + '.png');
-          if (response == total_slides) {
-            $("#proximoSlide").text('Próximo Slide: -')
-            $("#imgProx").attr('src', "{{ url_for('static', filename='images/Fim.jpg') }}");
-          } else {
-            $("#proximoSlide").text('Próximo Slide: ' + (response + 1))
-            $("#imgProx").attr('src', '/static/images/slides/' + (response + 1) + '.png');
-          }
+          console.log(reponse);
         },
         error: function(err) {
           console.log(err);
         }
-      });*/   
+      });
     }
 
     $("#btn_next").on('click', function() {
       next();
     });
 
-    $("#anterior").on('click', function() {
+    $("#btn_previous").on('click', function() {
       previous();
     });    
 
@@ -320,11 +358,15 @@
         }
         else if (e.keyCode == '37'  || e.keyCode == '33') {
             e.preventDefault();
-            previous();
+            if (index > 0) {
+              previous();
+            }
         }
         else if (e.keyCode == '39' || e.keyCode == '34') {
             e.preventDefault();
-            next();
+            if (index <= slides.length) {
+              next();
+            }
         }           
     }     
 
