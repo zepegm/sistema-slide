@@ -54,7 +54,7 @@ def controlador():
             else:
                 fundo = 'images/capas/' + fundo[0]['filename']
 
-            lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') from slides where id_musica = %s order by pos" % current_presentation['id'])
+            lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao from slides where id_musica = %s order by pos" % current_presentation['id'])
 
             return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo)
 
@@ -73,10 +73,11 @@ def slide():
 
     global estado
     global current_presentation
+    global index
 
     if estado == 0:
         fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
-        return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[])
+        return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0)
     elif estado == 1: # se iniciou uma apresentação
         if (current_presentation['tipo'] == 'musica'):
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
@@ -88,7 +89,7 @@ def slide():
 
             lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides where id_musica = %s order by pos' % current_presentation['id'])
 
-            return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=lista_slides)
+            return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=lista_slides, index=index)
 
 
 @app.route('/proximoSlide', methods=['GET', 'POST'])
@@ -103,9 +104,8 @@ def proximoSlide():
             global index
 
             index += 1
-            print(index)
 
-            #socketio.emit('update', index)
+            socketio.emit('update', index)
             #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
             #socketio.emit('legenda', legenda)            
             return jsonify(True)
@@ -121,15 +121,13 @@ def anteriorSlide():
 
     
             global index
-            global total_slides
 
-            if index > 1:
-                index -= 1
+            index -= 1
 
             socketio.emit('update', index)
-            legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
-            socketio.emit('legenda', legenda)            
-            return jsonify(index)
+            #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
+            #socketio.emit('legenda', legenda)            
+            return jsonify(True)
 
 @app.route('/goto', methods=['GET', 'POST'])
 def goto():
@@ -339,6 +337,8 @@ def iniciar_apresentacao():
             current_presentation = {'id':info['id'], 'tipo':info['tipo']}
             estado = 1
             index = 0
+
+            socketio.emit('refresh', 1)
 
 
     return jsonify(True)

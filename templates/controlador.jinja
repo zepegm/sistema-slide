@@ -100,6 +100,39 @@
       color:black;
     }
 
+    #loading {
+      background-color: white;
+      height: 100%;
+      left: 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 9999;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      bottom: 0;
+      margin: auto;
+      border: 20px solid #EAF0F6;
+      border-radius: 50%;
+      border-top: 20px solid #FF7A59;
+      width: 200px;
+      height: 200px;
+      animation: spinner 4s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }    
+
+    #anotacao {
+      font-size: 20px;
+    }
+
     </style>
 
     
@@ -119,24 +152,28 @@
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="text-center container">
+          <div id="loading"><div class="loader"></div></div>
           <div class="row">
             <h1 class="fw-light">Apresentador de Slides</h1>
               <p class="lead text-muted">Abaixo você vê o slide atual e prévia do próximo.</p>
               <div class="col-sm-7">
                 <div id="card_principal" class="card shadow-sm">
-                    {% if index == 0 %}
+                    {% if index == 0 or (index - 1) == lista_slides|length %}
                       <div class="capa" id="slidePrincipal"></div>
-                    {% elif (index + 1) == lista_slides|length %}
-                      <div class="capa" id="slidePrincipal">Aqui</div>
                     {% else %}
                       <div class="letra" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
                     {% endif %}
                   <div class="card-body">
                     <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
+                      {% if index <= lista_slides|length %}
+                        {% if lista_slides[index - 1]['anotacao'] != '' %}
+                        <p id="anotacao"><strong>Anotação: </strong>{{lista_slides[index - 1]['anotacao']}}</p>
+                        {% endif %}                    
+                      {% endif %}
                   </div>
                 </div>        
               </div>
-            {% if index <= lista_slides|length  %}
+            {% if index < lista_slides|length  %}
             <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
                 <div id="slideProx" class="letra">{{lista_slides[index]['text-slide']}}</div>
@@ -147,10 +184,21 @@
                 <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
                 <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
             </div> 
+            {% elif index == lista_slides|length %}
+            <div class="col-sm-5">
+              <div id="card_prox" class="card shadow-sm">
+                <div id="slideProx" class="capa"></div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
+                </div>
+              </div> 
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+            </div> 
             {% else %} 
             <div class="col-sm-5">
-              <div class="card shadow-sm">
-                <img class="bd-placeholder-img card-img-top" id="imgProx" width="100%" height="100%" src="{{ url_for('static', filename='images/Fim.jpg') }}" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#55595c"/></img>
+              <div id="card_prox" class="card shadow-sm">
+                <div id="slideProx" class="letra"><b>Fim</b></div>
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: -</h4>
                 </div>
@@ -177,8 +225,14 @@
     var index = {{index}};
     var slides = {{lista_slides}};
 
+    console.log(slides);
+
     window.onload = function() {
-      textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});
+      if (index > slides.length) {
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      } else {
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});
+      }
 
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
@@ -192,6 +246,8 @@
       } else {
         $("#btn_next").attr('disabled', '');
       }
+
+      $("#loading").remove();
     };
 
     function goto(index) {
@@ -240,7 +296,12 @@
         $("#slideProx").removeClass('capa');          
 
         $("#slideProx").html(slides[index]['text-slide']);
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});             
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});         
+
+        $("#anotacao").remove();
+        if (slides[index - 1]["anotacao"] != '') {
+          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
+        }            
       }
 
       if (index == 0) {
@@ -262,22 +323,19 @@
 
 
 
-      /*$.ajax({
+      $.ajax({
         type: "POST",
         url: "{{ url_for('anteriorSlide') }}",
         contentType: "application/json",
-        data: JSON.stringify(1),
+        data: JSON.stringify(index),
         dataType: "json",
         success: function(response) {
-          $("#slideAtual").text("Slide Atual: " + response)
-          $("#imgAtual").attr('src', '/static/images/slides/' + response + '.png');
-          $("#proximoSlide").text('Próximo Slide: ' + (response + 1))
-          $("#imgProx").attr('src', '/static/images/slides/' + (response + 1) + '.png');
+          console.log(response);
         },
         error: function(err) {
           console.log(err);
         }
-      });*/
+      });
     }
 
     function next() {
@@ -295,6 +353,11 @@
       if (index <= slides.length) {
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
         textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});        
+
+        $("#anotacao").remove();
+        if (slides[index - 1]["anotacao"] != '') {
+          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
+        }
       } else { // recolocar o background da imagem
         $("#slidePrincipal").empty();
         $("#slidePrincipal").addClass('capa');
@@ -332,7 +395,7 @@
         data: JSON.stringify(index),
         dataType: "json",
         success: function(response) {
-          console.log(reponse);
+          console.log(response);
         },
         error: function(err) {
           console.log(err);

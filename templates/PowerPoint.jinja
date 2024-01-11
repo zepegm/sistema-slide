@@ -10,8 +10,26 @@
                 min-height: 100%;
             }
 
-            #slide1 {
-                background-image: url("{{ url_for('static', filename=fundo) }}");
+            .cdx-marker {
+                color:rgba(255,207,102);
+                font-weight:bold;
+                background:rgba(0,0,0,0)
+            }
+
+            .capa {
+                background-image: url("{{ url_for('static', filename=fundo) }}");  
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-size: 100% 100%;
+            }
+
+            .letra {
+                background-color: rgb(0,0,0);
+                background-size: 100% 100%;
+                color:white;
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: normal; 
+                text-align: center;
             }
 
             .slide {
@@ -52,47 +70,61 @@
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
         </video> -->
 
-        <div class="slide in" id="slide1"></div>
+        {% if index == 0 %}
+        <div class="slide capa in" id="slide1"></div>
+        {% else %}
+        <div class="slide letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
+        {% endif %}
         <div class="slide" id="slide2"></div>        
 
+    <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
+    <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script>
 
         var slides = {{lista_slides}}
-        console.log(slides);
+        //console.log(slides);
 
         var key = 0;
 
         const slide1 = document.getElementById("slide1");
         const slide2 = document.getElementById("slide2");
-        const source = document.getElementById("myVideo");
+        //const source = document.getElementById("myVideo");
+
+       textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});        
+
+
+        function changeComponent(slide1, slide2, index) {
+            slide1.classList.remove("in");
+            slide1.classList.add("out");
+
+            slide2.classList.remove("out");
+            slide2.classList.add('in');
+            
+            if (index == 0) {
+                slide2.classList.remove('letra');
+                slide2.classList.add('capa');
+            } else {
+                slide2.classList.remove('capa');
+                slide2.classList.add('letra');                    
+                slide2.innerHTML = slides[index - 1]['text-slide'];
+                textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
+            }
+        }
 
         var socket = io();
         socket.on('update', function(index) {
             if (key == 0) {
-                slide1.classList.remove("in");
-                slide1.classList.add("out");
-
-                slide2.classList.remove("out");
-                slide2.classList.add('in');
-                slide2.style.backgroundImage = "url('/static/images/slides/" + index + ".png')";
-
+                changeComponent(slide1, slide2, index);
                 key = 1;
             } else {
-                slide2.classList.remove("in");
-                slide2.classList.add("out");
-
-                slide1.classList.remove("out");
-                slide1.classList.add('in');
-                slide1.style.backgroundImage = "url('/static/images/slides/" + index + ".png')";
-
-                key = 0;                    
+                changeComponent(slide2, slide1, index);
+                key = 0;
             } 
         });        
      
-        socket.on('change', function(completo) {
-            console.log(completo);
-            source.src = completo;
+        socket.on('refresh', function(result) {
+            location.reload();
         });
 
     </script>
