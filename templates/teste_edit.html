@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The Code Dose</title>
+    <meta charset="UTF-8" />
+    <style>
+body {
+  font-family: sans-serif;
+}
+
+.signature__base {
+  stroke-dasharray: 8000;
+  animation: writeBase 4s infinite linear;
+}
+
+@keyframes writeBase {
+  0% {
+    stroke-dashoffset: 8000;
+  }
+  80% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.signature__dash {
+  stroke-dasharray: 8000;
+  animation: writeDash 4s infinite linear;
+}
+
+@keyframes writeDash {
+    0% {
+    stroke-dashoffset: 8000;
+  }
+  80% {
+    stroke-dashoffset: 0;
+  }
+}
+
+    </style>
+  </head>
+
+  <body>
+    <!-- <svg
+      width="500"
+      viewBox="0 0 1882 933"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        class="signature__dash"
+        d="M325 491.5C403.833 437.167 614.1 336.5 824.5 368.5"
+        stroke="black"
+        stroke-width="10"
+      />
+      <path
+        class="signature__base"
+        d="M5.5 771C12 915.5 111.6 1089.9 458 631.5C804.4 173.1 749 80.8333 678 92C553.5 298.333 339.2 741 478 861C616.8 981 853.167 647 954 465C1020.67 385 1148 186.4 1124 32C1094 -161 837.5 754.5 847.5 841C857.5 927.5 888 471.5 1147.5 405C1407 338.5 1154 791 1210.5 861C1255.7 917 1329.33 871 1360.5 841C1397.17 759.833 1479.1 594.9 1513.5 584.5C1556.5 571.5 1660 674 1796.5 584.5C1905.7 512.9 1879.67 404 1853 358.5C1764.33 348.667 1576.3 389.5 1533.5 631.5C1480 934 1743 910.5 1853 771"
+        stroke="black"
+        stroke-width="10"
+      />
+    </svg> -->
+
+    <svg width="309" height="205" viewBox="0 0 309 205" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="signature__base" d="M1 24C13.6107 19.7239 25.2552 16.1269 36 13.1385M155 36C161.063 14.4774 143.859 -16.8592 36 13.1385M36 13.1385L16.6882 103M1 176L16.6882 103M16.6882 103C69.7376 95 84 94 84 94M100 113C68 247 126.667 157.667 148 141C184 29 158 158.333 155 186L173 141L193 108C225 108 210.333 156.667 199 181L243 108C269.4 89.6 265.333 118.333 260 135L248 191C248 229.4 288 173.667 308 141" stroke="black" stroke-width="10" />
+        <path class="signature__dash" d="M121.331 79.5637C122.665 83.897 123.431 94.4637 115.831 102.064C107.831 94.5637 94.0313 78.0637 102.831 72.0637C111.631 66.0637 118.831 74.5637 121.331 79.5637Z" stroke="black" stroke-width="10"/>
+        </svg>
+        
+
+  </body>
+</html>
