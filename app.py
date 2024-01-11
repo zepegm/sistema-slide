@@ -101,15 +101,14 @@ def proximoSlide():
 
     
             global index
-            global total_slides
 
-            if index < total_slides:
-                index += 1
+            index += 1
+            print(index)
 
-            socketio.emit('update', index)
-            legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
-            socketio.emit('legenda', legenda)            
-            return jsonify(index)
+            #socketio.emit('update', index)
+            #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
+            #socketio.emit('legenda', legenda)            
+            return jsonify(True)
 
 
 @app.route('/anteriorSlide', methods=['GET', 'POST'])

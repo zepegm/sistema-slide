@@ -124,20 +124,22 @@
               <p class="lead text-muted">Abaixo você vê o slide atual e prévia do próximo.</p>
               <div class="col-sm-7">
                 <div id="card_principal" class="card shadow-sm">
-                    {% if index == 0%}
+                    {% if index == 0 %}
                       <div class="capa" id="slidePrincipal"></div>
+                    {% elif (index + 1) == lista_slides|length %}
+                      <div class="capa" id="slidePrincipal">Aqui</div>
                     {% else %}
-                      <div class="letra" id="slidePrincipal"></div>
+                      <div class="letra" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
                     {% endif %}
                   <div class="card-body">
                     <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
                   </div>
                 </div>        
               </div>
-            {% if index < lista_slides|length  %}
+            {% if index <= lista_slides|length  %}
             <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
-                <div id="slideProx" class="letra">{{lista_slides[0]['text-slide']}}</div>
+                <div id="slideProx" class="letra">{{lista_slides[index]['text-slide']}}</div>
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
                 </div>
@@ -153,6 +155,8 @@
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: -</h4>
                 </div>
               </div>        
+                <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>              
             </div>       
             {% endif %} 
           </div>
@@ -178,6 +182,7 @@
 
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});
       } else {
         $("#btn_previous").attr('disabled', '');
       }
