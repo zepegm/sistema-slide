@@ -103,7 +103,7 @@ def proximoSlide():
     
             global index
 
-            index += 1
+            index = int(request.json)
 
             socketio.emit('update', index)
             #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
@@ -122,7 +122,7 @@ def anteriorSlide():
     
             global index
 
-            index -= 1
+            index = int(request.json)
 
             socketio.emit('update', index)
             #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]

@@ -297,12 +297,10 @@
 
         $("#slideProx").html(slides[index]['text-slide']);
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});         
-
-        $("#anotacao").remove();
-        if (slides[index - 1]["anotacao"] != '') {
-          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
-        }            
+           
       }
+
+      console.log(index);
 
       if (index == 0) {
         $("#slidePrincipal").empty();
@@ -321,6 +319,13 @@
 
       $("#btn_next").removeAttr('disabled');
 
+
+      if (index > 0) {
+        $("#anotacao").remove();
+        if (slides[index - 1]["anotacao"] != '') {
+          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
+        }         
+      }
 
 
       $.ajax({

@@ -1,7 +1,15 @@
 <html>
     <head>
         <title>SlideShow</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
         <style>
+            body {
+                background-color: rgb(0,0,0);
+            }
+
             #myVideo {
                 position: fixed;
                 right: 0;
@@ -13,7 +21,8 @@
             .cdx-marker {
                 color:rgba(255,207,102);
                 font-weight:bold;
-                background:rgba(0,0,0,0)
+                background:rgba(0,0,0,0);
+                /* margin-right: 20px;  */
             }
 
             .capa {
@@ -54,6 +63,19 @@
                 opacity: 0;
             }   
             
+            .final-out {
+                animation-name: fade-final;
+                animation-duration: 4s;
+                opacity: 0;
+            }
+
+			#fim {
+				widows: 80%;
+				margin:20px auto;
+				min-height: 700px;
+				margin-top:150px;
+			}
+
             @keyframes fade-in {
                 from {opacity: 0;}
                 to {opacity: 1;}
@@ -63,6 +85,18 @@
                 from {opacity: 1;}
                 to {opacity: 0;}
             } 
+
+            @keyframes fade-final {
+                0% {
+                    opacity: 0;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
         </style>
     </head>
     <body>
@@ -70,22 +104,26 @@
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
         </video> -->
 
-        {% if index == 0 %}
+        {% if index == 0 or (index - 1) == lista_slides|length %}
         <div class="slide capa in" id="slide1"></div>
         {% else %}
         <div class="slide letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
         {% endif %}
-        <div class="slide" id="slide2"></div>        
+        <div class="slide" id="slide2"></div>      
+
+        <div id="fim"></div>  
 
     <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vara.min.js') }}"></script>
     <script>
 
         var slides = {{lista_slides}}
         //console.log(slides);
 
         var key = 0;
+        var key_final = false;
 
         const slide1 = document.getElementById("slide1");
         const slide2 = document.getElementById("slide2");
@@ -102,8 +140,19 @@
             slide2.classList.add('in');
             
             if (index == 0) {
+                slide2.innerHTML = '';
                 slide2.classList.remove('letra');
                 slide2.classList.add('capa');
+            } else if((index - 1) == slides.length) { // final
+                slide2.innerHTML = '';
+                slide2.classList.remove('letra');
+                slide2.classList.add('capa');
+
+                slide2.classList.remove("in");
+                slide2.classList.add('final-out');
+                vara.draw("draw");
+
+                key_final = true;
             } else {
                 slide2.classList.remove('capa');
                 slide2.classList.add('letra');                    
@@ -114,17 +163,62 @@
 
         var socket = io();
         socket.on('update', function(index) {
-            if (key == 0) {
-                changeComponent(slide1, slide2, index);
-                key = 1;
+
+            if (key_final == true) {
+                location.reload();
             } else {
-                changeComponent(slide2, slide1, index);
-                key = 0;
-            } 
+                if (key == 0) {
+                    changeComponent(slide1, slide2, index);
+                    key = 1;
+                } else {
+                    changeComponent(slide2, slide1, index);
+                    key = 0;
+                } 
+            }
         });        
      
         socket.on('refresh', function(result) {
             location.reload();
+        });
+
+        var idealFontSize = 250, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
+        fontSize = (screen.width / idealScreenSize) * idealFontSize;
+
+        var vara = new Vara(
+            "#fim",
+
+            "https://raw.githubusercontent.com/akzhy/Vara/master/fonts/Satisfy/SatisfySL.json",
+            [
+                {
+                    text: 'Fim...',
+                    y:150,
+                    fromCurrentPosition:{y:false},
+                    duration:3000,
+                    autoAnimation:false,
+                    delay:4000,
+                    id:"draw"
+                }													
+            ],
+
+            {
+                strokeWidth: 2,
+                color:'#fff',
+                fontSize:fontSize,
+                textAlign:'center'
+            }
+        );
+
+        vara.ready(function() {
+            var erase = true;
+            vara.animationEnd(function(i, o) {
+                if (i == 'no_erase') erase = false;
+                if (erase) {
+                    o.container.style.transition = "opacity 1s 1s";
+                    o.container.style.opacity = 0;
+                }
+            });
+
+
         });
 
     </script>
