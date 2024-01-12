@@ -213,7 +213,7 @@
           <div class="row">
             <div class="col-sm-12">
               <button id="btn_nova_musica" class="btn btn-primary" data-toggle="modal" data-target="#modalConfirm"><i class="fa-solid fa-plus"></i> Nova Música</button>
-              <button id="btn_editar_musica" class="btn btn-secondary" disabled><i class="fa-solid fa-pen-to-square"></i> Editar Selecionada</button>
+              <button id="btn_editar_musica" class="btn btn-secondary" data-toggle="modal" data-target="#modalConfirm" disabled><i class="fa-solid fa-pen-to-square"></i> Editar Selecionada</button>
               <button id="btn_gerar_pdf" class="btn btn-danger"><i class="fa-solid fa-file-pdf"></i> Gerar PDF das Músicas Filtradas</button>
             </div>
             <div class="col-sm-12">
@@ -403,6 +403,10 @@
 
   $("#btn_nova_musica").on('click', function() {
     $("#destino").val('1');
+  });
+
+  $("#btn_editar_musica").on('click', function() {
+    $("#destino").val('2');
   });
 
   $("#btn_gerar_pdf").on('click', function() {
