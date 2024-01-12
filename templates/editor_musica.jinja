@@ -403,7 +403,7 @@ window.onload = function() {
 
   function load() {
     $("#previewSlide").html(slide[slide_count - 1]['text-slide'].replaceAll('cdx-marker', 'view-marker'));
-    textFit($('#previewSlide'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});
+    textFit($('#previewSlide'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
 
     $("#previewSubtitle").html(slide[slide_count - 1]['subtitle']);
     textFit($('#previewSubtitle'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});   

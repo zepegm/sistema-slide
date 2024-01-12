@@ -231,12 +231,12 @@
       if (index > slides.length) {
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
       } else {
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
       }
 
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
       } else {
         $("#btn_previous").attr('disabled', '');
       }
@@ -296,7 +296,7 @@
         $("#slideProx").removeClass('capa');          
 
         $("#slideProx").html(slides[index]['text-slide']);
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});         
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});         
 
         $("#anotacao").remove();
         if (slides[index - 1]["anotacao"] != '') {
@@ -310,7 +310,7 @@
         $("#slidePrincipal").removeClass('letra');        
       } else {
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});          
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});          
       }
 
       if (index == 0) {
@@ -352,7 +352,7 @@
 
       if (index <= slides.length) {
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 63});        
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});        
 
         $("#anotacao").remove();
         if (slides[index - 1]["anotacao"] != '') {
@@ -367,7 +367,7 @@
 
       if (index < slides.length) {
         $("#slideProx").html(slides[index]['text-slide']);
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
       } else if (index == slides.length) {
         $("#slideProx").empty();
         $("#slideProx").addClass('capa');
