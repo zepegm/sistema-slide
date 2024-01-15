@@ -297,7 +297,7 @@
 <script>
 
   $("#btn_adicionar_roteiro").on('click', function() {
-    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'musicas', 'check':false};
+    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'musicas', 'check':false, 'titulo':$("#lista_geral a.active").text(), 'tipo_show':'Música'};
 
     $.ajax({
         type: "POST",

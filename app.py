@@ -29,12 +29,30 @@ musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secreta
 
 banco = db({'host':"localhost",    # your host, usually localhost
             'user':"root",         # your username
-            'passwd':"",  # your password
+            'passwd':"Yasmin",  # your password
             'db':"sistema-slide"})
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('home.jinja', roteiro=roteiro)
+
+    if estado > 0:
+        titulo = banco.executarConsulta('select titulo from %s where id = %s' % (current_presentation['tipo'], current_presentation['id']))[0]['titulo']
+
+        if (current_presentation['tipo'] == 'musicas'):
+            tipo = 'Música'
+
+        ls_capa = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
+        
+        if (len(ls_capa) > 0):
+            capa = 'static/images/capas/' + ls_capa[0]['filename']
+        else:
+            capa = 'static/images/Background.jpeg'    
+    else:
+        titulo = None
+        tipo = None
+        capa = 'static/images/Background.jpeg'
+
+    return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():
@@ -356,6 +374,7 @@ def iniciar_apresentacao():
     global current_presentation
     global estado
     global index
+    global roteiro
 
     if request.method == 'POST':
         if request.is_json:
@@ -365,9 +384,46 @@ def iniciar_apresentacao():
             index = 0
 
             socketio.emit('refresh', 1)
+            socketio.emit('update_roteiro', 1)
+
+            return jsonify(True)
+        
+        elif 'proximaPRS' in request.form: # pediu para iniciar nova apresentação na lista do roteiro 
+            for item in roteiro:
+                if (not item['check']):
+                    item['check'] = True
+                    current_presentation = {'id':item['id'], 'tipo':item['tipo']}
+                    estado = 1
+                    index = 0
+
+                    socketio.emit('refresh', 1)
+                    break
+
+            return redirect('/')
+
+@app.route('/encerrar_apresentacao', methods=['GET', 'POST'])
+def encerrar_apresentacao():
+
+    global current_presentation
+    global estado
+    global index
 
 
-    return jsonify(True)
+    if request.method == 'POST':
+        if request.is_json:
+            if int(request.json) == 1:
+                estado = 0
+                current_presentation = {'id':0, 'tipo':''}
+                index = 0
+
+                socketio.emit('refresh', 1)          
+                socketio.emit('update_roteiro', 1)  
+
+
+                return jsonify(True)
+            else:
+                return jsonify(False)
+
 
 @app.route('/adicionar_roteiro', methods=['GET', 'POST'])
 def adicionar_roteiro():   
@@ -380,8 +436,22 @@ def adicionar_roteiro():
             roteiro.append(info)
             #print(roteiro)
 
-    return jsonify(True) 
+            socketio.emit('update_roteiro', 1)
+            return jsonify(True) 
 
+
+@app.route('/update_roteiro', methods=['GET', 'POST'])
+def update_roteiro():
+    if request.method == 'POST':
+        if request.is_json:
+
+            global roteiro
+
+            info = request.json
+            roteiro = info
+
+            socketio.emit('update_roteiro', 1)
+            return jsonify(len(roteiro))
 
 
 if __name__ == '__main__':

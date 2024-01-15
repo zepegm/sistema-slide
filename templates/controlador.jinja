@@ -187,6 +187,8 @@
               </div> 
                 <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
                 <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+                <br>
+                <button id="btn_encerrar" class="btn btn-dark">Encerrar Apresentação</button>
             </div> 
             {% elif index == lista_slides|length %}
             <div class="col-sm-5">
@@ -198,6 +200,8 @@
               </div> 
                 <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
                 <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+                <br>
+                <button id="btn_encerrar" class="btn btn-dark">Encerrar Apresentação</button>
             </div> 
             {% else %} 
             <div class="col-sm-5">
@@ -208,7 +212,9 @@
                 </div>
               </div>        
                 <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
-                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>              
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button> 
+                <br>
+                <button id="btn_encerrar" class="btn btn-dark">Encerrar Apresentação</button>
             </div>       
             {% endif %} 
           </div>
@@ -420,6 +426,24 @@
       });
     }
 
+    function encerrar() {
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('encerrar_apresentacao') }}",
+        contentType: "application/json",
+        data: JSON.stringify(1),
+        dataType: "json",
+        success: function(response) {
+          if (response) {
+            location.reload();
+          }
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });      
+    }
+
     $("#btn_next").on('click', function() {
       next();
     });
@@ -428,6 +452,9 @@
       previous();
     });    
 
+    $("#btn_encerrar").on('click', function() {
+      encerrar();
+    });
 
     document.onkeydown = checkKey;
 
@@ -435,11 +462,9 @@
 
         e = e || window.event;
 
-        if (e.keyCode == '38') {
-            //previous();
-        }
-        else if (e.keyCode == '40') {
-
+        if (e.keyCode == '27') {
+            e.preventDefault();
+            encerrar();
         }
         else if (e.keyCode == '37'  || e.keyCode == '33') {
             e.preventDefault();

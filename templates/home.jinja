@@ -61,6 +61,26 @@
         font-size: 18px;
       }
 
+      .list-group-item {
+        position:relative;  
+        height: 50px; /*requires explicit height*/   
+      }
+      
+      .list-group-item label {
+        position:absolute;
+        top: 50%; bottom: 0; left: 10px; right: 0;
+        margin: auto;
+        height: 50px; /*requires explicit height*/        
+      }
+
+    #miniatura {
+        display: block;
+        height: 300px;
+        width: 100%;
+        border: solid;
+        border-width: thin;
+    }
+
     </style>
     
   </head>
@@ -81,34 +101,44 @@
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
           <main class="form-signin">
-              <div class="text-center"><img class="mb-4" src="{{ url_for('static', filename='images/Logo Colorido.png') }}" alt="" width="200" height="250"></div>
-              <h1 class="h3 mb-3 fw-normal text-center"><a style="font-weight: bold;">Slide Master Index 2</a><br>Roteiro de slides</h1>
-          
-              {% if roteiro|length > 0 %}
-              <div class="form-floating">
-                <ul class="list-group" id="presentations">
-                  {% for slide in roteiro %}
-                  <li class="list-group-item">
-                    {% if slide['check'] == True %}
-                    <label><input class="form-check-input me-1" type="checkbox" name="checkEL" value="{{ slide['id'] }}" checked>Afs</label>
-                    {% else %}
-                    <label><input class="form-check-input me-1" type="checkbox" name="checkEL" value="{{ slide['id'] }}">Afs</label>
-                    {% endif %}
-                    <span class="close">x</span>
-                  </li>
-                  {% endfor %}
-               </ul>
-              </div>
-              <p>    </p>
-              <form id="proxsld" method="post" action="{{ url_for('iniciar_apresentacao') }}">
-                <input type="hidden" id="proximaPRS" name="proximaPRS" value="">
-                <button id="next" class="w-100 btn btn-lg btn-secondary" type="button">Próxima Apresentação</button>
-              </form>      
-              {% else %}
-              <p class="text fw-bold">A lista do Roteiro está vazia!</p>
-              <p class="text"><a href="/abrir_musica">Clique aqui</a> para abrir uma <b>Música.</b></p>
-              {% endif %}
-            </main>          
+            <div class="text-center"><img class="mb-4" src="{{ url_for('static', filename='images/Logo Colorido.png') }}" alt="" width="200" height="250"></div>
+            <h1 class="h3 mb-3 fw-normal text-center"><a style="font-weight: bold;">Slide Master Index 2</a><br>Roteiro de slides</h1>
+        
+            {% if roteiro|length > 0 %}
+            <div class="form-floating">
+              <ul class="list-group" id="presentations">
+                {% for slide in roteiro %}
+                <li class="list-group-item list-group-item-action" data-titulo="{{slide['titulo']}}" data-tipo="{{slide['tipo']}}" data-tipo-show="{{slide['tipo_show']}}">
+                  {% if slide['check'] == True %}
+                  <label><input class="form-check-input me-1" type="checkbox" name="checkEL" value="{{ slide['id'] }}" checked>{{slide['titulo']}} <strong>({{slide['tipo_show']}})</strong></label>
+                  {% else %}
+                  <label><input class="form-check-input me-1" type="checkbox" name="checkEL" value="{{ slide['id'] }}">{{slide['titulo']}} <strong>({{slide['tipo_show']}})</strong></label>
+                  {% endif %}
+                  <span class="close">x</span>
+                </li>
+                {% endfor %}
+            </ul>
+            </div>
+            <p>    </p>
+            <form id="proxsld" method="post" action="{{ url_for('iniciar_apresentacao') }}">
+              <input type="hidden" id="proximaPRS" name="proximaPRS" value="1">
+              <input type="submit" class="w-100 btn btn-lg btn-secondary" value="Próxima Apresentação">
+            </form>      
+            {% else %}
+            <p class="text fw-bold">A lista do Roteiro está vazia!</p>
+            <p class="text"><a href="/abrir_musica">Clique aqui</a> para abrir uma <b>Música.</b></p>
+            {% endif %}
+            <hr>
+            {% if estado == 0 %}
+            <h1><strong>Status: </strong><span class="text-danger">Parado</span></h1>
+            <img id="miniatura" src='{{capa}}'>
+            {% else %}
+            <h1><strong>Status: </strong><span class="text-success">Apresentando</span></h1>
+            <h3><strong>Título: </strong><span class="text-primary">{{titulo}}</span></h3>
+            <h3><strong>Tipo: </strong>{{tipo}}</h3>
+            <img id="miniatura" src='{{capa}}'>
+            {% endif %}            
+          </main>          
         </section>
       </div>
 		</div>
@@ -118,6 +148,89 @@
   <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/Sortable.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+
+  <script>
+  
+  key = 0;
+
+  {% if roteiro|length > 0 %}
+  Sortable.create(presentations, {
+    animation: 100,
+    group: 'list-1',
+    draggable: '.list-group-item',
+    handle: '.list-group-item',
+    sort: true,
+    filter: '.sortable-disabled',
+    //chosenClass: 'active'
+  });
+  {% endif %}
+
+    var socket = io();
+    socket.on('update_roteiro', function(k) {
+        key -= 1;
+
+        if (key < 0) {
+          location.reload();
+        }
+    });
+
+  $("#presentations").on('change', function() {
+    recriarRoteiro();
+  });
+
+  function recriarRoteiro() {
+    roteiro = [];
+
+    $("#presentations .list-group-item").each(function() {
+      id = $(this).find('.form-check-input').val();
+      tipo = $(this).attr('data-tipo');
+      checked_s = $(this).find('.form-check-input').is(":checked");
+      titulo = $(this).attr('data-titulo');
+      tipo_show = $(this).attr('data-tipo-show');
+
+      roteiro.push({'id':id, 'tipo':tipo, 'check':checked_s, 'titulo':titulo, 'tipo_show':tipo_show});
+    });
+
+    key += 1;
+
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('update_roteiro') }}",
+      contentType: "application/json",
+      data: JSON.stringify(roteiro),
+      dataType: "json",
+      success: function(response) {
+        if (response < 1) {
+          location.reload();
+        }
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });  
+  }
+
+  $(".close").on('click', function() {
+    $(this).parent().remove();
+    recriarRoteiro();
+  });
+
+    document.onkeydown = checkKey;
+
+    function checkKey(e) {
+
+        e = e || window.event;
+
+        if (e.keyCode == '116') {
+            e.preventDefault();
+            $("#proxsld").submit();
+        }           
+    }     
+
+
+  </script>
 
       
   </body>

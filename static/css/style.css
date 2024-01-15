@@ -1720,7 +1720,7 @@ textarea.form-control {
     padding-right: 5px;
     padding-left: 5px; }
 
-.form-check {
+/*.form-check {
   position: relative;
   display: block;
   padding-left: 1.25rem; }
@@ -1748,7 +1748,7 @@ textarea.form-control {
     position: static;
     margin-top: 0;
     margin-right: 0.3125rem;
-    margin-left: 0; }
+    margin-left: 0; }*/
 
 .valid-feedback {
   display: none;
@@ -4380,7 +4380,7 @@ input[type="button"].btn-block {
   -ms-flex: 1;
   flex: 1; }
 
-.list-group {
+/*.list-group {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -4622,7 +4622,7 @@ input[type="button"].btn-block {
   .list-group-item-dark.list-group-item-action.active {
     color: #fff;
     background-color: #1b1e21;
-    border-color: #1b1e21; }
+    border-color: #1b1e21; }*/
 
 .close {
   float: right;
