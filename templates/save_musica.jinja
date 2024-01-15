@@ -178,17 +178,37 @@
                     <div class="col-sm-12">
                         <div class="fw-bold">Vínculo 1 (Obrigatório):</div>
                         <select id="vinc1" class="form-select" aria-label="Default select example" name="vinc1" required>
-                            {% for item in categoria %}
-                                <option value="{{item['id']}}">{{item['descricao']}}</option>
-                            {% endfor %}
+                            {% if vinculos|length > 0 %}
+                              {% for item in categoria %}
+                                  {% if item['id'] == vinculos[0]['id_vinculo'] %}
+                                  <option value="{{item['id']}}" selected>{{item['descricao']}}</option>
+                                  {% else %}
+                                  <option value="{{item['id']}}">{{item['descricao']}}</option>
+                                  {% endif %}
+                              {% endfor %}                              
+                            {% else %}
+                              {% for item in categoria %}
+                                  <option value="{{item['id']}}">{{item['descricao']}}</option>
+                              {% endfor %}
+                            {% endif %}
                         </select>
                     </div>
                     <div class="col-sm-12">
                         <div class="fw-bold">Status 1:</div>
                         <select id="status1" class="form-select" aria-label="Default select example" name="status1" required>
-                            {% for item in status %}
-                                <option value="{{item['id']}}">{{item['descricao']}}</option>
-                            {% endfor %}
+                            {% if vinculos|length > 0 %}
+                              {% for item in status %}
+                                  {% if item['id'] == vinculos[0]['id_status'] %}
+                                  <option value="{{item['id']}}" selected>{{item['descricao']}}</option>
+                                  {% else %}
+                                  <option value="{{item['id']}}">{{item['descricao']}}</option>
+                                  {% endif %}
+                              {% endfor %} 
+                            {% else %}
+                              {% for item in status %}
+                                  <option value="{{item['id']}}">{{item['descricao']}}</option>
+                              {% endfor %}
+                            {% endif %}
                         </select>                    
                     </div>
 
@@ -196,7 +216,11 @@
                         <div class="fw-bold">Descrição:</div>
                     </div>
                     <div class="col-sm-12">
+                        {% if vinculos|length > 0 %}
+                        <textarea name="desc1" class="txt-vinc" id="desc_vinc1" rows="3" placeholder="Digite a descrição:" maxlength="200" required>{{vinculos[0]['descricao']}}</textarea>
+                        {% else %}
                         <textarea name="desc1" class="txt-vinc" id="desc_vinc1" rows="3" placeholder="Digite a descrição:" maxlength="200" required></textarea>
+                        {% endif %}
                     </div>
                 </div>     
             </div>
@@ -206,24 +230,50 @@
                         <div class="fw-bold">Vínculo 2:</div>
                         <select id="add_vinc2" class="form-select vincopt" name="vinc2" aria-label="Default select example">
                             <option value="0">-</option>
-                            {% for item in categoria %}
-                                <option value="{{item['id']}}">{{item['descricao']}}</option>
-                            {% endfor %}
+                            {% if vinculos|length > 1 %}
+                              {% for item in categoria %}
+                                  {% if item['id'] == vinculos[1]['id_vinculo'] %}
+                                  <option value="{{item['id']}}" selected>{{item['descricao']}}</option>
+                                  {% else %}
+                                  <option value="{{item['id']}}">{{item['descricao']}}</option>
+                                  {% endif %}
+                              {% endfor %}                              
+                            {% else %}
+                              {% for item in categoria %}
+                                  <option value="{{item['id']}}">{{item['descricao']}}</option>
+                              {% endfor %}
+                            {% endif %}
                         </select>
                     </div>
                     <div class="col-sm-12">
                         <div class="fw-bold">Status 2:</div>
+                        {% if vinculos|length > 1 %}
+                        <select id="status2" class="form-select form-vinc2" aria-label="Default select example" name="status2">
+                          {% for item in status %}
+                              {% if item['id'] == vinculos[1]['id_status'] %}
+                              <option value="{{item['id']}}" selected>{{item['descricao']}}</option>
+                              {% else %}
+                              <option value="{{item['id']}}">{{item['descricao']}}</option>
+                              {% endif %}
+                          {% endfor %}
+                        </select> 
+                        {% else %}
                         <select id="status2" class="form-select form-vinc2" aria-label="Default select example" name="status2" disabled>
                             {% for item in status %}
                                 <option value="{{item['id']}}">{{item['descricao']}}</option>
                             {% endfor %}
-                        </select>                    
+                        </select> 
+                        {% endif %}                   
                     </div>
                     <div class="col-sm-12">
                         <div class="fw-bold">Descrição:</div>
                     </div>
                     <div class="col-sm-12">
+                        {% if vinculos|length > 1 %}
+                        <textarea name="desc2" class="txt-vinc" id="desc_vinc2" rows="3" placeholder="Digite a descrição:" maxlength="200" required>{{vinculos[1]['descricao']}}</textarea>
+                        {% else %}
                         <textarea name="desc2" class="txt-vinc" id="desc_vinc2" rows="3" placeholder="Digite a descrição:" maxlength="200" disabled required></textarea>
+                        {% endif %}
                     </div>                    
                 </div>  
             </div>
@@ -232,26 +282,54 @@
                 <div class="row box pink">
                     <div class="col-sm-12">
                         <div class="fw-bold">Vínculo 3:</div>
+                        {% if vinculos|length > 2 %}
+                        <select id="add_vinc3" class="form-select vincopt" name="vinc3" aria-label="Default select example">
+                        {% for item in categoria %}
+                          {% if item['id'] == vinculos[2]['id_vinculo'] %}
+                          <option value="{{item['id']}}" selected>{{item['descricao']}}</option>
+                          {% else %}
+                          <option value="{{item['id']}}">{{item['descricao']}}</option>
+                          {% endif %}
+                        {% endfor %}  
+                        </select>
+                        {% else %}
                         <select id="add_vinc3" class="form-select vincopt" name="vinc3" aria-label="Default select example" disabled>
                             <option value="0">-</option>
                             {% for item in categoria %}
                                 <option value="{{item['id']}}">{{item['descricao']}}</option>
                             {% endfor %}
                         </select>
+                        {% endif %}
                     </div>
                     <div class="col-sm-12">
                         <div class="fw-bold">Status 3:</div>
+                        {% if vinculos|length > 2 %}
+                        <select id="status3" name="status3" class="form-select form-vinc3" aria-label="Default select example">
+                          {% for item in status %}
+                              {% if item['id'] == vinculos[2]['id_status'] %}
+                              <option value="{{item['id']}}" selected>{{item['descricao']}}</option>
+                              {% else %}
+                              <option value="{{item['id']}}">{{item['descricao']}}</option>
+                              {% endif %}
+                          {% endfor %}
+                        </select> 
+                        {% else %}
                         <select id="status3" name="status3" class="form-select form-vinc3" aria-label="Default select example" disabled>
                             {% for item in status %}
                                 <option value="{{item['id']}}">{{item['descricao']}}</option>
                             {% endfor %}
-                        </select>                    
+                        </select>  
+                        {% endif %}                  
                     </div>
                     <div class="col-sm-12">
                         <div class="fw-bold">Descrição:</div>
                     </div>
                     <div class="col-sm-12">
+                        {% if vinculos|length > 2 %}
+                        <textarea name="desc3" class="txt-vinc" id="desc_vinc3" rows="3" placeholder="Digite a descrição:" maxlength="200" required>{{vinculos[2]['descricao']}}</textarea>
+                        {% else %}
                         <textarea name="desc3" class="txt-vinc" id="desc_vinc3" rows="3" placeholder="Digite a descrição:" maxlength="200" disabled required></textarea>
+                        {% endif %}
                     </div>                    
                 </div>              
             </div>
@@ -282,9 +360,29 @@
                       <td class="align-middle">{{sld['text-slide']}}</td>
                       <td class="align-middle">
                         <select id="slide_cat_{{sld['pos']}}">
-                          {% for cat in cat_slides %}
-                          <option value="{{cat['id']}}">{{cat['descricao']}}</option>
-                          {% endfor %}
+                          {% if cat_slides_list|length > 0 %}
+                            {% set outer_loop = loop %}
+
+                            {% for cat in cat_slides %}
+
+                              {% if outer_loop.index0 < cat_slides_list|length %}
+
+                                {% if cat_slides_list[outer_loop.index0]['categoria'] == cat['id'] %}
+                                <option value="{{cat['id']}}" selected>{{cat['descricao']}}</option>
+                                {% else %}
+                                <option value="{{cat['id']}}">{{cat['descricao']}}</option>
+                                {% endif %}
+
+                              {% else %}
+                                <option value="{{cat['id']}}">{{cat['descricao']}}</option>
+                              {% endif %}
+
+                            {% endfor %}                            
+                          {% else %}
+                            {% for cat in cat_slides %}
+                              <option value="{{cat['id']}}">{{cat['descricao']}}</option>
+                            {% endfor %}
+                          {% endif %}
                         </select>
                       </td>
                     </tr>
@@ -371,6 +469,7 @@
 
             listaGeral = getInfo();
             listaGeral['letra'] = texto;
+            listaGeral['destino'] = '{{destino}}';
 
             $("#json_send").val(JSON.stringify(listaGeral));
             $("#formSend").submit();
@@ -410,7 +509,8 @@
 
   $("#btn_back").on('click', function() {
     listaGeral = getInfo();
-    $("#json_back").val(JSON.stringify(listaGeral));
+    lista_final = {'listaGeral':listaGeral, 'destino':'{{destino}}'};
+    $("#json_back").val(JSON.stringify(lista_final));
     $("#formBack").submit();
   });
 

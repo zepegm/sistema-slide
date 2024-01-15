@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.88.1">
-    <title>Música Cadastrada com Sucesso</title>
+    <title>Home</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
 
@@ -19,6 +19,7 @@
     <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/signin.css') }}" rel="stylesheet">   
     
 
     <!-- Simular original -->
@@ -35,14 +36,18 @@
         -webkit-user-select: none;
         -moz-user-select: none;
         user-select: none;
-        background-color: black;
       }
 
-      .box-index {
-        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
-        color: blue;
-        font-weight: bold;
+      .close {
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        right: 0%;
+        padding: 12px 16px;
+        transform: translate(0%, -50%);
       }
+      
+      *.close:hover {color: red; font-weight: bold;}
 
       @media (min-width: 768px) {
         .bd-placeholder-img-lg {
@@ -50,48 +55,10 @@
         }
       }
 
-      .container {
+      .text {
+        text-align: center;
         color:black;
-      }
-
-      .image_area {
-          position: relative;
-      }
-
-      img {
-          display: block;
-          width: 480px;
-          height: 270px;
-          border: solid;
-          border-width: thin;
-      }
-
-      .overlay {
-          position: absolute;
-          bottom: 6%;
-          background-color: rgba(0, 0, 0, 0.5);
-          overflow: hidden;
-          height: 0;
-          transition: .5s ease;
-          width: 481px;
-      }
-
-      .lb_principal {
-          cursor: pointer;
-      }
-
-      .lb_principal:hover .overlay {
-          height: 50%;
-      }
-
-      .text-hover {
-        color:white;
-      }
-
-      .cdx-marker {
-        color:rgba(192,0,0);
-        font-weight:bold;
-        background:rgba(0,0,0,0)
+        font-size: 18px;
       }
 
     </style>
@@ -113,25 +80,35 @@
       <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
-          <h3 class="fw-bold text-center">{{log}}</h3>
-
-          <div class="image_area text-center">
-              <form method="post">
-                  <label class="lb_principal" for="upload_image">
-                      <img src="{{ url_for('static', filename=capa) }}" id="uploaded_image" class="rounded foto" />
-                      <div class="overlay text-center">
-                          <h3 class="text-hover">Clique para Adicionar Foto da Capa</h3>
-                      </div>
-                      <input type="file" name="image" class="image" id="upload_image" style="display:none">
-                  </label>
-              </form>
-          </div>
-
-          <h4 class="text-primary fw-bold">{{titulo}}</h4>
-          {% for para in letras %}
-            <p>{{para['texto']}}</p>
-          {% endfor %}
-          <button id="btn_nova_musica" class="btn btn-success" onclick="location.href = '/edit_musica';">Cadastrar Nova Música</button>
+          <main class="form-signin">
+              <div class="text-center"><img class="mb-4" src="{{ url_for('static', filename='images/Logo Colorido.png') }}" alt="" width="200" height="250"></div>
+              <h1 class="h3 mb-3 fw-normal text-center"><a style="font-weight: bold;">Slide Master Index 2</a><br>Roteiro de slides</h1>
+          
+              {% if roteiro|length > 0 %}
+              <div class="form-floating">
+                <ul class="list-group" id="presentations">
+                  {% for slide in roteiro %}
+                  <li class="list-group-item">
+                    {% if slide['check'] == True %}
+                    <label><input class="form-check-input me-1" type="checkbox" name="checkEL" value="{{ slide['id'] }}" checked>Afs</label>
+                    {% else %}
+                    <label><input class="form-check-input me-1" type="checkbox" name="checkEL" value="{{ slide['id'] }}">Afs</label>
+                    {% endif %}
+                    <span class="close">x</span>
+                  </li>
+                  {% endfor %}
+               </ul>
+              </div>
+              <p>    </p>
+              <form id="proxsld" method="post" action="{{ url_for('iniciar_apresentacao') }}">
+                <input type="hidden" id="proximaPRS" name="proximaPRS" value="">
+                <button id="next" class="w-100 btn btn-lg btn-secondary" type="button">Próxima Apresentação</button>
+              </form>      
+              {% else %}
+              <p class="text fw-bold">A lista do Roteiro está vazia!</p>
+              <p class="text"><a href="/abrir_musica">Clique aqui</a> para abrir uma <b>Música.</b></p>
+              {% endif %}
+            </main>          
         </section>
       </div>
 		</div>
@@ -142,28 +119,6 @@
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-  <script>
-  
-  $("#upload_image").on('change', function() {
-    var form_data = new FormData();
-
-    form_data.append('file', $(this).prop('files')[0]);
-    form_data.append('id', {{id}});
-
-    $.ajax({
-        type: 'POST',
-        url: '/upload_capa',
-        data: form_data,
-        contentType: false,
-        cache: false,
-        processData: false,
-        success: function(data) {
-            $("#uploaded_image").attr('src', data);
-        },
-    });
-  });
-
-  </script>
-
+      
   </body>
 </html>

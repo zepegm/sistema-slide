@@ -205,7 +205,7 @@
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
           <div class="row">
-            <div class="col-sm-12">{{status}}</div>
+            <div id="status" class="col-sm-12">{{status}}</div>
             <div class="col-sm-12 text-center">
               <h2 class="fw-bold">Abrir Músicas</h2>
             </div>
@@ -296,8 +296,26 @@
   
 <script>
 
+  $("#btn_adicionar_roteiro").on('click', function() {
+    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'musicas', 'check':false};
+
+    $.ajax({
+        type: "POST",
+        url: "adicionar_roteiro",
+        contentType: "application/json",
+        data: JSON.stringify(info),
+        dataType: "json",
+        success: function(data) {
+            if (data) {
+              $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação da música <strong>' + $("#lista_geral a.active").text() + '</strong> adicionada ao Roteiro com sucesso! <a href="/">Clique aqui</a> para abrir a lista dos Roteiros.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
+        },
+    }); 
+
+  });
+
   $("#btn_iniciar_apresentacao").on('click', function() {
-    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'musica'};
+    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'musicas'};
     
     $.ajax({
         type: "POST",
@@ -306,7 +324,9 @@
         data: JSON.stringify(info),
         dataType: "json",
         success: function(data) {
-            console.log(data);
+            if (data) {
+              $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação da música <strong>' + $("#lista_geral a.active").text() + '</strong> iniciada com sucesso. <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
         },
     });    
 
@@ -402,11 +422,11 @@
   });
 
   $("#btn_nova_musica").on('click', function() {
-    $("#destino").val('1');
+    $("#destino").val('0');
   });
 
   $("#btn_editar_musica").on('click', function() {
-    $("#destino").val('2');
+    $("#destino").val($("#lista_geral a.active").attr('data-id'));
   });
 
   $("#btn_gerar_pdf").on('click', function() {

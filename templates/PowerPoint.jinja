@@ -8,6 +8,7 @@
         <style>
             body {
                 background-color: rgb(0,0,0);
+                overflow: hidden;
             }
 
             #myVideo {
@@ -16,6 +17,10 @@
                 bottom: 0;
                 min-width: 100%;
                 min-height: 100%;
+            }
+
+            .glow {
+                text-shadow: rebeccapurple 0 0 10px;
             }
 
             .cdx-marker {
@@ -33,12 +38,11 @@
             }
 
             .letra {
-                background-color: rgb(0,0,0);
-                background-size: 100% 100%;
                 color:white;
                 font-family: Arial, Helvetica, sans-serif;
                 line-height: normal; 
                 text-align: center;
+                text-shadow: 0 0 10px black;
             }
 
             .slide {
@@ -70,11 +74,56 @@
             }
 
 			#fim {
-				widows: 80%;
-				margin:20px auto;
-				min-height: 700px;
-				margin-top:150px;
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
 			}
+
+            .muzieknootjes {
+              display: block;
+              margin: auto;
+              position: absolute;
+              width: 100%;
+              height: 100%  ;
+              border: 0px solid #000;
+            }
+
+            .noot-1,
+            .noot-2,
+            .noot-3,
+            .noot-4 {
+              position: absolute;
+              animation: notes 2s infinite linear;
+              font-size: 200px;
+              opacity: 0;
+              color:white;
+              text-shadow: white 0 0 40px;
+              animation-duration: 5s;
+            }
+
+            .noot-1 {
+              top: 30%;
+              left: 5%;
+              animation-delay: 0.5s;
+            }
+
+            .noot-2 {
+              top: 60%;
+              left: 30%;
+              animation-delay: 1s;
+            }
+
+            .noot-3 {
+              top: 30%;
+              left: 50%;
+              animation-delay: 1.5s;
+            }
+
+            .noot-4 {
+              top: 60%;
+              left: 80%;
+              animation-delay: 2s;
+            }
 
             @keyframes fade-in {
                 from {opacity: 0;}
@@ -97,12 +146,42 @@
                     opacity: 0;
                 }
             }
+
+            @keyframes notes {
+              0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 0;
+              }
+              50% {
+                opacity: 1;
+                transform: scale(1.5) translate(50%, -50%);
+              }
+              80% {
+                opacity: 0;
+                transform: scale(1.5) translate(100%, -100%);
+              }
+              100% {
+                transform: scale(1.5) translate(100%, -100%);
+                opacity: 0;
+              }
+            }             
         </style>
     </head>
     <body>
         <!-- <video autoplay muted loop id="myVideo">
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
         </video> -->
+
+        <div id="notas" class="muzieknootjes">
+            {% if lista_slides|length > 0 %}
+            {% if lista_slides[index - 1]['categoria'] == 3 %}
+            <div class="noot-1">&#9835; &#9833;</div>
+            <div class="noot-2">&#9833;</div>
+            <div class="noot-3">&#9839; &#9834;</div>
+            <div class="noot-4">&#9834;</div>
+            {% endif %}
+            {% endif %}
+        </div>
 
         {% if index == 0 or (index - 1) == lista_slides|length %}
         <div class="slide capa in" id="slide1"></div>
@@ -111,7 +190,7 @@
         {% endif %}
         <div class="slide" id="slide2"></div>      
 
-        <div id="fim"></div>  
+        <div id="fim"></div>
 
     <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
@@ -127,6 +206,7 @@
 
         const slide1 = document.getElementById("slide1");
         const slide2 = document.getElementById("slide2");
+        const notas = document.getElementById("notas");
         //const source = document.getElementById("myVideo");
 
        textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});        
@@ -158,6 +238,14 @@
                 slide2.classList.add('letra');                    
                 slide2.innerHTML = slides[index - 1]['text-slide'];
                 textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
+
+                if (slides[index -1]['categoria'] == 3) {
+                    notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
+                    /*notas.classList.remove('hidden');*/
+                } else {
+                    notas.innerHTML = '';
+                    /*notas.classList.add('hidden');*/
+                }
             }
         }
 
@@ -181,17 +269,18 @@
             location.reload();
         });
 
-        var idealFontSize = 250, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
+        var idealFontSize = 300, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
         fontSize = (screen.width / idealScreenSize) * idealFontSize;
 
         var vara = new Vara(
             "#fim",
 
-            "https://raw.githubusercontent.com/akzhy/Vara/master/fonts/Satisfy/SatisfySL.json",
+            //"https://raw.githubusercontent.com/akzhy/Vara/master/fonts/Satisfy/SatisfySL.json",
+            ".{{ url_for('static', filename='fonts/Satisfy/SatisfySl.json') }}",
             [
                 {
                     text: 'Fim...',
-                    y:150,
+                    y:250,
                     fromCurrentPosition:{y:false},
                     duration:3000,
                     autoAnimation:false,

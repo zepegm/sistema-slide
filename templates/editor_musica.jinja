@@ -224,7 +224,10 @@
       </div>
 		</div>
 
-  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica"><input id="json_data_send" name="json_data_send" type="hidden"></form>
+  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica">
+    <input id="json_data_send" name="json_data_send" type="hidden">
+    <input type='hidden' name='destino' id='destino' value='{{destino}}'>
+  </form>
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>

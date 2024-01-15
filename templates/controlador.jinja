@@ -129,6 +129,7 @@
       100% { transform: rotate(360deg); }
     }    
 
+    #pausa_instrumental,
     #anotacao {
       font-size: 20px;
     }
@@ -168,7 +169,10 @@
                       {% if index <= lista_slides|length %}
                         {% if lista_slides[index - 1]['anotacao'] != '' %}
                         <p id="anotacao"><strong>Anotação: </strong>{{lista_slides[index - 1]['anotacao']}}</p>
-                        {% endif %}                    
+                        {% endif %}
+                        {% if lista_slides[index - 1]['categoria'] == 3 %}
+                        <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
+                        {% endif %}                        
                       {% endif %}
                   </div>
                 </div>        
@@ -322,15 +326,19 @@
 
       if (index > 0) {
         $("#anotacao").remove();
+        $("#pausa_instrumental").remove();
         if (slides[index - 1]["anotacao"] != '') {
           $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
-        }         
+        }   
+        if (slides[index - 1]["categoria"] == 3) {
+          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
+        }
       }
 
 
       $.ajax({
         type: "POST",
-        url: "{{ url_for('anteriorSlide') }}",
+        url: "{{ url_for('updateSlide') }}",
         contentType: "application/json",
         data: JSON.stringify(index),
         dataType: "json",
@@ -360,9 +368,13 @@
         textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});        
 
         $("#anotacao").remove();
+        $("#pausa_instrumental").remove();
         if (slides[index - 1]["anotacao"] != '') {
           $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
         }
+        if (slides[index - 1]["categoria"] == 3) {
+          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
+        }        
       } else { // recolocar o background da imagem
         $("#slidePrincipal").empty();
         $("#slidePrincipal").addClass('capa');
@@ -395,7 +407,7 @@
 
       $.ajax({
         type: "POST",
-        url: "{{ url_for('proximoSlide') }}",
+        url: "{{ url_for('updateSlide') }}",
         contentType: "application/json",
         data: JSON.stringify(index),
         dataType: "json",
