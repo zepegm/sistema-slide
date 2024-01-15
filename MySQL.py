@@ -55,8 +55,9 @@ class db:
             for sld in musica['slides']:
                 anotacao = 'null'
 
-                if sld['anotacao'] != '':
-                    anotacao = "'%s'" % sld['anotacao']
+                if 'anotacao' in sld.keys():
+                    if sld['anotacao'] != '':
+                        anotacao = "'%s'" % sld['anotacao']
 
                 sql = "INSERT INTO slides VALUES(%s, %s, '%s', '%s', %s, %s)" % (id, sld['pos'], sld['text-slide'], sld['subtitle'], sld['cat'], anotacao)
                 cur.execute(sql)
@@ -78,6 +79,58 @@ class db:
             print("An exception occurred:", error) # An exception occurred: division by zero
             return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error)}
         
+
+    def alterarMusica(self, musica):
+        try:
+            database = mysql.connector.connect(host=self.cred['host'], user=self.cred['user'], passwd=self.cred['passwd'], db=self.cred['db'])
+            cur = database.cursor()
+            
+            # primeira preciso alterar a música
+            sql = "UPDATE musicas set titulo = '%s' WHERE id = %s" % (musica['titulo'], musica['destino'])
+            cur.execute(sql)
+
+            # agora preciso inserir os slides
+
+            # primeiro vou deletar os antigos
+            sql = 'DELETE FROM slides WHERE id_musica = %s' % musica['destino']
+            cur.execute(sql)
+
+            for sld in musica['slides']:
+                anotacao = 'null'
+
+                if 'anotacao' in sld.keys():
+                    if sld['anotacao'] != '':
+                        anotacao = "'%s'" % sld['anotacao']
+
+                sql = "INSERT INTO slides VALUES(%s, %s, '%s', '%s', %s, %s)" % (musica['destino'], sld['pos'], sld['text-slide'], sld['subtitle'], sld['cat'], anotacao)
+                cur.execute(sql)
+
+            # agora irei inserir os vínculos
+
+            # primeiro preciso remover os vínculos antigos
+            sql = 'DELETE FROM vinculos_x_musicas WHERE id_musica = %s' % musica['destino']
+            cur.execute(sql)
+
+            for vin in musica['vinculos']:
+                sql = "INSERT INTO vinculos_x_musicas VALUES(%s, %s, %s, '%s')" % (musica['destino'], vin['vinc'], vin['status'], vin['descricao'])
+                cur.execute(sql)
+
+            # por último inserir as letras para visualização
+
+            # primeiro preciso remover a letra antiga
+            sql = 'DELETE FROM letras WHERE id_musica = %s' % musica['destino']
+            cur.execute(sql)
+
+            for letra in musica['letra']:
+                sql = "INSERT INTO letras VALUES(%s, %s, '%s')" % (musica['destino'], letra['paragrafo'], letra['texto'])
+                cur.execute(sql)
+
+            database.commit()
+            database.close()
+            return {'id':int(musica['destino']), 'log':'Alteração realizada com sucesso!'}
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error)}        
 
     def insertOrUpdate(self, dados, tabela):
             

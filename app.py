@@ -23,17 +23,18 @@ thread_lock = Lock()
 estado = 0
 current_presentation = {'id':0, 'tipo':''}
 index = 0
+roteiro = []
 
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 
 banco = db({'host':"localhost",    # your host, usually localhost
             'user':"root",         # your username
-            'passwd':"Yasmin",  # your password
+            'passwd':"",  # your password
             'db':"sistema-slide"})
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    return 'Hello World!'
+    return render_template('home.jinja', roteiro=roteiro)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():
@@ -46,7 +47,7 @@ def controlador():
         return redirect('/')
     else:
 
-        if (current_presentation['tipo'] == 'musica'):
+        if (current_presentation['tipo'] == 'musicas'):
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
 
             if len(fundo) < 1:
@@ -79,7 +80,7 @@ def slide():
         fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
         return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0)
     elif estado == 1: # se iniciou uma apresentação
-        if (current_presentation['tipo'] == 'musica'):
+        if (current_presentation['tipo'] == 'musicas'):
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
 
             if len(fundo) < 1:
@@ -92,27 +93,8 @@ def slide():
             return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=lista_slides, index=index)
 
 
-@app.route('/proximoSlide', methods=['GET', 'POST'])
-def proximoSlide():
-    if request.method == 'POST':
-        #print('got a post request!')
-
-        if request.is_json: # application/json
-            # handle your ajax request here!
-
-    
-            global index
-
-            index = int(request.json)
-
-            socketio.emit('update', index)
-            #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
-            #socketio.emit('legenda', legenda)            
-            return jsonify(True)
-
-
-@app.route('/anteriorSlide', methods=['GET', 'POST'])
-def anteriorSlide():
+@app.route('/updateSlide', methods=['GET', 'POST'])
+def updateSlide():
     if request.method == 'POST':
         #print('got a post request!')
 
@@ -163,13 +145,23 @@ def changeBackground():
 def addMusica():
     if request.method == 'POST':    
         info = json.loads(request.form.getlist('json_send')[0])
-        result = banco.inserirNovaMusica(info)
+        
+        capa = 'images/upload_image.jpg'
+
+        if (info['destino'] == '0'):
+            result = banco.inserirNovaMusica(info)
+        else:
+            result = banco.alterarMusica(info)
+            ls_capa = banco.executarConsulta('select filename from capas where id_musica = %s' % result['id'])
+            print(ls_capa)
+            if (len(ls_capa) > 0):
+                capa = 'images/capas/' + ls_capa[0]['filename']
 
         if result['id'] > 0:       
             titulo = banco.executarConsulta('select titulo from musicas where id = %s' % result['id'])[0]['titulo']
             letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % result['id'])
             
-            return render_template('result_musica.jinja', titulo=titulo, letras=letras, id=result['id'])
+            return render_template('result_musica.jinja', titulo=titulo, letras=letras, id=result['id'], log=result['log'], capa=capa)
         else :
             return render_template('erro.jinja', log=result['log'])
     else:
@@ -202,10 +194,13 @@ def edit_musica():
 
     if request.method == "POST":
 
+        destino = '0'
+
         if 'json_back' in request.form:
             info = json.loads(request.form.getlist('json_back')[0])
-            titulo = info['titulo']
-            lista_texto = info['slides']
+            titulo = info['listaGeral']['titulo']
+            lista_texto = info['listaGeral']['slides']
+            destino = info['destino']
         else:
             nome = request.form.getlist('file')[0]
             lista_texto = getListText(musicas_dir + nome)
@@ -216,7 +211,7 @@ def edit_musica():
             blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
             blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
-    return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo)
+        return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
 
 
 @app.route('/enviarDadosNovaMusica', methods=['GET', 'POST'])
@@ -226,12 +221,25 @@ def enviarDadosNovaMusica():
         cat_slides = banco.executarConsulta('select * from categoria_slide')
         categoria = banco.executarConsulta('select * from subcategoria_departamentos')
         status = banco.executarConsulta('select * from status_vinculo')
+        vinculos = []
+        cat_slides_list = []
 
         blocks = []
         for item in info['slides']:
             blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
 
-        return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks, categoria=categoria, status=status)
+        destino = request.form.getlist('destino')[0]
+        if destino != '0': # significa que é edição e não acréscimo
+            vinculos = banco.executarConsulta('select * from vinculos_x_musicas where id_musica = %s' % destino)
+            letras = banco.executarConsulta('select * from letras where id_musica = %s order by paragrafo' % destino)
+            blocks = []
+
+            for item in letras:
+                blocks.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            cat_slides_list = banco.executarConsulta('select categoria from slides where id_musica = %s order by pos' % destino)
+
+        return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks, categoria=categoria, status=status, vinculos=vinculos, cat_slides_list=cat_slides_list, destino=destino)
 
 @app.route('/upload_capa',  methods=['GET', 'POST'])
 def upload_capa():
@@ -281,7 +289,13 @@ def get_info_musica():
             
             vinculos = banco.executarConsulta(sql)
             letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % id['id'])
-            capa = '/static/images/capas/' + banco.executarConsulta('select * from capas where id_musica = %s' % id['id'])[0]['filename']
+
+            filename = banco.executarConsulta('select * from capas where id_musica = %s' % id['id'])
+    
+            if (len(filename) > 0):
+                capa = '/static/images/capas/' + filename[0]['filename']
+            else:
+                capa = '/static/images/upload_image.jpg'
 
             return jsonify({'vinculos':vinculos, 'letras':letras, 'capa':capa})
 
@@ -292,8 +306,20 @@ def verificarSenha():
         destino = request.form.getlist('destino')[0]
         
         if senha == '120393':
-            if destino == '1':
-                return render_template('editor_musica.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='')
+            if destino == '0':
+                return render_template('editor_musica.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0')
+            else: # ele vai editar e não salvar um novo
+                blocks = []
+                blocks_s = []
+                titulo = banco.executarConsulta('select titulo from musicas where id = %s' % destino)[0]['titulo']
+                lista_texto = banco.executarConsulta("select pos, `text-slide`, `text-legenda` as subtitle, ifnull(anotacao, '') as anotacao from slides where id_musica = %s order by pos" % destino)
+                
+                # recriar lista pro editor
+                for item in lista_texto:
+                    blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+                    blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+                return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
             
         else:
             if destino == '1' or destino == '2':
@@ -342,6 +368,19 @@ def iniciar_apresentacao():
 
 
     return jsonify(True)
+
+@app.route('/adicionar_roteiro', methods=['GET', 'POST'])
+def adicionar_roteiro():   
+
+    global roteiro
+
+    if request.method == 'POST':
+        if request.is_json:
+            info = request.json
+            roteiro.append(info)
+            #print(roteiro)
+
+    return jsonify(True) 
 
 
 
