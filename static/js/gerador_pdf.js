@@ -13,6 +13,8 @@ function addPaginaInferior(doc, pagina) {
         format: 'a5'
     });
 
+    doc.addPage();
+
     var cont = 1;
     doc.setLineWidth(0.01);
 
@@ -143,6 +145,8 @@ function addPaginaInferior(doc, pagina) {
     }
 
     addPaginaInferior(doc, ("0" + pagina).slice(-2));
+    /*doc.setPage(1);
+    doc.text(10, 10, 'yes');*/
     window.open(doc.output('bloburl'), '_blank');   
 
   }
