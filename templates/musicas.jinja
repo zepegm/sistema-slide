@@ -243,7 +243,7 @@
                                 <div class="card card-body">
                                 {% for item in cat['subcategoria'] %}
                                   <p>&nbsp;
-                                    <input id="check{{item['id']}}" class="form-check-input filtro-vinculo-check check-{{cat['id']}}" type="checkbox" value="{{item['id']}}">
+                                    <input id="check{{item['id']}}" class="form-check-input filtro-vinculo-check check-{{cat['id']}}" type="checkbox" value="{{item['id']}}" data-txt="{{item['descricao']}}">
                                     <label class="form-check-label" for="check{{item['id']}}">
                                       {{item['descricao']}}
                                     </label>      
@@ -295,6 +295,8 @@
 
   
 <script>
+
+  var lista_categoria = {{categoria}};
 
   $("#btn_adicionar_roteiro").on('click', function() {
     info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'musicas', 'check':false, 'titulo':$("#lista_geral a.active").text(), 'tipo_show':'Música'};
@@ -439,6 +441,22 @@
       }
     });    
 
+
+    lista_vinculos = []
+
+    // agora preciso pegar a lista de filtros
+    for (item in lista_categoria) {
+      aux = []
+      id = lista_categoria[item]['id'];
+      $(".check-" + id + ':checked').filter(function() {
+        aux.push({'descricao':$(this).attr('data-txt')})
+      });
+
+      if (aux.length > 0) {
+        lista_vinculos.push({'id':id, 'descricao':lista_categoria[item]['descricao'], 'subcategoria':aux})
+      }
+    }
+
     $.ajax({
         type: "POST",
         url: "getTexto_PDF",
@@ -446,7 +464,12 @@
         data: JSON.stringify(lista),
         dataType: "json",
         success: function(data) {
-            gerarPDF(data);
+            if (lista_vinculos.length > 0) {
+              gerarPDF(data, lista_vinculos); // vínculos filtrados
+            } else {
+              gerarPDF(data, lista_categoria); // todos os vínculos
+            }
+            
         },
     });
   });
