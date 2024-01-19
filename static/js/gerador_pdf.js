@@ -277,6 +277,12 @@ function addPaginaInferior(doc, pagina) {
       doc.line(x + doc.getTextWidth(cont.toString().padStart(2, '0') + '. ' + lista[musica]['titulo'] + ' '), y, 14.1 - doc.getTextWidth(String(lista[musica]['pagina'])) - doc.getTextWidth(' '), y);
       doc.text(14.1 ,y, String(lista[musica]['pagina']), 'right');
 
+      // desenhar retângulo do link
+      /*doc.setDrawColor(255, 0, 0);
+      doc.rect(x, y - 0.3, 13.4, 0.4, 'S');*/
+      doc.link(x, y - 0.3, 13.4, 0.4, { pageNumber: lista[musica]['pagina'], magFactor: 'XYZ' });
+      //doc.setDrawColor(0, 0, 0);
+
       y += 0.6;
       cont++;
     }
