@@ -465,9 +465,9 @@
         dataType: "json",
         success: function(data) {
             if (lista_vinculos.length > 0) {
-              gerarPDF(data, lista_vinculos); // vínculos filtrados
+              gerarPDF(data, lista_vinculos, true); // vínculos filtrados
             } else {
-              gerarPDF(data, lista_categoria); // todos os vínculos
+              gerarPDF(data, lista_categoria, true); // todos os vínculos
             }
             
         },
