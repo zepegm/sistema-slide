@@ -43,7 +43,7 @@ function addPaginaInferior(doc, pagina) {
       var img = new Image();
   
       img.src = "/static/images/Logo%20Colorido.png";
-      doc.addImage(img, 'png', 5, 6, 5, 6);     
+      doc.addImage(img, 'png', 5, 6, 5, 6, undefined, 'FAST');
   
       doc.setTextColor(255, 0, 0);
       doc.setFontSize(50);
