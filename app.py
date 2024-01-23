@@ -368,6 +368,12 @@ def getTexto_PDF():
 
     return jsonify(lista)
 
+@app.route('/pesquisarLetra', methods=['GET', 'POST'])
+def pesquisarLetra():
+
+    return render_template('resultado_pesquisa.jinja')
+
+
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
 def iniciar_apresentacao():
 

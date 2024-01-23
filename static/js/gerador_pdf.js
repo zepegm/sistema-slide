@@ -231,11 +231,17 @@ function addPaginaInferior(doc, pagina) {
               }                
             }
 
-            doc.text(x, aux, lista[musica]['letras'][paragrafo][linha]['text'][texto] + ' ');
-            tamanho = doc.getTextWidth(lista[musica]['letras'][paragrafo][linha]['text'][texto] + ' ');
+
+            if (aux_css == 'ignore') {
+              doc.text(x, aux, lista[musica]['letras'][paragrafo][linha]['text'][texto]);
+              tamanho = doc.getTextWidth(lista[musica]['letras'][paragrafo][linha]['text'][texto]);
+            } else {
+              doc.text(x, aux, lista[musica]['letras'][paragrafo][linha]['text'][texto] + ' ');
+              tamanho = doc.getTextWidth(lista[musica]['letras'][paragrafo][linha]['text'][texto] + ' ');
+            }
 
             if (aux_css == 'u' || aux_css == 'mark-u' || aux_css == 'u-b') {
-              doc.line(x, y + 0.07, doc.getTextWidth(lista[musica]['letras'][paragrafo][linha]['text'][texto]) + x, y + 0.07);
+              doc.line(x, y + 0.1, doc.getTextWidth(lista[musica]['letras'][paragrafo][linha]['text'][texto]) + x, y + 0.1);
             }
 
             x += tamanho;

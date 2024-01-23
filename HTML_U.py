@@ -20,6 +20,10 @@ def converHTML_to_List(string):
         else:
             elemento = element.name
 
+        if (elemento == 'span'):
+            if element.get('class')[0] == 'ignore':
+                elemento = 'ignore'
+
         for child in element:
             try:
                 if elemento == 'mark' and child.name == 'u':
