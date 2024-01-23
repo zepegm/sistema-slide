@@ -371,7 +371,33 @@ def getTexto_PDF():
 @app.route('/pesquisarLetra', methods=['GET', 'POST'])
 def pesquisarLetra():
 
-    return render_template('resultado_pesquisa.jinja')
+    if request.method == 'POST':
+        if 'pesquisa' in request.form:
+            pesquisa = request.form['pesquisa']
+
+            if pesquisa == '':
+                musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+                categoria = banco.executarConsulta('select * from categoria_departamentos')
+                
+                for item in categoria:
+                    item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
+
+                return render_template('musicas.jinja', musicas=musicas, status='', categoria=categoria)                
+
+            pesquisa = r'%' + pesquisa.replace(' ', r'%') + r'%'
+
+            resultado_pesquisa = banco.executarConsulta("select letras.id_musica, musicas.titulo, texto from letras inner join musicas on musicas.id = letras.id_musica where letras.texto like '%s' or musicas.titulo like '%s' group by id_musica order by titulo" % (pesquisa, pesquisa))
+            
+            if len(resultado_pesquisa) > 0:
+                return render_template('resultado_pesquisa.jinja', resultado_pesquisa=resultado_pesquisa)
+            else:
+                musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+                categoria = banco.executarConsulta('select * from categoria_departamentos')
+                
+                for item in categoria:
+                    item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
+
+                return render_template('musicas.jinja', musicas=musicas, status='', categoria=categoria)
 
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
