@@ -10,6 +10,7 @@ import json
 import os
 import DB
 import os.path
+import re
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -373,34 +374,64 @@ def pesquisarLetra():
 
     if request.method == 'POST':
         if 'pesquisa' in request.form:
-            pesquisa = request.form['pesquisa']
+            pesquisa = request.form['pesquisa'].replace("'", '’')
+            pesquisa_original = pesquisa
+            status = ''
 
-            if pesquisa == '':
-                musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
-                categoria = banco.executarConsulta('select * from categoria_departamentos')
-                status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor digite algumas palavras na pesquisa.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            if pesquisa != '':
+                if len(pesquisa) > 2:
+                    lista_palavras = pesquisa.split(' ')
+                    pesquisa = r'%' + pesquisa.replace(' ', r'%') + r'%'
 
-                for item in categoria:
-                    item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
 
-                return render_template('musicas.jinja', musicas=musicas, status=status, categoria=categoria)                
+                    resultado_pesquisa = banco.executarConsulta("select letras.id_musica, musicas.titulo, replace(texto, '<br>', ' ') as texto from letras inner join musicas on musicas.id = letras.id_musica where letras.texto like '%s' or musicas.titulo like '%s' group by id_musica order by titulo" % (pesquisa, pesquisa))
 
-            lista_palavras = pesquisa.split(' ')
-            pesquisa = r'%' + pesquisa.replace(' ', r'%') + r'%'
+                    for item in resultado_pesquisa:
 
-            resultado_pesquisa = banco.executarConsulta("select letras.id_musica, musicas.titulo, texto from letras inner join musicas on musicas.id = letras.id_musica where letras.texto like '%s' or musicas.titulo like '%s' group by id_musica order by titulo" % (pesquisa, pesquisa))
-            
-            if len(resultado_pesquisa) > 0:
-                return render_template('resultado_pesquisa.jinja', resultado_pesquisa=resultado_pesquisa, lista_palavras=lista_palavras)
+                        texto = converHTML_to_List(item['texto'])
+                        texto_final = ''
+
+                        for element in texto:
+                            if len(element['text']) > 0:
+                                aux = element['text'][0]
+                                #print(aux)
+                                for palavra in lista_palavras:
+                                    if len(palavra) > 2:
+                                        compiled = re.compile(re.escape(palavra), re.IGNORECASE)
+                                        res = compiled.sub('<span class="highlight">' + palavra + "</span>", aux)
+                                        aux = str(res)
+
+                                if element['css'] == 'mark':
+                                    texto_final += '<span class="cdx-marker">' + aux + '</span>&nbsp;'
+                                elif element['css'] == 'b':
+                                    texto_final += '<b>' + aux + '</b>&nbsp;'
+                                elif element['css'] == 'u':
+                                    texto_final += '<u class="cdx-underline">' + aux + '</u>&nbsp;'
+                                elif element['css'] == 'u-b':
+                                    texto_final += '<u class="cdx-underline"><b>' + aux + '</b></u>&nbsp;'
+                                else:
+                                    texto_final += aux + '&nbsp;'
+
+
+
+                        item['texto'] = texto_final
+
+                    if len(resultado_pesquisa) > 0:
+                        return render_template('resultado_pesquisa.jinja', resultado_pesquisa=resultado_pesquisa, lista_palavras=lista_palavras, pesquisa=pesquisa_original)
+                    else:
+                        status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Sem resultados encontrados, por favor revise os termos pesquisados.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                else:
+                    status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor utilize uma palavra de três letras ou mais.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
             else:
-                musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
-                categoria = banco.executarConsulta('select * from categoria_departamentos')
-                status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Sem resultados encontrados, por favor revise os termos pesquisados.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
-                
-                for item in categoria:
-                    item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
+                status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor digite algumas palavras na pesquisa.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            
+            musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+            categoria = banco.executarConsulta('select * from categoria_departamentos')
+            
+            for item in categoria:
+                item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
 
-                return render_template('musicas.jinja', musicas=musicas, status=status, categoria=categoria)
+            return render_template('musicas.jinja', musicas=musicas, status=status, categoria=categoria)
 
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
