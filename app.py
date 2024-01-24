@@ -210,6 +210,7 @@ def edit_musica():
     blocks = []
     blocks_s = []
     titulo = ''
+    destino = '0'
 
     if request.method == "POST":
 
@@ -230,7 +231,10 @@ def edit_musica():
             blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
             blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
-        return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
+    
+    return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
+    
+
 
 
 @app.route('/enviarDadosNovaMusica', methods=['GET', 'POST'])
