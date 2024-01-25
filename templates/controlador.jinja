@@ -40,7 +40,6 @@
       .box-index {
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
         color: blue;
-        font-weight: bold;
       }
 
       @media (min-width: 768px) {
@@ -229,15 +228,16 @@
             {% for sld in lista_slides %}
               <div class="col-sm-3">
                 {% if index == sld['pos'] %}
-                <div id="card_prox" id="box{{sld['index']}}" class="card box-index">
+                <div id="box{{sld['index']}}" class="card box-index">
                 {% else %}
-                <div id="card_prox" id="box{{sld['index']}}" class="card shadow-sm">
+                <div id="box{{sld['index']}}" class="card shadow-sm">
                 {% endif %}
                   <div class="letra mini-box">{{sld['text-slide']}}</div>
                   <div class="card-body">
                     <h4 class="card-text text-center" id="proximoSlide">Slide: {{sld['pos'] + 1}}</h4>
                   </div>
                 </div>
+                <br>
               </div>
             {% endfor %}
           </div>
