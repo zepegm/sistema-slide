@@ -130,8 +130,13 @@ function addPaginaInferior(doc, pagina) {
       
       // preciso calcular as páginas extras
       if (lista.length > 30) {
-        doc.addPage();
-        pagina++;             
+        sobra = lista.length - 30;
+        total_pags = Math.ceil((sobra / 32));
+        
+        for (let i = 0; i < total_pags; i++) {
+          doc.addPage();
+          pagina++;    
+        }         
       }
     }
 
@@ -232,11 +237,11 @@ function addPaginaInferior(doc, pagina) {
             }
 
 
+            doc.text(x, aux, lista[musica]['letras'][paragrafo][linha]['text'][texto]);
+
             if (aux_css == 'ignore') {
-              doc.text(x, aux, lista[musica]['letras'][paragrafo][linha]['text'][texto]);
               tamanho = doc.getTextWidth(lista[musica]['letras'][paragrafo][linha]['text'][texto]);
             } else {
-              doc.text(x, aux, lista[musica]['letras'][paragrafo][linha]['text'][texto] + ' ');
               tamanho = doc.getTextWidth(lista[musica]['letras'][paragrafo][linha]['text'][texto] + ' ');
             }
 
@@ -309,6 +314,7 @@ function addPaginaInferior(doc, pagina) {
           y = 1.2;
           doc.setLineWidth(0.01);
           doc.setLineDash([0.05, 0.05], 0);          
+          limite += 32;
         }
       }
     }

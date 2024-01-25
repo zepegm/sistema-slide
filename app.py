@@ -74,7 +74,7 @@ def controlador():
             else:
                 fundo = 'images/capas/' + fundo[0]['filename']
 
-            lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao from slides where id_musica = %s order by pos" % current_presentation['id'])
+            lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides where id_musica = %s order by pos" % current_presentation['id'])
 
             return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo)
 
@@ -470,6 +470,37 @@ def iniciar_apresentacao():
                     break
 
             return redirect('/')
+
+@app.route('/proxima_prs', methods=['GET', 'POST'])
+def proxima_prs():
+
+    global current_presentation
+    global estado
+    global roteiro
+    global index
+
+    if request.method == 'POST':
+        if request.is_json:
+            msg = request.json
+            if msg == 1:
+                if len(roteiro) > 1:
+                    for item in roteiro:
+                        if not item['check']:
+                            item['check'] = True
+                            estado = 1
+                            current_presentation = {'id':item['id'], 'tipo':item['tipo']}
+                            index = 0
+
+                            socketio.emit('refresh', 1)
+                            return jsonify(True)
+
+    estado = 0
+    current_presentation = {'id':0, 'tipo':''}
+    index = 0
+
+    socketio.emit('refresh', 1)
+    return jsonify(True)
+
 
 @app.route('/encerrar_apresentacao', methods=['GET', 'POST'])
 def encerrar_apresentacao():

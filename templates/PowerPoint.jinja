@@ -173,7 +173,7 @@
         </video> -->
 
         <div id="notas" class="muzieknootjes">
-            {% if lista_slides|length > 0 %}
+            {% if lista_slides|length > 0 and index < lista_slides|length %}
             {% if lista_slides[index - 1]['categoria'] == 3 %}
             <div class="noot-1">&#9835; &#9833;</div>
             <div class="noot-2">&#9833;</div>
