@@ -1,0 +1,170 @@
+<html>
+    <head>
+        <title>Render PDF</title>
+        <style>
+
+            @font-face {
+                font-family:bebaskai;
+                font-style:normal;
+                font-weight:400;
+                src:local('BebasKai'),
+                url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+            }
+
+            .pagina {
+                width: 401px;
+                height: 575.3px;
+                border: solid;
+                border-width: 1px;
+                border-color: rgb(255, 0, 0, 0);
+            }
+
+            .capa {
+                width: 401px;
+                height: 575.3px;
+                border: solid;
+                border-width: 1px;
+                border-color: rgb(255, 0, 0, 0);                
+            }
+
+            .titulo {
+                text-align: center;
+                /*font-family: 'Bebas Kai', sans-serif;*/
+                color:rgb(0, 112, 192);
+                font-size: 20px;
+                position: relative;
+                top:-13px;
+            }
+
+            .content {
+                font-size: 10px;
+                font-family: Helvetica, Arial, sans-serif;
+                position: relative;
+                top: -20px;
+                left: 27px;
+                line-height: 1.3;
+            }
+
+            .cdx-marker {
+                color:rgba(192,0,0);
+                font-weight:bold;
+                background:rgba(0,0,0,0);
+                padding-right: 3px;
+            }    
+
+            .cdx-underline {
+                /*text-decoration: underline;
+                -webkit-text-underline-position: under;
+                -ms-text-underline-position: below;
+                text-underline-position: under; */
+                text-decoration: none;
+                border-bottom: solid;
+                border-width: thin;
+                padding-bottom: 1px;
+            }        
+        </style>
+    </head>
+    <body>
+        {% if completo %}
+        <div id="capa" class="pagina">
+            <div class="titulo"></div>
+        </div>
+        <br>
+        <div id="info" class="pagina">
+            <div class="titulo"></div>
+        </div>
+        <br>
+        {% endif %}
+        {% for item in lista %}
+        <div id="pag{{item['cont']}}" class="pagina">
+            <h3 class="titulo" style="font-family:'BebasKai', sans-serif">{{item['cont']}}. {{item['titulo']}}</h3>
+            <div class="content">
+                {% for par in item['letras'] %}
+                <p>{{par['texto']|safe}}</p>
+                {% endfor %}
+            </div>
+        </div>
+        <br>
+        {% endfor %}
+    </body>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
+    <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
+
+    <script type="text/javascript">
+
+    completo = {{completo}};
+    
+
+    window.onload = function () {
+        //2).save as pdf
+               const doc = new jspdf.jsPDF({
+                    orientation: 'portrait',
+                    unit: 'pt',
+                    format: 'a5'
+                });
+
+            doc.text(10, 10, 'yes');
+            doc.addPage();
+        
+            doc.html(document.body, {
+                callback: (pdf) => {
+                    if (completo) {
+                        // adicionar capa
+                        doc.setPage(1);
+                        const date = new Date().toLocaleDateString("pt-BR");
+
+                        doc.setLineWidth(4);
+                        doc.line(20, 20, 400, 20);
+                        doc.line(20, 575, 400, 575);
+                    
+                        doc.line(20, 18, 20, 577);
+                        doc.line(400, 18, 400, 577);
+                    
+                        doc.setLineWidth(0.01);
+                        doc.line(25, 25, 395, 25);
+                        doc.line(25, 570, 395, 570);
+                    
+                        doc.line(25, 25, 25, 570);
+                        doc.line(395, 25, 395, 570);
+                                        
+                    
+                        doc.setFont('BebasKai', 'normal');
+                        doc.setFontSize(33);
+                        doc.text(210, 56, 'Assembleia de Deus Ministério', 'center');
+                        doc.text(210, 96, 'De Cachoeira Paulista', 'center');
+                    
+                        var img = new Image();
+                    
+                        img.src = "/static/images/Logo%20Colorido.png";
+                        doc.addImage(img, 'png', 141, 170, 141, 170, undefined, 'FAST');
+                    
+                        doc.setTextColor(255, 0, 0);
+                        doc.setFontSize(50);
+                        doc.text(210, 453, 'Hinário dos Slides', 'center');
+                    
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'normal'); 
+                        doc.setFontSize(20);
+                        doc.text(210, 552, date, 'center')      
+
+                        // adicionar informações
+                        doc.setPage(2);
+                    }
+
+                    window.open(doc.output('bloburl'), '_blank');
+                    window.close();
+                },
+                /*x: 10,
+                y: 10*/
+            });
+
+            /*doc.addPage();
+            doc.text(10, 10, 'yes');
+            window.open(doc.output('bloburl'), '_blank');*/
+    };
+    </script>
+
+</html>

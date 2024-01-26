@@ -444,16 +444,19 @@
 
   $("#btn_gerar_pdf").on('click', function() {
 
-    lista = []
+    lista = '';
 
     $("#lista_geral a").filter(function() {
       if (!$(this).hasClass('toggled') && !$(this).hasClass('toggled-vinc')) {
-        lista.push({'id':$(this).attr('data-id'), 'titulo':$(this).text()});
+        //lista.push({'id':$(this).attr('data-id'), 'titulo':$(this).text()});
+        lista += $(this).attr('data-id') + ',';
       }
     });    
 
+    window.open('/render_pdf?ls=' + lista);
 
-    lista_vinculos = []
+
+    /*lista_vinculos = []
 
     // agora preciso pegar a lista de filtros
     for (item in lista_categoria) {
@@ -482,7 +485,7 @@
             }
             
         },
-    });
+    });*/
   });
 
   $('#txt_filtro').on('keyup', function (e) {

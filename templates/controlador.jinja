@@ -87,8 +87,12 @@
     }
 
     .mini-box {
-      height: 120px;
+      height: 140px;
       font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .big-box {
+      cursor: pointer;
     }
 
     .cdx-marker {
@@ -137,8 +141,6 @@
     }
 
     </style>
-
-    
   </head>
 
   <body>
@@ -151,6 +153,15 @@
     {% block menu_lateral %}
       {% include 'menu_lateral.html' %}
     {% endblock %}    
+
+
+    <script>
+      if (window.innerWidth < 1367) {
+        var sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("active");
+      }
+    </script>
+    
 
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
@@ -225,12 +236,25 @@
           </div>
           <div class="row"><div class="col-sm-12"><hr></div></div>
           <div class="row">
+            <div class="col-sm-3">
+              {% if index == 0 %}
+              <div id="box0" data-index="0" class="card box-index big-box">
+              {% else %}
+              <div id="box0" data-index="0" class="card shadow-sm big-box">
+              {% endif %}              
+                <div class="capa mini-box"></div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Slide: 1</h4>
+                </div>
+              </div>
+              <br>
+            </div>
             {% for sld in lista_slides %}
               <div class="col-sm-3">
                 {% if index == sld['pos'] %}
-                <div id="box{{sld['index']}}" class="card box-index">
+                <div id="box{{sld['pos']}}" data-index="{{sld['pos']}}" class="big-box card box-index">
                 {% else %}
-                <div id="box{{sld['index']}}" class="card shadow-sm">
+                <div id="box{{sld['pos']}}" data-index="{{sld['pos']}}" class="big-box card shadow-sm">
                 {% endif %}
                   <div class="letra mini-box">{{sld['text-slide']}}</div>
                   <div class="card-body">
@@ -257,10 +281,12 @@
 
     var index = {{index}};
     var slides = {{lista_slides}};
+    var chave = true;
 
     console.log(slides);
 
     window.onload = function() {
+
       if (index > slides.length) {
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
       } else {
@@ -285,30 +311,60 @@
       $("#loading").remove();
     };
 
-    function goto(index) {
+    $(".big-box").on('click', function() {
+      index = $(this).attr('data-index');
+
+      // modificar slide Principal
+      $("#slideAtual").text('Slide Atual: ' + (parseInt(index) + 1));
+
+      if (index > 0) {
+        $("#slidePrincipal").addClass('letra');
+        $("#slidePrincipal").removeClass('capa');
+
+        $("#slidePrincipal").empty();
+        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      } else {
+        $("#slidePrincipal").addClass('capa');
+        $("#slidePrincipal").removeClass('letra');        
+        $("#slidePrincipal").empty();
+      }
+
+      
+      // modificar próximo slide
+      if (index <= slides.length) {
+        $("#proximoSlide").text('Próximo Slide: ' + (parseInt(index) + 2));
+
+        if (index < slides.length) {
+          $("#slideProx").addClass('letra');
+          $("#slideProx").removeClass('capa');
+
+          $("#slideProx").empty();
+          $("#slideProx").html(slides[index]['text-slide']);
+          textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+        } else {
+          $("#slideProx").addClass('capa');
+          $("#slideProx").removeClass('letra');        
+          $("#slideProx").empty();          
+        }
+      }
+
+      changeBox(index);
+
       $.ajax({
         type: "POST",
-        url: "{{ url_for('goto') }}",
+        url: "{{ url_for('updateSlide') }}",
         contentType: "application/json",
         data: JSON.stringify(index),
         dataType: "json",
         success: function(response) {
-          $("#slideAtual").text("Slide Atual: " + response)
-          $("#imgAtual").attr('src', '/static/images/slides/' + response + '.png');
-          if (response == total_slides) {
-            $("#proximoSlide").text('Próximo Slide: -')
-            $("#imgProx").attr('src', "{{ url_for('static', filename='images/Fim.jpg') }}");
-          } else {
-            $("#proximoSlide").text('Próximo Slide: ' + (response + 1))
-            $("#imgProx").attr('src', '/static/images/slides/' + (response + 1) + '.png');
-          }
-
+          console.log(response);
         },
         error: function(err) {
           console.log(err);
         }
-      });
-    }
+      });      
+    });
 
     function previous() {
 
@@ -366,6 +422,7 @@
         }
       }
 
+      changeBox(index);
 
       $.ajax({
         type: "POST",
@@ -438,6 +495,8 @@
 
       $("#btn_previous").removeAttr('disabled');
 
+      changeBox(index);
+
       $.ajax({
         type: "POST",
         url: "{{ url_for('updateSlide') }}",
@@ -451,6 +510,13 @@
           console.log(err);
         }
       });
+    }
+
+    function changeBox(index) {
+      $(".card").removeClass('box-index');
+      $(".card").addClass('shadow-sm')
+      $("#box" + index).addClass('box-index');
+      $("#box" + index).removeClass('shadow-sm');
     }
 
     function encerrar() {
@@ -514,21 +580,26 @@
     });
 
     function proxima_PRS() {
-      $.ajax({
-        type: "POST",
-        url: "{{ url_for('proxima_prs') }}",
-        contentType: "application/json",
-        data: JSON.stringify(1),
-        dataType: "json",
-        success: function(response) {
-          if (response) {
-            location.reload();
+      if (chave) {
+
+        chave = false;
+
+        $.ajax({
+          type: "POST",
+          url: "{{ url_for('proxima_prs') }}",
+          contentType: "application/json",
+          data: JSON.stringify(1),
+          dataType: "json",
+          success: function(response) {
+            if (response) {
+              location.reload();
+            }
+          },
+          error: function(err) {
+            console.log(err);
           }
-        },
-        error: function(err) {
-          console.log(err);
-        }
-      });       
+        });
+      }       
     }
 
   </script>

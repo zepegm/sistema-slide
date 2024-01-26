@@ -55,6 +55,19 @@ def home():
 
     return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa)
 
+@app.route('/render_pdf', methods=['GET', 'POST'])
+def render_pdf():
+    lista_final = []
+    cont = 1
+    lista_musicas = banco.executarConsulta('select * from musicas order by titulo')
+    
+    for item in lista_musicas:
+        letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % item['id'])
+        lista_final.append({'titulo':item['titulo'], 'letras':letras, 'cont':'{:02d}'.format(cont)})
+        cont += 1
+
+    return render_template('render_pdf.jinja', lista=lista_final, completo='true')
+
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():
 
@@ -483,7 +496,7 @@ def proxima_prs():
         if request.is_json:
             msg = request.json
             if msg == 1:
-                if len(roteiro) > 1:
+                if len(roteiro) > 0:
                     for item in roteiro:
                         if not item['check']:
                             item['check'] = True
