@@ -446,46 +446,11 @@
 
     lista = '';
 
-    $("#lista_geral a").filter(function() {
-      if (!$(this).hasClass('toggled') && !$(this).hasClass('toggled-vinc')) {
-        //lista.push({'id':$(this).attr('data-id'), 'titulo':$(this).text()});
-        lista += $(this).attr('data-id') + ',';
-      }
+    $('.filtro-vinculo-check:checked').filter(function(index) {
+        lista += $(this).val() + ',';
     });    
 
     window.open('/render_pdf?ls=' + lista);
-
-
-    /*lista_vinculos = []
-
-    // agora preciso pegar a lista de filtros
-    for (item in lista_categoria) {
-      aux = []
-      id = lista_categoria[item]['id'];
-      $(".check-" + id + ':checked').filter(function() {
-        aux.push({'descricao':$(this).attr('data-txt')})
-      });
-
-      if (aux.length > 0) {
-        lista_vinculos.push({'id':id, 'descricao':lista_categoria[item]['descricao'], 'subcategoria':aux})
-      }
-    }
-
-    $.ajax({
-        type: "POST",
-        url: "getTexto_PDF",
-        contentType: "application/json",
-        data: JSON.stringify(lista),
-        dataType: "json",
-        success: function(data) {
-            if (lista_vinculos.length > 0) {
-              gerarPDF(data, lista_vinculos, true); // vínculos filtrados
-            } else {
-              gerarPDF(data, lista_categoria, true); // todos os vínculos
-            }
-            
-        },
-    });*/
   });
 
   $('#txt_filtro').on('keyup', function (e) {

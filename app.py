@@ -59,14 +59,57 @@ def home():
 def render_pdf():
     lista_final = []
     cont = 1
-    lista_musicas = banco.executarConsulta('select * from musicas order by titulo')
+
+    ls = request.args.get('ls')
+    
+    if ls == '': # pegar geral
+        lista_musicas = banco.executarConsulta('select * from musicas order by titulo')
+        lista_categoria = []
+
+        for item in banco.executarConsulta('select * from categoria_departamentos order by id'):
+            aux = []
+            for cats in banco.executarConsulta('select descricao from subcategoria_departamentos where supercategoria = %s order by id' % item['id']):
+                aux.append(cats['descricao'])
+
+            lista_categoria.append({'descricao':item['descricao'], 'cats':aux})
+    else: # fazer o processo reverso pra pegar isso daqui
+        lista = ls[:-1].split(',')
+        lista_categoria = []
+
+        supercategoria = 0
+        aux = []
+
+
+        for item in lista:
+            cat = banco.executarConsulta('select * from subcategoria_departamentos where id = %s' % item)[0]
+
+            if cat['supercategoria'] != supercategoria:
+                
+                if len(aux) > 0:
+                    descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
+                    lista_categoria.append({'descricao':descricao, 'cats':aux})
+                    aux = []
+
+                supercategoria = cat['supercategoria']
+
+            aux.append(cat['descricao'])
+
+        descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
+        lista_categoria.append({'descricao':descricao, 'cats':aux})
+
+        lista_musicas = banco.executarConsulta('select ' + \
+                                               'musicas.id, musicas.titulo ' + \
+                                               'from musicas inner join vinculos_x_musicas ' + \
+                                               'on vinculos_x_musicas.id_musica = musicas.id ' + \
+                                               'where vinculos_x_musicas.id_vinculo IN (%s) ' % ls[:-1] + \
+                                               'group by (titulo) order by titulo')
     
     for item in lista_musicas:
         letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % item['id'])
         lista_final.append({'titulo':item['titulo'], 'letras':letras, 'cont':'{:02d}'.format(cont)})
         cont += 1
 
-    return render_template('render_pdf.jinja', lista=lista_final, completo='true')
+    return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final))
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():

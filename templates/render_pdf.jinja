@@ -88,7 +88,7 @@
         {% endfor %}
     </body>
 
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
     <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
     <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
     <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
@@ -96,6 +96,7 @@
     <script type="text/javascript">
 
     completo = {{completo}};
+    lista_categorias = {{lista_categoria}}
     
 
     window.onload = function () {
@@ -152,9 +153,59 @@
 
                         // adicionar informações
                         doc.setPage(2);
+                        doc.setFontSize(20);
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('BebasKai', 'normal');
+                        doc.text(209, 48, 'Informações do documento', 'center');
+                        tamanho = doc.getTextWidth('Informações do documento');
+
+                        doc.setLineWidth(0.08);
+                        doc.line(209 - (tamanho / 2), 54, 209 + (tamanho / 2), 54);
+
+                        doc.setFont('helvetica', 'normal'); 
+                        doc.setFontSize(12);
+                        y = 85;
+                        doc.text(20, y, 'Documento gerado automaticamente pelo banco de dados do sistema');
+                        doc.setFont('helvetica', 'bold'); 
+                        y += 20;
+                        doc.text(20, y, '"Slide Master Index II".');
+
+                        y += 40;
+                        doc.text(20, y, 'Data do documento: ');
+                        tamanho = doc.getTextWidth('Data do documento: ');
+                        doc.setFont('helvetica', 'normal'); 
+                        doc.text(20 + tamanho, y, date);
+
+                        y += 20;
+                        doc.setFont('helvetica', 'bold'); 
+                        doc.text(20, y, 'Quantidade de Músicas: ');
+                        tamanho = doc.getTextWidth('Quantidade de Músicas: ');
+                        doc.setFont('helvetica', 'normal'); 
+                        doc.text(20 + tamanho, y, String({{total}}));
+
+                        y += 40;
+                        doc.setFont('helvetica', 'bold'); 
+                        doc.text(20, y, 'Vínculos: ');
+                        x = 20;
+                        y += 20;
+                        doc.setFont('helvetica', 'normal');
+
+                        // agora que a dificuldade começa rs
+                        for (item in lista_categorias) {
+                            doc.setFontSize(12);
+                            doc.text(x, y, lista_categorias[item]['descricao']);
+                            y += 14;
+                            doc.setFontSize(10);
+                            for (sub in lista_categorias[item]['cats']) {
+                                doc.text(x, y, " - " + lista_categorias[item]['cats'][sub])
+                                y += 14;
+                            }
+
+                            y += 14;
+                        }                        
                     }
 
-                    window.open(doc.output('bloburl'), '_blank');
+                    doc.save('musicas.pdf');
                     window.close();
                 },
                 /*x: 10,
