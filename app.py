@@ -25,13 +25,12 @@ estado = 0
 current_presentation = {'id':0, 'tipo':''}
 index = 0
 roteiro = []
-render_temp = None
 
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 
 banco = db({'host':"localhost",    # your host, usually localhost
             'user':"root",         # your username
-            'passwd':"",  # your password
+            'passwd':"Yasmin",  # your password
             'db':"sistema-slide"})
 
 @app.route('/', methods=['GET', 'POST'])
@@ -62,16 +61,8 @@ def render_pdf():
     cont = 1
 
     ls = request.json
+    #ls = request.args.get('ls')
     
-    if ls == 'render_temp':
-        global render_temp
-        print(render_temp)
-        lista_final.append(render_temp)
-
-        return jsonify({'lista_musicas':lista_final, 'lista_categorias':[], 'completo':'false', 'total':0})
-        #return render_template('render_pdf.jinja', lista=lista_final, completo='false', lista_categoria=[], total=0)
-
-
     if ls == '': # pegar geral
         lista_musicas = banco.executarConsulta('select * from musicas order by titulo')
         lista_categoria = []
@@ -115,7 +106,7 @@ def render_pdf():
                                                'group by (titulo) order by titulo')
     
     for item in lista_musicas:
-        letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % item['id'])
+        letras = banco.executarConsulta('select replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto from letras where id_musica = %s order by paragrafo' % item['id'])
         lista_final.append({'titulo':item['titulo'], 'letras':letras, 'cont':'{:02d}'.format(cont)})
         cont += 1
 

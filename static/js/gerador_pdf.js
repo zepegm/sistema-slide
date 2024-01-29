@@ -1,12 +1,16 @@
-function renderPDF(lista_musicas, lista_categorias, completo, total) {
+function renderPDF(lista_musicas, lista_categorias, completo, total, loading, btn) {
   const doc = new jspdf.jsPDF({
       orientation: 'portrait',
       unit: 'pt',
       format: 'a5'
   });
 
-  var preview = '<div class="container"><div id="capa" class="pagina"><h3 class="titulo"></h3></div><br>';
-  preview += '<div id="info" class="pagina"><div class="titulo"></div></div><br>';
+  if (completo) {
+    var preview = '<div class="conteudo"><div id="capa" class="pagina"><h3 class="titulo"></h3></div>';
+    preview += '<div id="info" class="pagina"><div class="titulo"></div></div>';
+  } else {
+    var preview = '<div class="conteudo">';
+  }
 
   for (item in lista_musicas) {
       preview += '<div id="pag' + lista_musicas[item]['cont'] + '" class="pagina">';
@@ -18,11 +22,15 @@ function renderPDF(lista_musicas, lista_categorias, completo, total) {
 
       preview += '<div class="content">';
           for (musica in lista_musicas[item]['letras']) {
-              preview += "<p>" + lista_musicas[item]['letras'][musica]['texto'] + "</p>";
+              preview += "<p class='paragrafo'>" + lista_musicas[item]['letras'][musica]['texto'] + "</p>";
           }
 
-      preview += '</div></div></div><br>';
+      preview += '</div></div>';
   }
+
+  preview += "</div>";
+
+  //console.log(preview);
 
   doc.html(preview, {
   //doc.html(document.body, {
@@ -127,11 +135,14 @@ function renderPDF(lista_musicas, lista_categorias, completo, total) {
           doc.deletePage(pageCount)
 
           doc.setProperties({
-              title: "jsPDF sample"
+              title: "Lista de Músicas"
           });
 
 
           window.open(doc.output('bloburl'), '_blank');  
+
+          loading.attr('hidden', '');
+          btn.removeAttr('disabled');
 
           /*if (completo) {
               doc.save('musicas.pdf', { returnPromise: true }).then(() => {

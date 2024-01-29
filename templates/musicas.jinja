@@ -51,21 +51,14 @@
       .pagina {
           position: relative;
           top: 8px;
-          left: 8px;
+          left: 9px;
           width: 401px;
-          height: 575.3px;
+          height: 579px;
           border: solid;
           border-width: 1px;
           border-color: rgb(255, 0, 0, 0);
           color:black;
-      }
-
-      .capa {
-          width: 401px;
-          height: 575.3px;
-          border: solid;
-          border-width: 1px;
-          border-color: rgb(255, 0, 0, 0);                
+          margin-bottom: 16.3px;
       }
 
       .titulo {
@@ -74,15 +67,15 @@
           color:rgb(0, 112, 192);
           font-size: 20px;
           position: relative;
-          top:-13px;
+          top:-8px;
       }
 
       .content {
           font-size: 10px;
           font-family: Helvetica, Arial, sans-serif;
           position: relative;
-          top: -20px;
-          left: 27px;
+          top: -8px;
+          left: 26px;
           line-height: 1.3;
       }      
 
@@ -90,6 +83,10 @@
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
         color: blue;
         font-weight: bold;
+      }
+
+      .paragrafo {
+        margin-bottom: 10px;
       }
 
       @media (min-width: 768px) {
@@ -193,6 +190,17 @@
       padding-right: 3px;
     }
 
+    .cdx-underline-view {
+        /*text-decoration: underline;
+        -webkit-text-underline-position: under;
+        -ms-text-underline-position: below;
+        text-underline-position: under; */
+        text-decoration: none;
+        border-bottom: solid;
+        border-width: thin;
+        padding-bottom: 9px;
+    }      
+
     #txt_pesquisa_letra,
     #txt_senha,
     #txt_filtro {
@@ -210,6 +218,14 @@
         width: 100%;
         border: solid;
         border-width: thin;
+    }
+
+    .center {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
     }
 
     </style>
@@ -257,7 +273,12 @@
         <section class="container">
           <div class="row">
             <div id="status" class="col-sm-12">{{status}}</div>
-            <div class="col-sm-12 text-center">
+            <div id="loading" class="col-sm-12 text-center" hidden>
+              <div class="spinner-border text-danger" role="status">
+                <span class="sr-only">Carregando...</span>
+              </div><span class="center">&nbsp;Renderizando PDF... Por favor aguarde.</span>
+            </div>
+            <div class="col-sm-12">
               <h2 class="fw-bold">Abrir Músicas</h2>
             </div>
           </div>
@@ -350,7 +371,7 @@
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
   <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+  <script src="{{ url_for('static', filename='js/purify.min.js') }}"></script>
   <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
   <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
   <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
@@ -502,6 +523,8 @@
         lista += $(this).val() + ',';
     });    
 
+    $("#loading").removeAttr('hidden');
+    $("#btn_gerar_pdf").attr('disabled', '');
 
     $.ajax({
         type: "POST",
@@ -510,7 +533,7 @@
         data: JSON.stringify(lista),
         dataType: "json",
         success: function(data) {
-            renderPDF(data['lista_musicas'], data['lista_categorias'], data['completo'], data['total']);
+          renderPDF(data['lista_musicas'], data['lista_categorias'], data['completo'], data['total'], $("#loading"), $("#btn_gerar_pdf"));
         },
     });
 
