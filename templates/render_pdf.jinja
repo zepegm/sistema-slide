@@ -29,7 +29,7 @@
 
             .titulo {
                 text-align: center;
-                /*font-family: 'Bebas Kai', sans-serif;*/
+                font-family:'BebasKai', sans-serif;
                 color:rgb(0, 112, 192);
                 font-size: 20px;
                 position: relative;
@@ -65,30 +65,38 @@
         </style>
     </head>
     <body>
-        {% if completo %}
-        <div id="capa" class="pagina">
-            <div class="titulo"></div>
-        </div>
-        <br>
-        <div id="info" class="pagina">
-            <div class="titulo"></div>
-        </div>
-        <br>
-        {% endif %}
-        {% for item in lista %}
-        <div id="pag{{item['cont']}}" class="pagina">
-            <h3 class="titulo" style="font-family:'BebasKai', sans-serif">{{item['cont']}}. {{item['titulo']}}</h3>
-            <div class="content">
-                {% for par in item['letras'] %}
-                <p>{{par['texto']|safe}}</p>
-                {% endfor %}
+        <div id="container">
+            {% if completo == 'true' %}
+            <div id="capa" class="pagina">
+                <div class="titulo"></div>
             </div>
+            <br>
+            <div id="info" class="pagina">
+                <div class="titulo"></div>
+            </div>
+            <br>
+            {% endif %}
+            {% for item in lista %}
+            <div id="pag{{item['cont']}}" class="pagina">
+                {% if completo == 'true' %}
+                <h3 class="titulo" style="font-family:'BebasKai', sans-serif">{{item['cont']}}. {{item['titulo']}}</h3>
+                {% else %}
+                <h3 class="titulo" style="font-family:'BebasKai', sans-serif">{{item['titulo']}}</h3>
+                {% endif %}
+                <div class="content">
+                    {% for par in item['letras'] %}
+                    <p>{{par['texto']|safe}}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <br>
+            {% endfor %}        
         </div>
-        <br>
-        {% endfor %}
     </body>
 
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
     <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
     <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
     <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
@@ -96,7 +104,8 @@
     <script type="text/javascript">
 
     completo = {{completo}};
-    lista_categorias = {{lista_categoria}}
+    lista_categorias = {{lista_categoria}};
+    lista_musicas = {{lista}};
     
 
     window.onload = function () {
@@ -107,10 +116,31 @@
                     format: 'a5'
                 });
 
-            doc.text(10, 10, 'yes');
-            doc.addPage();
-        
-            doc.html(document.body, {
+            var preview = '<div id="capa" class="pagina"><h3 class="titulo"></h3></div><br>';
+            preview += '<div id="info" class="pagina"><div class="titulo"></div></div><br>';
+
+            for (item in lista_musicas) {
+                preview += '<div id="pag' + lista_musicas[item]['cont'] + '" class="pagina">';
+                if (completo) {
+                    preview += '<h3 class="titulo">' + lista_musicas[item]['cont'] + '. ' + lista_musicas[item]['titulo'] + '</h3>';
+                } else {
+                    preview += '<h3 class="titulo">' + lista_musicas[item]['titulo'] + '</h3>';
+                }
+
+                preview += '<div class="content">';
+                    for (musica in lista_musicas[item]['letras']) {
+                        preview += "<p>" + lista_musicas[item]['letras'][musica]['texto'] + "</p>";
+                    }
+
+                preview += '</div></div><br>';
+            }
+
+            //console.log(preview);
+
+            const elem = document.getElementById("container");
+            
+            doc.html(preview, {
+            //doc.html(document.body, {
                 callback: (pdf) => {
                     if (completo) {
                         // adicionar capa
@@ -205,8 +235,26 @@
                         }                        
                     }
 
-                    doc.save('musicas.pdf');
-                    window.close();
+                    var pageCount = doc.internal.getNumberOfPages();
+                    doc.deletePage(pageCount)
+
+                    doc.setProperties({
+                        title: "jsPDF sample"
+                    });
+
+
+                    window.open(doc.output('bloburl'), '_blank');  
+
+                    /*if (completo) {
+                        doc.save('musicas.pdf', { returnPromise: true }).then(() => {
+                            console.log('yes');
+                            //window.close();
+                        });                        
+                    } else {
+                        window.open(doc.output('bloburl'), '_blank');  
+                        window.close();
+                    }*/
+
                 },
                 /*x: 10,
                 y: 10*/

@@ -25,6 +25,7 @@ estado = 0
 current_presentation = {'id':0, 'tipo':''}
 index = 0
 roteiro = []
+render_temp = None
 
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 
@@ -62,6 +63,14 @@ def render_pdf():
 
     ls = request.args.get('ls')
     
+    if ls == 'render_temp':
+        global render_temp
+        print(render_temp)
+        lista_final.append(render_temp)
+
+        return render_template('render_pdf.jinja', lista=lista_final, completo='false', lista_categoria=[], total=0)
+
+
     if ls == '': # pegar geral
         lista_musicas = banco.executarConsulta('select * from musicas order by titulo')
         lista_categoria = []
@@ -334,18 +343,10 @@ def upload_capa():
 
 @app.route('/converto_to_pdf_list', methods=['GET', 'POST'])
 def converto_to_pdf_list():
-    texto = request.json
-    print(texto)
-    lista = []
-    
-    texto_formatado = []
+    global render_temp
+    render_temp = request.json
 
-    for txt in texto['texto_bruto']:
-        texto_formatado.append(converHTML_to_List(txt['texto']))
-
-    lista.append({'titulo':texto['titulo'], 'letras':texto_formatado})
-
-    return jsonify(lista)
+    return jsonify(True)
 
 @app.route('/get_info_musica', methods=['GET', 'POST'])
 def get_info_musica():

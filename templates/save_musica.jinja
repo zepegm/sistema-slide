@@ -434,16 +434,16 @@
           texto.push({'texto':data['blocks'][item]['data']['text']})
         }
 
-        data = {'titulo':"{{info['titulo']}}", 'texto_bruto':texto}
+        info = {'titulo':"{{info['titulo']}}", 'letras':texto, 'cont':''}
 
         $.ajax({
             type: "POST",
             url: "converto_to_pdf_list",
             contentType: "application/json",
-            data: JSON.stringify(data),
+            data: JSON.stringify(info),
             dataType: "json",
             success: function(data) {
-                gerarPDF(data, [], false);
+                window.open('/render_pdf?ls=render_temp');
             },
         });
 
