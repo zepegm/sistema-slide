@@ -31,7 +31,7 @@ musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secreta
 
 banco = db({'host':"localhost",    # your host, usually localhost
             'user':"root",         # your username
-            'passwd':"Yasmin",  # your password
+            'passwd':"",  # your password
             'db':"sistema-slide"})
 
 @app.route('/', methods=['GET', 'POST'])
@@ -61,14 +61,15 @@ def render_pdf():
     lista_final = []
     cont = 1
 
-    ls = request.args.get('ls')
+    ls = request.json
     
     if ls == 'render_temp':
         global render_temp
         print(render_temp)
         lista_final.append(render_temp)
 
-        return render_template('render_pdf.jinja', lista=lista_final, completo='false', lista_categoria=[], total=0)
+        return jsonify({'lista_musicas':lista_final, 'lista_categorias':[], 'completo':'false', 'total':0})
+        #return render_template('render_pdf.jinja', lista=lista_final, completo='false', lista_categoria=[], total=0)
 
 
     if ls == '': # pegar geral
@@ -118,7 +119,8 @@ def render_pdf():
         lista_final.append({'titulo':item['titulo'], 'letras':letras, 'cont':'{:02d}'.format(cont)})
         cont += 1
 
-    return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final))
+    return jsonify({'lista_musicas':lista_final, 'lista_categorias':lista_categoria, 'completo':'true', 'total':len(lista_final)})
+    #return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final))
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():

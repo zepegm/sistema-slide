@@ -29,6 +29,15 @@
     <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
 
     <style>
+
+      @font-face {
+          font-family:bebaskai;
+          font-style:normal;
+          font-weight:400;
+          src:local('BebasKai'),
+          url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+      }
+
       .bd-placeholder-img {
         font-size: 1.125rem;
         text-anchor: middle;
@@ -39,6 +48,43 @@
       }
 
 
+      .pagina {
+          position: relative;
+          top: 8px;
+          left: 8px;
+          width: 401px;
+          height: 575.3px;
+          border: solid;
+          border-width: 1px;
+          border-color: rgb(255, 0, 0, 0);
+          color:black;
+      }
+
+      .capa {
+          width: 401px;
+          height: 575.3px;
+          border: solid;
+          border-width: 1px;
+          border-color: rgb(255, 0, 0, 0);                
+      }
+
+      .titulo {
+          text-align: center;
+          font-family:'BebasKai', sans-serif;
+          color:rgb(0, 112, 192);
+          font-size: 20px;
+          position: relative;
+          top:-13px;
+      }
+
+      .content {
+          font-size: 10px;
+          font-family: Helvetica, Arial, sans-serif;
+          position: relative;
+          top: -20px;
+          left: 27px;
+          line-height: 1.3;
+      }      
 
       .box-index {
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
@@ -140,7 +186,11 @@
     .cdx-marker {
       color:rgba(192,0,0);
       font-weight:bold;
-      background:rgba(0,0,0,0)
+      background:rgba(0,0,0,0);
+    }
+
+    span.cdx-marker {
+      padding-right: 3px;
     }
 
     #txt_pesquisa_letra,
@@ -299,6 +349,8 @@
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+  <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
   <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
   <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
   <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
@@ -450,7 +502,18 @@
         lista += $(this).val() + ',';
     });    
 
-    window.open('/render_pdf?ls=' + lista);
+
+    $.ajax({
+        type: "POST",
+        url: "render_pdf",
+        contentType: "application/json",
+        data: JSON.stringify(lista),
+        dataType: "json",
+        success: function(data) {
+            renderPDF(data['lista_musicas'], data['lista_categorias'], data['completo'], data['total']);
+        },
+    });
+
   });
 
   $('#txt_filtro').on('keyup', function (e) {

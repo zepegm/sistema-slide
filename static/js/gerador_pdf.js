@@ -1,3 +1,156 @@
+function renderPDF(lista_musicas, lista_categorias, completo, total) {
+  const doc = new jspdf.jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: 'a5'
+  });
+
+  var preview = '<div class="container"><div id="capa" class="pagina"><h3 class="titulo"></h3></div><br>';
+  preview += '<div id="info" class="pagina"><div class="titulo"></div></div><br>';
+
+  for (item in lista_musicas) {
+      preview += '<div id="pag' + lista_musicas[item]['cont'] + '" class="pagina">';
+      if (completo) {
+          preview += '<h3 class="titulo">' + lista_musicas[item]['cont'] + '. ' + lista_musicas[item]['titulo'] + '</h3>';
+      } else {
+          preview += '<h3 class="titulo">' + lista_musicas[item]['titulo'] + '</h3>';
+      }
+
+      preview += '<div class="content">';
+          for (musica in lista_musicas[item]['letras']) {
+              preview += "<p>" + lista_musicas[item]['letras'][musica]['texto'] + "</p>";
+          }
+
+      preview += '</div></div></div><br>';
+  }
+
+  doc.html(preview, {
+  //doc.html(document.body, {
+      html2canvas: {
+          scale: 1,
+      },
+      callback: (pdf) => {
+          if (completo) {
+              // adicionar capa
+              doc.setPage(1);
+              const date = new Date().toLocaleDateString("pt-BR");
+
+              doc.setLineWidth(4);
+              doc.line(20, 20, 400, 20);
+              doc.line(20, 575, 400, 575);
+          
+              doc.line(20, 18, 20, 577);
+              doc.line(400, 18, 400, 577);
+          
+              doc.setLineWidth(0.01);
+              doc.line(25, 25, 395, 25);
+              doc.line(25, 570, 395, 570);
+          
+              doc.line(25, 25, 25, 570);
+              doc.line(395, 25, 395, 570);
+                              
+          
+              doc.setFont('BebasKai', 'normal');
+              doc.setFontSize(33);
+              doc.text(210, 56, 'Assembleia de Deus Ministério', 'center');
+              doc.text(210, 96, 'De Cachoeira Paulista', 'center');
+          
+              var img = new Image();
+          
+              img.src = "/static/images/Logo%20Colorido.png";
+              doc.addImage(img, 'png', 141, 170, 141, 170, undefined, 'FAST');
+          
+              doc.setTextColor(255, 0, 0);
+              doc.setFontSize(50);
+              doc.text(210, 453, 'Hinário dos Slides', 'center');
+          
+              doc.setTextColor(0, 0, 0);
+              doc.setFont('helvetica', 'normal'); 
+              doc.setFontSize(20);
+              doc.text(210, 552, date, 'center')      
+
+              // adicionar informações
+              doc.setPage(2);
+              doc.setFontSize(20);
+              doc.setTextColor(0, 0, 0);
+              doc.setFont('BebasKai', 'normal');
+              doc.text(209, 48, 'Informações do documento', 'center');
+              tamanho = doc.getTextWidth('Informações do documento');
+
+              doc.setLineWidth(0.08);
+              doc.line(209 - (tamanho / 2), 54, 209 + (tamanho / 2), 54);
+
+              doc.setFont('helvetica', 'normal'); 
+              doc.setFontSize(12);
+              y = 85;
+              doc.text(20, y, 'Documento gerado automaticamente pelo banco de dados do sistema');
+              doc.setFont('helvetica', 'bold'); 
+              y += 20;
+              doc.text(20, y, '"Slide Master Index II".');
+
+              y += 40;
+              doc.text(20, y, 'Data do documento: ');
+              tamanho = doc.getTextWidth('Data do documento: ');
+              doc.setFont('helvetica', 'normal'); 
+              doc.text(20 + tamanho, y, date);
+
+              y += 20;
+              doc.setFont('helvetica', 'bold'); 
+              doc.text(20, y, 'Quantidade de Músicas: ');
+              tamanho = doc.getTextWidth('Quantidade de Músicas: ');
+              doc.setFont('helvetica', 'normal'); 
+              doc.text(20 + tamanho, y, String(total));
+
+              y += 40;
+              doc.setFont('helvetica', 'bold'); 
+              doc.text(20, y, 'Vínculos: ');
+              x = 20;
+              y += 20;
+              doc.setFont('helvetica', 'normal');
+
+              // agora que a dificuldade começa rs
+              for (item in lista_categorias) {
+                  doc.setFontSize(12);
+                  doc.text(x, y, lista_categorias[item]['descricao']);
+                  y += 14;
+                  doc.setFontSize(10);
+                  for (sub in lista_categorias[item]['cats']) {
+                      doc.text(x, y, " - " + lista_categorias[item]['cats'][sub])
+                      y += 14;
+                  }
+
+                  y += 14;
+              }                        
+          }
+
+          var pageCount = doc.internal.getNumberOfPages();
+          doc.deletePage(pageCount)
+
+          doc.setProperties({
+              title: "jsPDF sample"
+          });
+
+
+          window.open(doc.output('bloburl'), '_blank');  
+
+          /*if (completo) {
+              doc.save('musicas.pdf', { returnPromise: true }).then(() => {
+                  console.log('yes');
+                  //window.close();
+              });                        
+          } else {
+              window.open(doc.output('bloburl'), '_blank');  
+              window.close();
+          }*/
+
+      },
+      /*x: 10,
+      y: 10*/
+  });
+
+
+}
+
 function addPaginaInferior(doc, pagina) {
     doc.setFont('helvetica', 'normal'); 
     doc.setFontSize(11);

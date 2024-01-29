@@ -12,6 +12,9 @@
             }
 
             .pagina {
+                position: relative;
+                top: 8px;
+                left: 8px;
                 width: 401px;
                 height: 575.3px;
                 border: solid;
@@ -116,7 +119,7 @@
                     format: 'a5'
                 });
 
-            var preview = '<div id="capa" class="pagina"><h3 class="titulo"></h3></div><br>';
+            var preview = '<div class="container"><div id="capa" class="pagina"><h3 class="titulo"></h3></div><br>';
             preview += '<div id="info" class="pagina"><div class="titulo"></div></div><br>';
 
             for (item in lista_musicas) {
@@ -132,7 +135,7 @@
                         preview += "<p>" + lista_musicas[item]['letras'][musica]['texto'] + "</p>";
                     }
 
-                preview += '</div></div><br>';
+                preview += '</div></div></div><br>';
             }
 
             //console.log(preview);
@@ -141,6 +144,9 @@
             
             doc.html(preview, {
             //doc.html(document.body, {
+                html2canvas: {
+                    scale: 1,
+                },
                 callback: (pdf) => {
                     if (completo) {
                         // adicionar capa
