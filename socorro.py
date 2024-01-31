@@ -1,14 +1,7 @@
-from os import listdir
-from os import rename
+import datetime
 
-def listar_arquivos(caminho=None):
-    lista_arqs = [arq for arq in listdir(caminho)]
-    return lista_arqs
+now = datetime.date.today()
 
-lista = listar_arquivos(r'C:\Users\Giuseppe\Desktop\Projetos Python\sistema_slide\slides\Oficina')
-
-key = 112
-
-for item in lista:
-    rename(r'C:\Users\Giuseppe\Desktop\Projetos Python\sistema_slide\slides\Oficina' + '\\' + item, r'C:\Users\Giuseppe\Desktop\Projetos Python\sistema_slide\slides\Oficina' + '\\' + str(key) + '.png')
-    key += 1
+# convert to string
+date_time_str = now.strftime("%d/%m/%Y")
+print('DateTime String:', date_time_str)

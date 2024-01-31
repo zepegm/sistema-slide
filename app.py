@@ -11,6 +11,7 @@ import os
 import DB
 import os.path
 import re
+import datetime
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -59,9 +60,13 @@ def home():
 def render_pdf():
     lista_final = []
     cont = 1
+    now = datetime.date.today()
 
-    ls = request.json
-    #ls = request.args.get('ls')
+    # convert to string
+    hoje = now.strftime("%d/%m/%Y") 
+
+    #ls = request.json
+    ls = request.args.get('ls')
     
     if ls == '': # pegar geral
         lista_musicas = banco.executarConsulta('select * from musicas order by titulo')
@@ -110,8 +115,8 @@ def render_pdf():
         lista_final.append({'titulo':item['titulo'], 'letras':letras, 'cont':'{:02d}'.format(cont)})
         cont += 1
 
-    return jsonify({'lista_musicas':lista_final, 'lista_categorias':lista_categoria, 'completo':'true', 'total':len(lista_final)})
-    #return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final))
+    #return jsonify({'lista_musicas':lista_final, 'lista_categorias':lista_categoria, 'completo':'true', 'total':len(lista_final)})
+    return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():

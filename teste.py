@@ -1,36 +1,18 @@
-from MySQL import db
+import asyncio
+from pyppeteer import launch
 
+async def generate_pdf(url, pdf_path):
+    browser = await launch()
+    page = await browser.newPage()
+    
+    await page.goto(url)
+    #await page.setViewport({'width': 800, 'height': 600})
+    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}})
+    #await page.pdf({'path': pdf_path, 'width ':'100', 'height':'900'})
+    
 
-banco = db({'host':"localhost",    # your host, usually localhost
-            'user':"root",         # your username
-            'passwd':"Yasmin",  # your password
-            'db':"sistema-slide"})
+    
+    await browser.close()
 
-
-
-lista = '1,2,3,4,5,6,7,14,15,'[:-1].split(',')
-lista_categoria = []
-
-supercategoria = 0
-aux = []
-
-
-for item in lista:
-    cat = banco.executarConsulta('select * from subcategoria_departamentos where id = %s' % item)[0]
-
-    if cat['supercategoria'] != supercategoria:
-        
-        if len(aux) > 0:
-            descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
-            lista_categoria.append({'descricao':descricao, 'cats':aux})
-            aux = []
-
-        supercategoria = cat['supercategoria']
-
-    aux.append(cat['descricao'])
-
-descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
-lista_categoria.append({'descricao':descricao, 'cats':aux})
-
-print(lista_categoria)
-        
+# Run the function
+asyncio.get_event_loop().run_until_complete(generate_pdf('http://localhost:120/render_pdf?ls=', 'example.pdf'))

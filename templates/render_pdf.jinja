@@ -11,40 +11,99 @@
                 url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
             }
 
+            body > :last-child: { margin-bottom: -1px; overflow: hidden; }
+
+            #container {
+                position: absolute;
+                top:0px;
+            }
+
             .pagina {
                 position: relative;
-                top: 8px;
-                left: 8px;
+                top: 0px;
+                left: 5px;
                 width: 401px;
-                height: 575.3px;
+                height: 580px;
                 border: solid;
                 border-width: 1px;
                 border-color: rgb(255, 0, 0, 0);
+                margin-bottom: 40px;
             }
 
             .capa {
-                width: 401px;
-                height: 575.3px;
-                border: solid;
-                border-width: 1px;
-                border-color: rgb(255, 0, 0, 0);                
+                position: relative;
+                top: 0px;
+                left: 5px;
+                width: 393px;
+                height: 571px;                
+                border: 5px solid black;
+                margin-bottom: 40px;
             }
+
+            .capa:before {
+                content: " ";
+                position: absolute;
+                z-index: -1;
+                top: 5px;
+                left: 5px;
+                right: 5px;
+                bottom: 5px;
+                border: 1px solid black;
+            }            
 
             .titulo {
                 text-align: center;
                 font-family:'BebasKai', sans-serif;
                 color:rgb(0, 112, 192);
-                font-size: 20px;
+                font-size: 20.5px;
                 position: relative;
-                top:-13px;
+                top:-17.5px;
+            }
+
+            .titulo-capa {
+                position: relative;
+                top:5px;
+                text-align: center;
+                font-family:'BebasKai', sans-serif;
+                font-size: 35px;
+            }
+
+            .texto-capa {
+                margin-top: 40px;
+                text-align: center;
+                font-family:'BebasKai', sans-serif;
+                font-size: 50px;
+                color: red;
+            }
+
+            .foot-capa {
+                margin-top: 70px;
+                text-align: center;
+                font-family: Helvetica, Arial, sans-serif;
+                font-size: 25px;
+            }
+
+            .titulo-info {
+                text-align: center;
+                font-family:'BebasKai', sans-serif;
+                font-size: 25px;
+                text-decoration: underline;                
+            }
+
+            #logo {
+                margin-top: 40px;
+                position: relative;
+                width: 180px;
+                height: auto;
+                left: 27%;
             }
 
             .content {
-                font-size: 10px;
+                font-size: 10.5px;
                 font-family: Helvetica, Arial, sans-serif;
                 position: relative;
-                top: -20px;
-                left: 27px;
+                top: -25px;
+                left: 23px;
                 line-height: 1.3;
             }
 
@@ -70,21 +129,22 @@
     <body>
         <div id="container">
             {% if completo == 'true' %}
-            <div id="capa" class="pagina">
-                <div class="titulo"></div>
+            <div id="capa" class="capa">
+                <div class="titulo-capa">Assembleia de Deus Ministério De Cachoeira Paulista</div>
+                <img id="logo" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                <div class="texto-capa">Hinário dos Slides</div>
+                <div class="foot-capa"><b>Edição: </b>{{data}}</div>
             </div>
-            <br>
             <div id="info" class="pagina">
-                <div class="titulo"></div>
+                <div class="titulo-info">Informações do Documento</div>
             </div>
-            <br>
             {% endif %}
             {% for item in lista %}
             <div id="pag{{item['cont']}}" class="pagina">
                 {% if completo == 'true' %}
-                <h3 class="titulo" style="font-family:'BebasKai', sans-serif">{{item['cont']}}. {{item['titulo']}}</h3>
+                <h3 class="titulo">{{item['cont']}}. {{item['titulo']}}</h3>
                 {% else %}
-                <h3 class="titulo" style="font-family:'BebasKai', sans-serif">{{item['titulo']}}</h3>
+                <h3 class="titulo">{{item['titulo']}}</h3>
                 {% endif %}
                 <div class="content">
                     {% for par in item['letras'] %}
@@ -92,184 +152,7 @@
                     {% endfor %}
                 </div>
             </div>
-            <br>
             {% endfor %}        
         </div>
     </body>
-
-    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
-    <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
-    <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
-
-    <script type="text/javascript">
-
-    completo = {{completo}};
-    lista_categorias = {{lista_categoria}};
-    lista_musicas = {{lista}};
-    
-
-    window.onload = function () {
-        //2).save as pdf
-               const doc = new jspdf.jsPDF({
-                    orientation: 'portrait',
-                    unit: 'pt',
-                    format: 'a5'
-                });
-
-            var preview = '<div class="container"><div id="capa" class="pagina"><h3 class="titulo"></h3></div><br>';
-            preview += '<div id="info" class="pagina"><div class="titulo"></div></div><br>';
-
-            for (item in lista_musicas) {
-                preview += '<div id="pag' + lista_musicas[item]['cont'] + '" class="pagina">';
-                if (completo) {
-                    preview += '<h3 class="titulo">' + lista_musicas[item]['cont'] + '. ' + lista_musicas[item]['titulo'] + '</h3>';
-                } else {
-                    preview += '<h3 class="titulo">' + lista_musicas[item]['titulo'] + '</h3>';
-                }
-
-                preview += '<div class="content">';
-                    for (musica in lista_musicas[item]['letras']) {
-                        preview += "<p>" + lista_musicas[item]['letras'][musica]['texto'] + "</p>";
-                    }
-
-                preview += '</div></div></div><br>';
-            }
-
-            //console.log(preview);
-
-            const elem = document.getElementById("container");
-            
-            doc.html(preview, {
-            //doc.html(document.body, {
-                html2canvas: {
-                    scale: 1,
-                },
-                callback: (pdf) => {
-                    if (completo) {
-                        // adicionar capa
-                        doc.setPage(1);
-                        const date = new Date().toLocaleDateString("pt-BR");
-
-                        doc.setLineWidth(4);
-                        doc.line(20, 20, 400, 20);
-                        doc.line(20, 575, 400, 575);
-                    
-                        doc.line(20, 18, 20, 577);
-                        doc.line(400, 18, 400, 577);
-                    
-                        doc.setLineWidth(0.01);
-                        doc.line(25, 25, 395, 25);
-                        doc.line(25, 570, 395, 570);
-                    
-                        doc.line(25, 25, 25, 570);
-                        doc.line(395, 25, 395, 570);
-                                        
-                    
-                        doc.setFont('BebasKai', 'normal');
-                        doc.setFontSize(33);
-                        doc.text(210, 56, 'Assembleia de Deus Ministério', 'center');
-                        doc.text(210, 96, 'De Cachoeira Paulista', 'center');
-                    
-                        var img = new Image();
-                    
-                        img.src = "/static/images/Logo%20Colorido.png";
-                        doc.addImage(img, 'png', 141, 170, 141, 170, undefined, 'FAST');
-                    
-                        doc.setTextColor(255, 0, 0);
-                        doc.setFontSize(50);
-                        doc.text(210, 453, 'Hinário dos Slides', 'center');
-                    
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'normal'); 
-                        doc.setFontSize(20);
-                        doc.text(210, 552, date, 'center')      
-
-                        // adicionar informações
-                        doc.setPage(2);
-                        doc.setFontSize(20);
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('BebasKai', 'normal');
-                        doc.text(209, 48, 'Informações do documento', 'center');
-                        tamanho = doc.getTextWidth('Informações do documento');
-
-                        doc.setLineWidth(0.08);
-                        doc.line(209 - (tamanho / 2), 54, 209 + (tamanho / 2), 54);
-
-                        doc.setFont('helvetica', 'normal'); 
-                        doc.setFontSize(12);
-                        y = 85;
-                        doc.text(20, y, 'Documento gerado automaticamente pelo banco de dados do sistema');
-                        doc.setFont('helvetica', 'bold'); 
-                        y += 20;
-                        doc.text(20, y, '"Slide Master Index II".');
-
-                        y += 40;
-                        doc.text(20, y, 'Data do documento: ');
-                        tamanho = doc.getTextWidth('Data do documento: ');
-                        doc.setFont('helvetica', 'normal'); 
-                        doc.text(20 + tamanho, y, date);
-
-                        y += 20;
-                        doc.setFont('helvetica', 'bold'); 
-                        doc.text(20, y, 'Quantidade de Músicas: ');
-                        tamanho = doc.getTextWidth('Quantidade de Músicas: ');
-                        doc.setFont('helvetica', 'normal'); 
-                        doc.text(20 + tamanho, y, String({{total}}));
-
-                        y += 40;
-                        doc.setFont('helvetica', 'bold'); 
-                        doc.text(20, y, 'Vínculos: ');
-                        x = 20;
-                        y += 20;
-                        doc.setFont('helvetica', 'normal');
-
-                        // agora que a dificuldade começa rs
-                        for (item in lista_categorias) {
-                            doc.setFontSize(12);
-                            doc.text(x, y, lista_categorias[item]['descricao']);
-                            y += 14;
-                            doc.setFontSize(10);
-                            for (sub in lista_categorias[item]['cats']) {
-                                doc.text(x, y, " - " + lista_categorias[item]['cats'][sub])
-                                y += 14;
-                            }
-
-                            y += 14;
-                        }                        
-                    }
-
-                    var pageCount = doc.internal.getNumberOfPages();
-                    doc.deletePage(pageCount)
-
-                    doc.setProperties({
-                        title: "jsPDF sample"
-                    });
-
-
-                    window.open(doc.output('bloburl'), '_blank');  
-
-                    /*if (completo) {
-                        doc.save('musicas.pdf', { returnPromise: true }).then(() => {
-                            console.log('yes');
-                            //window.close();
-                        });                        
-                    } else {
-                        window.open(doc.output('bloburl'), '_blank');  
-                        window.close();
-                    }*/
-
-                },
-                /*x: 10,
-                y: 10*/
-            });
-
-            /*doc.addPage();
-            doc.text(10, 10, 'yes');
-            window.open(doc.output('bloburl'), '_blank');*/
-    };
-    </script>
-
 </html>
