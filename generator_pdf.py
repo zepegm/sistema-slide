@@ -14,5 +14,7 @@ async def generate_pdf(url, pdf_path):
     
     await browser.close()
 
+    return pdf_path
+
 # Run the function
-asyncio.get_event_loop().run_until_complete(generate_pdf('http://localhost:120/render_pdf?ls=', 'example.pdf'))
+#print(asyncio.get_event_loop().run_until_complete(generate_pdf('http://localhost:120/render_pdf?ls=', 'static/docs/musica.pdf')))

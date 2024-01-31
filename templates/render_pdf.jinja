@@ -84,9 +84,11 @@
             }
 
             .titulo-info {
+                position: relative;
+                top:16px;
                 text-align: center;
                 font-family:'BebasKai', sans-serif;
-                font-size: 25px;
+                font-size: 22px;
                 text-decoration: underline;                
             }
 
@@ -105,6 +107,29 @@
                 top: -25px;
                 left: 23px;
                 line-height: 1.3;
+            }
+
+            .content-info {
+                position: relative;
+                left:17px;
+                margin-top: 40px;
+                font-size: 12px;
+                font-family: Helvetica, Arial, sans-serif;
+                line-height: 1.8;                
+            }
+
+            .lista {
+                font-size:10px;
+                line-height: 1.4;
+            }
+
+            .super-lista {
+                position: relative;
+                left:-40px;
+            }
+
+            .super-lista:first-of-type {
+                margin-top: -10px;
             }
 
             .cdx-marker {
@@ -137,6 +162,28 @@
             </div>
             <div id="info" class="pagina">
                 <div class="titulo-info">Informações do Documento</div>
+                <div class="content-info">
+                    <p>Documento gerado automaticamente pelo banco de dados do sistema <b>"Slide Master Index II".</b></p>
+                    <p>
+                        <b>Data do Documento: </b>{{data}}
+                        <br>
+                        <b>Quantidades de Músicas: </b>{{lista|length}}
+                    </p>
+                    <p>
+                        <b>Vínculos: </b><br>
+                        
+                        {% for item in lista_categoria %}
+                            <ul class="super-lista">
+                            {{item['descricao']}}
+                                <ul class="lista">
+                                {% for cat in item['cats'] %}
+                                    <li>{{cat}}</li>
+                                {% endfor %}
+                                </ul>
+                            </ul>
+                        {% endfor %}
+                    </p>
+                </div>
             </div>
             {% endif %}
             {% for item in lista %}

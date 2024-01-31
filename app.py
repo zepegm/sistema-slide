@@ -12,6 +12,7 @@ import DB
 import os.path
 import re
 import datetime
+from pyppeteer import launch
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -115,7 +116,6 @@ def render_pdf():
         lista_final.append({'titulo':item['titulo'], 'letras':letras, 'cont':'{:02d}'.format(cont)})
         cont += 1
 
-    #return jsonify({'lista_musicas':lista_final, 'lista_categorias':lista_categoria, 'completo':'true', 'total':len(lista_final)})
     return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje)
 
 @app.route('/controlador', methods=['GET', 'POST'])
@@ -413,20 +413,20 @@ def verificarSenha():
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 
 
-@app.route('/getTexto_PDF', methods=['GET', 'POST'])
-def getTexto_PDF():
-    lista = []
-    musicas = request.json
+@app.route('/gerar_pdf', methods=['GET', 'POST'])
+async def gerar_pdf():
+    ls = request.json
+    pdf_path = 'static/docs/musica.pdfs'
+    url = 'http://localhost:120/render_pdf?ls=%s' % ls
     
-    for musica in musicas:
-        letras = banco.executarConsulta('select texto from letras where id_musica = %s order by paragrafo' % musica['id'])
-        texto_formatado = []
-        for l in letras:
-            texto_formatado.append(converHTML_to_List(l['texto']))
-        
-        lista.append({'titulo':musica['titulo'], 'letras':texto_formatado})
+    browser = await launch()
+    page = await browser.newPage()
 
-    return jsonify(lista)
+    await page.goto(url)
+    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}})
+    #await browser.close()
+
+    return jsonify(pdf_path)
 
 @app.route('/pesquisarLetra', methods=['GET', 'POST'])
 def pesquisarLetra():

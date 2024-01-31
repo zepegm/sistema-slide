@@ -30,14 +30,6 @@
 
     <style>
 
-      @font-face {
-          font-family:bebaskai;
-          font-style:normal;
-          font-weight:400;
-          src:local('BebasKai'),
-          url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
-      }
-
       .bd-placeholder-img {
         font-size: 1.125rem;
         text-anchor: middle;
@@ -46,38 +38,7 @@
         user-select: none;
         background-color: black;
       }
-
-
-      .pagina {
-          position: relative;
-          top: 8px;
-          left: 9px;
-          width: 401px;
-          height: 579px;
-          border: solid;
-          border-width: 1px;
-          border-color: rgb(255, 0, 0, 0);
-          color:black;
-          margin-bottom: 16.3px;
-      }
-
-      .titulo {
-          text-align: center;
-          font-family:'BebasKai', sans-serif;
-          color:rgb(0, 112, 192);
-          font-size: 20px;
-          position: relative;
-          top:-8px;
-      }
-
-      .content {
-          font-size: 10px;
-          font-family: Helvetica, Arial, sans-serif;
-          position: relative;
-          top: -8px;
-          left: 26px;
-          line-height: 1.3;
-      }      
+   
 
       .box-index {
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
@@ -184,22 +145,7 @@
       color:rgba(192,0,0);
       font-weight:bold;
       background:rgba(0,0,0,0);
-    }
-
-    span.cdx-marker {
-      padding-right: 3px;
-    }
-
-    .cdx-underline-view {
-        /*text-decoration: underline;
-        -webkit-text-underline-position: under;
-        -ms-text-underline-position: below;
-        text-underline-position: under; */
-        text-decoration: none;
-        border-bottom: solid;
-        border-width: thin;
-        padding-bottom: 9px;
-    }      
+    }   
 
     #txt_pesquisa_letra,
     #txt_senha,
@@ -370,13 +316,6 @@
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-  <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/purify.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
-  <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
-  <script src="{{ url_for('static', filename='js/gerador_pdf.js') }}"></script>  
-
   
 <script>
 
@@ -528,12 +467,12 @@
 
     $.ajax({
         type: "POST",
-        url: "render_pdf",
+        url: "gerar_pdf",
         contentType: "application/json",
         data: JSON.stringify(lista),
         dataType: "json",
         success: function(data) {
-          renderPDF(data['lista_musicas'], data['lista_categorias'], data['completo'], data['total'], $("#loading"), $("#btn_gerar_pdf"));
+          console.log(data);
         },
     });
 
