@@ -26,7 +26,7 @@
                 height: 580px;
                 border: solid;
                 border-width: 1px;
-                border-color: rgb(255, 0, 0, 0);
+                /*border-color: rgb(255, 0, 0, 0);*/
                 margin-bottom: 40px;
             }
 
@@ -109,6 +109,11 @@
                 line-height: 1.3;
             }
 
+            .pagina2 {
+                position: relative;
+                top: 0px;
+            }            
+
             .content-info {
                 position: relative;
                 left:17px;
@@ -116,6 +121,24 @@
                 font-size: 12px;
                 font-family: Helvetica, Arial, sans-serif;
                 line-height: 1.8;                
+            }
+
+            .content-sumario {
+                position: relative;
+                left:17px;
+                margin-top: 35px;
+                font-size: 8px;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+
+            .sumario-extra {
+                margin-top: 0px;
+            }
+
+            .content-sumario p {
+                margin-bottom: -1px;
+                border-bottom: 1px dotted #000;
+                margin-right: 35px;
             }
 
             .lista {
@@ -148,7 +171,19 @@
                 border-bottom: solid;
                 border-width: thin;
                 padding-bottom: 1px;
-            }        
+            }   
+
+            .pag {
+                float: right;
+                background: white;
+                padding: 0 0 5px 3px;
+            }     
+
+            .titulo-sumario {
+                background: white;
+                padding: 0 3px 5px 0;
+            }
+
         </style>
     </head>
     <body>
@@ -185,6 +220,22 @@
                     </p>
                 </div>
             </div>
+            <div id="sumario" class="pagina">
+                <div class="titulo-info">Sumário</div>
+                <div class="content-sumario">
+                    {% set limite =  30 %}
+                    {% for item in lista %}
+                    <p><span class="titulo-sumario">{{item['cont']}}. {{item['titulo']}}</span><span class="pag">{{item['pag']}}</span></p>
+            {% if limite == item['cont']|int %}
+                </div>
+            </div>
+            <div class="pagina">
+                <div class="content-sumario sumario-extra">
+                {% set limite = limite + 33 %}
+            {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
             {% endif %}
             {% for item in lista %}
             <div id="pag{{item['cont']}}" class="pagina">
@@ -199,6 +250,17 @@
                     {% endfor %}
                 </div>
             </div>
+
+            {% if item['letras_2']|length > 0 %}
+            <div id="pag{{item['cont'] + 1|string}}" class="pagina">
+                <div class="content pagina2">
+                    {% for par in item['letras_2'] %}
+                    <p>{{par['texto']|safe}}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
             {% endfor %}        
         </div>
     </body>

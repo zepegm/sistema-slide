@@ -472,7 +472,9 @@
         data: JSON.stringify(lista),
         dataType: "json",
         success: function(data) {
-          console.log(data);
+          window.open(data);
+          $("#loading").attr('hidden', '');
+          $("#btn_gerar_pdf").removeAttr('disabled');
         },
     });
 

@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.88.1">
-    <title>Controlador Principal</title>
+    <title>Edição de Músicas</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
 
@@ -205,6 +205,11 @@
 
     textarea {
       resize: none;
+    }
+
+    #btn_gerar_pdf {
+      height: 50px;
+      width: 70px;
     }
 
     </style>
@@ -451,8 +456,10 @@
 
             <div class="col-sm-6">
               <div class="row">
-                <div class="col-sm-12"><h3 class="fw-bold text-center">Prévia das Letras <button id="btn_gerar_pdf" class="btn btn-danger"><i class="fa-solid fa-file-pdf"></i></button></h3></div>
+                <div class="col-sm-12"><h3 class="fw-bold text-center">Prévia das Letras <button id="btn_gerar_pdf" class="btn btn-danger"><i class="fa-solid fa-file-pdf fa-xl"></i></button></h3></div>
                 <div class="col-sm-12 doc"><div id="editorjs"></div></div>
+                <h3>Página 2:</h3>
+                <div class="col-sm-12 doc"><div id="editorjs2"></div></div>
               </div>
             </div>
           </div>
@@ -472,19 +479,15 @@
 
   <script src="{{ url_for('static', filename='js/marker.umd.js') }}"></script>
   <script src="{{ url_for('static', filename='js/underline.umd.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script>
-
-  <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/purify.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='jspdf/jspdf.umd.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='font-custom/BebasKai-normal.js') }}"></script>
-  <script src="{{ url_for('static', filename='font-custom/GreatVibes-Regular-normal.js') }}"></script>  
-  <script src="{{ url_for('static', filename='js/gerador_pdf.js') }}"></script>  
+  <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script> 
 
   
 <script>
 
   $("#btn_gerar_pdf").on('click', function() {
+    $(this).attr('disabled', '');
+    $(this).html('<div class="spinner-border text-ligth" role="status"><span class="sr-only">Carregando...</span></div>');
+
     editor.save()
       .then( data => {
 
@@ -495,12 +498,34 @@
           texto.push({'texto':aux})
         }
 
-        info = [{'titulo':"{{info['titulo']}}", 'letras':texto, 'cont':''}]
+        editor2.save()
+          .then( data_2 => {
+            
+            var texto_2 = [];
 
-        renderPDF(info, [], false, 0, null, null);
+            for (item in data_2['blocks']) {
+              aux = data_2['blocks'][item]['data']['text'].replaceAll("<mark ", "<span ").replaceAll("</mark>", "</span>").replaceAll('cdx-underline', 'cdx-underline-view');
+              texto_2.push({'texto':aux})
+            }
 
-        
+            info = [{'titulo':"{{info['titulo']}}", 'letras':texto, 'letras_2':texto_2, 'cont':''}]
+            console.log(info);
 
+            $.ajax({
+              type: "POST",
+              url: "converto_to_pdf_list",
+              contentType: "application/json",
+              data: JSON.stringify(info),
+              dataType: "json",
+              success: function(data) { 
+                $("#btn_gerar_pdf").removeAttr('disabled');
+                $("#btn_gerar_pdf").html('<i class="fa-solid fa-file-pdf fa-xl"></i>');
+                window.open(data);
+              },
+          });            
+        }).catch((error) => {
+          console.error('Saving error', error);
+        });
       })
       .catch((error) => {
         console.error('Saving error', error);
@@ -516,18 +541,33 @@
             cont = 1;
 
             for (item in data['blocks']) {
-              texto.push({'paragrafo':cont, 'texto':data['blocks'][item]['data']['text']})
+              texto.push({'paragrafo':cont, 'texto':data['blocks'][item]['data']['text'], 'pagina':1});
               cont++;
               //console.log(data['blocks'][item]['data']['text']);
             }
 
-            listaGeral = getInfo();
-            listaGeral['letra'] = texto;
-            listaGeral['destino'] = '{{destino}}';
+            editor2.save()
+              .then( data_2 => {
 
-            $("#json_send").val(JSON.stringify(listaGeral));
-            $("#formSend").submit();
+                for (item in data_2['blocks']) {
+                  texto.push({'paragrafo':cont, 'texto':data_2['blocks'][item]['data']['text'], 'pagina':2});
+                  cont++;
+                  //console.log(data['blocks'][item]['data']['text']);
+                }                
 
+                listaGeral = getInfo();
+                listaGeral['letra'] = texto;
+                listaGeral['destino'] = '{{destino}}';
+
+                //console.log(listaGeral);
+
+                $("#json_send").val(JSON.stringify(listaGeral));
+                $("#formSend").submit();
+
+              })
+              .catch((error) => {
+                console.error('Saving error', error);
+              });
           })
           .catch((error) => {
             console.error('Saving error', error);
@@ -617,6 +657,27 @@
       blocks: {{blocks}}
     }
   });
+
+  const editor2 = new EditorJS({
+    /**
+    * Id of Element that should contain Editor instance
+    */
+    holder: 'editorjs2',
+
+    inlineToolbar: ['bold', 'italic', 'underline', 'Marker'],
+
+    tools: {
+      // ...
+      underline: Underline,
+      Marker: {
+        class: Marker,
+        shortcut: 'CMD+SHIFT+M',
+      }
+    },
+    data: {
+      blocks: {{blocks_2}}
+    }
+  });  
 
 </script>
       

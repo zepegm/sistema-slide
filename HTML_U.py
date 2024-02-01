@@ -42,4 +42,4 @@ def converHTML_to_List(string):
 
 string = '<mark class="cdx-marker"><u class="cdx-underline">Volta no começo e repete novamente.</u></mark>'
 
-print(converHTML_to_List(string))
+#print(converHTML_to_List(string))

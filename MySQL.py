@@ -69,7 +69,7 @@ class db:
 
             # por último inserir as letras para visualização
             for letra in musica['letra']:
-                sql = "INSERT INTO letras VALUES(%s, %s, '%s')" % (id, letra['paragrafo'], letra['texto'])
+                sql = "INSERT INTO letras VALUES(%s, %s, '%s', %s)" % (id, letra['paragrafo'], letra['texto'], letra['pagina'])
                 cur.execute(sql)
 
             database.commit()
@@ -122,7 +122,7 @@ class db:
             cur.execute(sql)
 
             for letra in musica['letra']:
-                sql = "INSERT INTO letras VALUES(%s, %s, '%s')" % (musica['destino'], letra['paragrafo'], letra['texto'])
+                sql = "INSERT INTO letras VALUES(%s, %s, '%s', %s)" % (musica['destino'], letra['paragrafo'], letra['texto'], letra['pagina'])
                 cur.execute(sql)
 
             database.commit()

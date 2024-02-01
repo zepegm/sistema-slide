@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, Response
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
-from threading import Lock
+#from threading import Lock
 from waitress import serve
 from PowerPoint import getListText
 from MySQL import db
 from HTML_U import converHTML_to_List
+import math
 import json
 import os
 import DB
@@ -17,16 +18,15 @@ from pyppeteer import launch
 app=Flask(__name__)
 app.secret_key = "abc123"
 app.config['SECRET_KEY'] = 'justasecretkeythatishouldputhere'
-#socketio = SocketIO(app, async_mode='threading')
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='threading')
+#socketio = SocketIO(app)
 CORS(app)
-thread = None
-thread_lock = Lock()
 
 estado = 0
 current_presentation = {'id':0, 'tipo':''}
 index = 0
 roteiro = []
+temp_pdf = None
 
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 
@@ -69,6 +69,11 @@ def render_pdf():
     #ls = request.json
     ls = request.args.get('ls')
     
+    if (ls == 'render_preview'):
+        global temp_pdf
+        return render_template('render_pdf.jinja', lista=temp_pdf, completo='false', lista_categoria=[], total=0, data='')
+
+
     if ls == '': # pegar geral
         lista_musicas = banco.executarConsulta('select * from musicas order by titulo')
         lista_categoria = []
@@ -111,10 +116,22 @@ def render_pdf():
                                                'where vinculos_x_musicas.id_vinculo IN (%s) ' % ls[:-1] + \
                                                'group by (titulo) order by titulo')
     
+    #montar o sumário
+    if (len(lista_musicas) > 30):
+        page = math.ceil((len(lista_musicas) - 30) / 33) + 4
+    else:
+        page = 4
+
     for item in lista_musicas:
-        letras = banco.executarConsulta('select replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto from letras where id_musica = %s order by paragrafo' % item['id'])
-        lista_final.append({'titulo':item['titulo'], 'letras':letras, 'cont':'{:02d}'.format(cont)})
+        letras = banco.executarConsulta('select replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto from letras where id_musica = %s and pagina = 1 order by paragrafo' % item['id'])
+        letras_2 = banco.executarConsulta('select replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto from letras where id_musica = %s and pagina = 2 order by paragrafo' % item['id'])
+        lista_final.append({'titulo':item['titulo'], 'letras':letras, 'letras_2':letras_2, 'cont':'{:02d}'.format(cont), 'pag':page})
+        
+        if (len(letras_2) > 0):
+            page += 1
+        
         cont += 1
+        page += 1
 
     return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje)
 
@@ -235,7 +252,7 @@ def addMusica():
         else:
             result = banco.alterarMusica(info)
             ls_capa = banco.executarConsulta('select filename from capas where id_musica = %s' % result['id'])
-            print(ls_capa)
+            #print(ls_capa)
             if (len(ls_capa) > 0):
                 capa = 'images/capas/' + ls_capa[0]['filename']
 
@@ -311,21 +328,28 @@ def enviarDadosNovaMusica():
         cat_slides_list = []
 
         blocks = []
+        blocks_2 = []
         for item in info['slides']:
             blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
 
         destino = request.form.getlist('destino')[0]
         if destino != '0': # significa que é edição e não acréscimo
             vinculos = banco.executarConsulta('select * from vinculos_x_musicas where id_musica = %s' % destino)
-            letras = banco.executarConsulta('select * from letras where id_musica = %s order by paragrafo' % destino)
+            letras = banco.executarConsulta('select * from letras where id_musica = %s and pagina = 1 order by paragrafo' % destino)
             blocks = []
 
             for item in letras:
                 blocks.append({'type':'paragraph', 'data':{'text':item['texto']}})
 
+            letras = banco.executarConsulta('select * from letras where id_musica = %s and pagina = 2 order by paragrafo' % destino)
+            blocks_2 = []
+
+            for item in letras:
+                blocks_2.append({'type':'paragraph', 'data':{'text':item['texto']}})            
+
             cat_slides_list = banco.executarConsulta('select categoria from slides where id_musica = %s order by pos' % destino)
 
-        return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks, categoria=categoria, status=status, vinculos=vinculos, cat_slides_list=cat_slides_list, destino=destino)
+        return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks, blocks_2=blocks_2, categoria=categoria, status=status, vinculos=vinculos, cat_slides_list=cat_slides_list, destino=destino)
 
 @app.route('/upload_capa',  methods=['GET', 'POST'])
 def upload_capa():
@@ -340,11 +364,24 @@ def upload_capa():
     return jsonify('./static/images/capas/' + filename)
 
 @app.route('/converto_to_pdf_list', methods=['GET', 'POST'])
-def converto_to_pdf_list():
-    global render_temp
-    render_temp = request.json
+async def converto_to_pdf_list():
+    global temp_pdf
+    temp_pdf = request.json
 
-    return jsonify(True)
+    pdf_path = 'static/docs/musica.pdf'
+
+    browser = await launch(
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False
+    )
+
+    page = await browser.newPage()
+    await page.goto('http://localhost:120/render_pdf?ls=render_preview')
+    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}})
+    await browser.close()
+
+    return jsonify(pdf_path)
 
 @app.route('/get_info_musica', methods=['GET', 'POST'])
 def get_info_musica():
@@ -416,15 +453,18 @@ def verificarSenha():
 @app.route('/gerar_pdf', methods=['GET', 'POST'])
 async def gerar_pdf():
     ls = request.json
-    pdf_path = 'static/docs/musica.pdfs'
-    url = 'http://localhost:120/render_pdf?ls=%s' % ls
-    
-    browser = await launch()
-    page = await browser.newPage()
+    pdf_path = 'static/docs/musica.pdf'
 
-    await page.goto(url)
+    browser = await launch(
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False
+    )
+
+    page = await browser.newPage()
+    await page.goto('http://localhost:120/render_pdf?ls=%s' % ls)
     await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}})
-    #await browser.close()
+    await browser.close()
 
     return jsonify(pdf_path)
 
