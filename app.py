@@ -9,10 +9,10 @@ from HTML_U import converHTML_to_List
 import math
 import json
 import os
-import DB
 import os.path
 import re
 import datetime
+import random
 from pyppeteer import launch
 
 app=Flask(__name__)
@@ -147,6 +147,9 @@ def controlador():
     else:
 
         if (current_presentation['tipo'] == 'musicas'):
+
+            config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
 
             if len(fundo) < 1:
@@ -156,7 +159,7 @@ def controlador():
 
             lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides where id_musica = %s order by pos" % current_presentation['id'])
 
-            return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo)
+            return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo, config=config)
 
 @app.route('/abrir_musica', methods=['GET', 'POST'])
 def abrir_musica():
@@ -179,6 +182,10 @@ def slide():
         fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
         return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0)
     elif estado == 1: # se iniciou uma apresentação
+
+        # estabelecer configuração da música
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+
         if (current_presentation['tipo'] == 'musicas'):
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
 
@@ -189,7 +196,7 @@ def slide():
 
             lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides where id_musica = %s order by pos' % current_presentation['id'])
 
-            return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=lista_slides, index=index)
+            return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=lista_slides, index=index, config=config)
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
@@ -209,23 +216,6 @@ def updateSlide():
             #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
             #socketio.emit('legenda', legenda)            
             return jsonify(True)
-
-@app.route('/goto', methods=['GET', 'POST'])
-def goto():
-    if request.method == 'POST':
-        #print('got a post request!')
-
-        if request.is_json: # application/json
-            # handle your ajax request here!
-            new_index = request.json
-            global index
-            index = new_index  
-
-            socketio.emit('update', index)
-            legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
-            socketio.emit('legenda', legenda)
-            return jsonify(index)              
-
 
 @app.route('/changeBackground', methods=['GET', 'POST'])
 def changeBackground():
@@ -270,8 +260,8 @@ def addMusica():
 
 @app.route('/subtitle')
 def exibirLegenda():
-    legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
-
+    #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
+    legenda = None
     if legenda != '':
     
         if len(legenda) > 199:
@@ -532,6 +522,36 @@ def pesquisarLetra():
 
             return render_template('musicas.jinja', musicas=musicas, status=status, categoria=categoria)
 
+@app.route('/alterar_fundo', methods=['GET', 'POST'])
+def alterar_fundo():
+
+    if request.method == 'POST':
+        if request.is_json:
+            info = request.json
+            
+            for item in info:
+                banco.insertOrUpdate(item, 'config')
+
+            socketio.emit('refresh', 1)
+
+            return jsonify(True)
+
+
+    destino = request.args.get('destino')
+
+    if (destino == 'm'):
+
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+
+        #pegar um texto aleatório pra testar o preview
+        texto = banco.executarConsulta("select * from slides where `text-slide` like '" + '%<mark class="cdx-marker">%' + "' and categoria = 1")
+        result = texto[random.randint(0, len(texto))]['text-slide']
+
+        return render_template('alterar_fundo.jinja', titulo='Música', preview=result, config=config)
+
+    return 'yes'
+
+
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
 def iniciar_apresentacao():
@@ -612,7 +632,7 @@ def encerrar_apresentacao():
                 current_presentation = {'id':0, 'tipo':''}
                 index = 0
 
-                socketio.emit('refresh', 1)          
+                socketio.emit('refresh', 1)
                 socketio.emit('update_roteiro', 1)  
 
 

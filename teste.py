@@ -1,15 +1,14 @@
-from pptx import Presentation
+from MySQL import db
+import random
 
-dir = r'C:\Users\giuseppe.manzella\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro\Autor da Minha Fé (UMADECAP).pptx'
+banco = db({'host':"localhost",    # your host, usually localhost
+            'user':"root",         # your username
+            'passwd':"",  # your password
+            'db':"sistema-slide"})
 
-file = open(f'{dir}', 'rb')
-prs = Presentation(file)
 
-for slide in prs.slides:
-    for shape in slide.shapes:
-        if not shape.has_text_frame:
-            continue
-        for paragraph in shape.text_frame.paragraphs:
-            for run in paragraph.runs:
+texto = banco.executarConsulta("select * from slides where `text-slide` like '" + '%<mark class="cdx-marker">%' + "' and categoria = 1")
 
-                print(run.text)
+result = texto[random.randint(0, len(texto))]
+
+print(result['text-slide'])

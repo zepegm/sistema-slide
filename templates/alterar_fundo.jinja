@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Alterar Fundo da {{titulo}}</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      /*.bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }*/
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+
+    #slidePreview {
+      width: 640px; /* or whatever width you want. */
+      height: 360px; /* or whatever width you want. */
+    }
+
+    .letra {
+      background-color: {{config['fundo']}};
+      background-size: 100% 100%;
+      color:{{config['letra']}};
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: normal; 
+    }
+
+    .cdx-marker {
+      color:{{config['mark']}};
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
+
+    #card_principal {
+      width: 641px; /* or whatever width you want. */
+    }
+
+    #loading {
+      background-color: white;
+      height: 100%;
+      left: 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 9999;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      bottom: 0;
+      margin: auto;
+      border: 20px solid #EAF0F6;
+      border-radius: 50%;
+      border-top: 20px solid #FF7A59;
+      width: 200px;
+      height: 200px;
+      animation: spinner 4s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }    
+
+    #pausa_instrumental,
+    #anotacao {
+      font-size: 20px;
+    }
+
+    .form-check-label {
+      color:black;
+    }
+
+    .card-body {
+      background-color: rgb(226, 226, 226);
+    }
+
+    </style>
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div id="loading"><div class="loader"></div></div>
+          <h2 class="fw-bold text-center">Alterar Fundo da {{titulo}}</h2>
+          <div class="row">
+              <div class="col-sm-7 text-center">
+                <div id="card_principal" class="card shadow-sm">
+                      <div class="letra" id="slidePreview">{{preview}}</div>
+                  <div class="card-body">
+                    <h1 class="card-text text-center">Preview</h1>
+                  </div>
+                </div>        
+              </div>
+              <div class="col-sm-5">
+                <h4>Opções de Fundo</h4>
+              <div class="form-check">
+                {% if config['letra'] == 'white' %}
+                <input value="0" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" checked>
+                {% else %}
+                <input value="0" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+                {% endif %}
+                <label class="form-check-label" for="flexRadioDefault1">
+                  Escuro
+                </label>
+              </div>
+              <div class="form-check">
+                {% if config['letra'] == 'black' %}
+                <input value="1" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
+                {% else %}
+                <input value="1" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2">
+                {% endif %}
+                <label class="form-check-label" for="flexRadioDefault2">
+                  Claro
+                </label>
+              </div>                
+              </div>            
+          </div>
+
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+  
+  <script>
+
+
+    window.onload = function() {
+      textFit($('#slidePreview'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+      $("#loading").remove();
+    };
+
+    $(".form-check-input").on('change', function() {
+      if ($(this).val() == '0') {
+        letra = 'white';
+        fundo = 'black';
+        mark = 'rgba(255,207,102)'
+      } else {
+        letra = 'black';
+        fundo = 'white';
+        mark = 'rgba(192,0,0)'        
+      }
+      info = []
+      info.push({'id':"'cor-musica-letra'", 'valor':"'" + letra + "'"});
+      info.push({'id':"'cor-musica-fundo'", 'valor':"'" + fundo + "'"});
+      info.push({'id':"'cor-musica-mark'", 'valor':"'" + mark + "'"});
+
+      $.ajax({
+        type: "POST",
+        url: "alterar_fundo",
+        contentType: "application/json",
+        data: JSON.stringify(info),
+        dataType: "json",
+        success: function(data) { 
+          if (data) {
+            $(".letra").css('background-color', fundo);
+            $(".letra").css('color', letra);
+            $(".cdx-marker").css('color', mark);
+          }
+        },
+    });      
+
+    });
+
+  </script>
+      
+  </body>
+</html>
