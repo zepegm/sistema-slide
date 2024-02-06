@@ -125,6 +125,10 @@
               animation-delay: 2s;
             }
 
+            .coro {
+                color:{{config['mark']}};
+            }
+
             @keyframes fade-in {
                 from {opacity: 0;}
                 to {opacity: 1;}
@@ -174,7 +178,7 @@
 
         <div id="notas" class="muzieknootjes">
             {% if lista_slides|length > 0 and index < lista_slides|length %}
-            {% if lista_slides[index - 1]['categoria'] == 3 %}
+            {% if lista_slides[index - 1]['categoria'] == 3 or lista_slides[index - 1]['categoria'] == 4 %}
             <div class="noot-1">&#9835; &#9833;</div>
             <div class="noot-2">&#9833;</div>
             <div class="noot-3">&#9839; &#9834;</div>
@@ -186,7 +190,11 @@
         {% if index == 0 or (index - 1) == lista_slides|length %}
         <div class="slide capa in" id="slide1"></div>
         {% else %}
-        <div class="slide letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
+            {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
+            <div class="slide coro letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
+            {% else %}
+            <div class="slide letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
+            {% endif %}
         {% endif %}
         <div class="slide" id="slide2"></div>      
 
@@ -235,16 +243,21 @@
                 key_final = true;
             } else {
                 slide2.classList.remove('capa');
+                slide2.classList.remove('coro');
                 slide2.classList.add('letra');                    
                 slide2.innerHTML = slides[index - 1]['text-slide'];
                 textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
 
-                if (slides[index -1]['categoria'] == 3) {
+                if (slides[index -1]['categoria'] == 3 || slides[index -1]['categoria'] == 4) {
                     notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
                     /*notas.classList.remove('hidden');*/
                 } else {
                     notas.innerHTML = '';
                     /*notas.classList.add('hidden');*/
+                }
+
+                if (slides[index -1]['categoria'] == 2 || slides[index -1]['categoria'] == 4) {
+                    slide2.classList.add('coro'); 
                 }
             }
         }

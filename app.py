@@ -259,19 +259,25 @@ def addMusica():
 
 
 @app.route('/subtitle')
-def exibirLegenda():
-    #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
-    legenda = None
-    if legenda != '':
+def subtitle():
     
-        if len(legenda) > 199:
-            tamanho = 30
-        else:
-            tamanho = 20
-    else:
-        tamanho = 0
+    global current_presentation
+    global estado
+    global index
 
-    return render_template('subtitle.jinja', legenda=legenda, tamanho=tamanho)
+    if (estado == 1): #música
+        legenda = banco.executarConsulta('select `text-legenda` from slides where id_musica = %s order by pos' % current_presentation['id'])
+        titulo = banco.executarConsulta('select titulo from musicas where id = %s' % current_presentation['id'])[0]['titulo']
+        tamanho = 20
+    else:
+        legenda = []
+        tamanho = 0
+        titulo = ''
+
+    print(legenda)
+    print(index)
+
+    return render_template('subtitle.jinja', legenda=legenda, index=index, tamanho=tamanho, titulo=titulo)
 
 @app.route('/edit_musica', methods=['GET', 'POST'])
 def edit_musica():

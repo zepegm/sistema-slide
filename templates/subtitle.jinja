@@ -66,36 +66,56 @@
         <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     </head>
     <body>
+        {% if index > 0 %}
         <div class="retangulo" style="height:{{tamanho|safe}}vh"></div>
-        <div class="text" style="height:{{tamanho|safe}}vh">{{ legenda|safe }}</div>
+        <div class="text" style="height:{{tamanho|safe}}vh">{{ legenda[index - 1]['text-legenda']|safe }}</div>
+        {% else %}
+        <div class="retangulo" style="height:20vh"></div>
+        <div class="text" style="height:20vh">{{titulo}}</div>
+        {% endif %}
 
         <script>
-            var tamanho = {{tamanho|safe}}
-            if (tamanho > 0) {
+            var legenda = {{legenda}};
+            if ({{index}} < legenda.length) {
                 textFit($('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
             }
+            
             var socket = io()
 
-            socket.on('legenda', function(legenda) {
+            socket.on('update', function(index) {
                 
-                if ($('.text').text() != legenda) {
+                if (index > 0 && index < legenda.length) {
+                    console.log(legenda[index - 1]);
+                    $('.text').html(legenda[index - 1]['text-legenda']);
 
-                    $('.text').html(legenda);
-                    //console.log(legenda['texto']);
-                    if ($('.text').text().length < 1) {
-                        tamanho = 0;
-                    } else if ($('.text').text().length < 100) {
+                    if ($('.text').text().length < 100) {
                         tamanho = 20;
                     } else {
                         tamanho = 30;
                     }
+
                     $('.text').attr('style', "height:" + tamanho + "vh");
                     $('.retangulo').attr('style', "height:" + tamanho + "vh");
+
                     if (tamanho > 0) {
                         textFit($('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
                     }
+
                     var el = $('.text');
                     el.before( el.clone(true) ).remove();
+                } else if (index == 0) {
+                    $('.text').html('{{titulo}}');
+                    $('.text').attr('style', "height:20vh");
+                    $('.retangulo').attr('style', "height:20vh");
+
+                    textFit($('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
+
+                    var el = $('.text');
+                    el.before( el.clone(true) ).remove();                    
+                } else {
+                    $('.text').empty();
+                    $('.text').attr('style', "height:0vh");
+                    $('.retangulo').attr('style', "height:0vh");                    
                 }
             })
         </script>

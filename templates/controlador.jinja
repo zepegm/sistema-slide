@@ -140,6 +140,10 @@
       font-size: 20px;
     }
 
+    .coro {
+      color:{{config['mark']}};
+    }
+
     </style>
   </head>
 
@@ -175,7 +179,11 @@
                     {% if index == 0 or (index - 1) == lista_slides|length %}
                       <div class="capa" id="slidePrincipal"></div>
                     {% else %}
+                      {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
+                      <div class="letra coro" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
+                      {% else %}
                       <div class="letra" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
+                      {% endif %}
                     {% endif %}
                   <div class="card-body">
                     <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
@@ -183,7 +191,7 @@
                         {% if lista_slides[index - 1]['anotacao'] != '' %}
                         <p id="anotacao"><strong>Anotação: </strong>{{lista_slides[index - 1]['anotacao']}}</p>
                         {% endif %}
-                        {% if lista_slides[index - 1]['categoria'] == 3 %}
+                        {% if lista_slides[index - 1]['categoria'] == 3 or lista_slides[index - 1]['categoria'] == 4 %}
                         <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
                         {% endif %}                        
                       {% endif %}
@@ -193,7 +201,11 @@
             {% if index < lista_slides|length  %}
             <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
+                {% if lista_slides[index]['categoria'] == 2 or lista_slides[index]['categoria'] == 4 %}
+                <div id="slideProx" class="letra coro">{{lista_slides[index]['text-slide']}}</div>
+                {% else %}
                 <div id="slideProx" class="letra">{{lista_slides[index]['text-slide']}}</div>
+                {% endif %}
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
                 </div>
@@ -256,7 +268,11 @@
                 {% else %}
                 <div id="box{{sld['pos']}}" data-index="{{sld['pos']}}" class="big-box card shadow-sm">
                 {% endif %}
+                  {% if sld['categoria'] == 2 or sld['categoria'] == 4 %}
+                  <div class="letra coro mini-box">{{sld['text-slide']}}</div>
+                  {% else %}
                   <div class="letra mini-box">{{sld['text-slide']}}</div>
+                  {% endif %}
                   <div class="card-body">
                     <h4 class="card-text text-center" id="proximoSlide">Slide: {{sld['pos'] + 1}}</h4>
                   </div>
@@ -326,6 +342,15 @@
 
         $("#slidePrincipal").empty();
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
+
+        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
+          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
+        }
+        $("#slidePrincipal").removeClass('coro');
+        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
+          $("#slidePrincipal").addClass('coro');        
+        }
+
         textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
       } else {
         $("#slidePrincipal").addClass('capa');
@@ -341,6 +366,11 @@
         if (index < slides.length) {
           $("#slideProx").addClass('letra');
           $("#slideProx").removeClass('capa');
+
+          $("#slideProx").removeClass('coro');
+          if (slides[index]["categoria"] == 2 || slides[index]["categoria"] == 4) {
+            $("#slideProx").addClass('coro');        
+          }
 
           $("#slideProx").empty();
           $("#slideProx").html(slides[index]['text-slide']);
@@ -387,11 +417,15 @@
         $("#slideProx").removeClass('letra');             
       } else {
         $("#slideProx").addClass('letra');
-        $("#slideProx").removeClass('capa');          
+        $("#slideProx").removeClass('capa');
+        $("#slideProx").removeClass('coro');
 
         $("#slideProx").html(slides[index]['text-slide']);
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});         
            
+        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
+          $("#slideProx").addClass('coro');
+        }
       }
 
       console.log(index);
@@ -420,9 +454,13 @@
         if (slides[index - 1]["anotacao"] != '') {
           $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
         }   
-        if (slides[index - 1]["categoria"] == 3) {
+        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
           $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
         }
+        $("#slidePrincipal").removeClass('coro');
+        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
+          $("#slidePrincipal").addClass('coro');
+        }        
       }
 
       changeBox(index);
@@ -463,19 +501,28 @@
         if (slides[index - 1]["anotacao"] != '') {
           $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
         }
-        if (slides[index - 1]["categoria"] == 3) {
+        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
           $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
-        }        
+        } 
+        $("#slidePrincipal").removeClass('coro');
+        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
+          $("#slidePrincipal").addClass('coro');
+        }
       } else { // recolocar o background da imagem
         $("#slidePrincipal").empty();
         $("#slidePrincipal").addClass('capa');
         $("#slidePrincipal").removeClass('letra');        
       }
 
+      $("#slideProx").removeClass('coro');
 
       if (index < slides.length) {
         $("#slideProx").html(slides[index]['text-slide']);
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+
+        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
+          $("#slideProx").addClass('coro');
+        }
       } else if (index == slides.length) {
         $("#slideProx").empty();
         $("#slideProx").addClass('capa');
