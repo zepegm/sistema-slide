@@ -66,12 +66,12 @@
         <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     </head>
     <body>
-        {% if index > 0 %}
+        {% if index < legenda|length %}
         <div class="retangulo" style="height:{{tamanho|safe}}vh"></div>
-        <div class="text" style="height:{{tamanho|safe}}vh">{{ legenda[index - 1]['text-legenda']|safe }}</div>
+        <div class="text" style="height:{{tamanho|safe}}vh">{{ legenda[index]|safe }}</div>
         {% else %}
-        <div class="retangulo" style="height:20vh"></div>
-        <div class="text" style="height:20vh">{{titulo}}</div>
+        <div class="retangulo" style="height:0vh"></div>
+        <div class="text" style="height:0vh"></div>
         {% endif %}
 
         <script>
@@ -84,9 +84,8 @@
 
             socket.on('update', function(index) {
                 
-                if (index > 0 && index < legenda.length) {
-                    console.log(legenda[index - 1]);
-                    $('.text').html(legenda[index - 1]['text-legenda']);
+                if (index < legenda.length) {
+                    $('.text').html(legenda[index]);
 
                     if ($('.text').text().length < 100) {
                         tamanho = 20;
@@ -97,27 +96,22 @@
                     $('.text').attr('style', "height:" + tamanho + "vh");
                     $('.retangulo').attr('style', "height:" + tamanho + "vh");
 
-                    if (tamanho > 0) {
-                        textFit($('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
-                    }
-
-                    var el = $('.text');
-                    el.before( el.clone(true) ).remove();
-                } else if (index == 0) {
-                    $('.text').html('{{titulo}}');
-                    $('.text').attr('style', "height:20vh");
-                    $('.retangulo').attr('style', "height:20vh");
-
                     textFit($('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
 
                     var el = $('.text');
-                    el.before( el.clone(true) ).remove();                    
+                    el.before( el.clone(true) ).remove();      
                 } else {
                     $('.text').empty();
                     $('.text').attr('style', "height:0vh");
                     $('.retangulo').attr('style', "height:0vh");                    
                 }
-            })
+            });
+
+            socket.on('refresh', function(a) {
+                if (a == 1) {
+                    location.reload();
+                }
+            });
         </script>
     </body>
 </html>

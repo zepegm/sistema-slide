@@ -267,17 +267,17 @@ def subtitle():
 
     if (estado == 1): #música
         legenda = banco.executarConsulta('select `text-legenda` from slides where id_musica = %s order by pos' % current_presentation['id'])
-        titulo = banco.executarConsulta('select titulo from musicas where id = %s' % current_presentation['id'])[0]['titulo']
+        lista = [banco.executarConsulta('select titulo from musicas where id = %s' % current_presentation['id'])[0]['titulo']]
+        for item in legenda:
+            lista.append(item['text-legenda'])
+
         tamanho = 20
     else:
-        legenda = []
+        lista = []
         tamanho = 0
         titulo = ''
 
-    print(legenda)
-    print(index)
-
-    return render_template('subtitle.jinja', legenda=legenda, index=index, tamanho=tamanho, titulo=titulo)
+    return render_template('subtitle.jinja', legenda=lista, index=index, tamanho=tamanho)
 
 @app.route('/edit_musica', methods=['GET', 'POST'])
 def edit_musica():
