@@ -374,7 +374,7 @@ async def converto_to_pdf_list():
 
     page = await browser.newPage()
     await page.goto('http://localhost:120/render_pdf?ls=render_preview')
-    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}})
+    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
     await browser.close()
 
     return jsonify(pdf_path)
@@ -458,8 +458,8 @@ async def gerar_pdf():
     )
 
     page = await browser.newPage()
-    await page.goto('http://localhost:120/render_pdf?ls=%s' % ls)
-    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}})
+    await page.goto('http://localhost:120/render_pdf?ls=%s' % ls, {'waitUntil':'networkidle2'})
+    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
     await browser.close()
 
     return jsonify(pdf_path)
