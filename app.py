@@ -118,7 +118,7 @@ def render_pdf():
     
     #montar o sumário
     if (len(lista_musicas) > 30):
-        page = math.ceil((len(lista_musicas) - 30) / 33) + 4
+        page = math.ceil((len(lista_musicas) - 32) / 35) + 4
     else:
         page = 4
 
