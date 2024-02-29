@@ -161,6 +161,12 @@ def controlador():
 
             return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo, config=config)
 
+@app.route('/abrir_biblia', methods=['GET', 'POST'])
+def abrir_biblia():
+
+    return render_template('biblia.jinja')
+
+
 @app.route('/abrir_musica', methods=['GET', 'POST'])
 def abrir_musica():
 

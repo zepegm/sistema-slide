@@ -151,7 +151,7 @@ class db:
 
             sql = "INSERT INTO " + tabela + " (" + keys[:-2] + ") VALUES(" + data[:-2] + ") ON DUPLICATE KEY UPDATE " + update[:-2]
 
-            print(sql)
+            #print(sql)
 
             cur.execute(sql)
             database.commit()
@@ -161,4 +161,39 @@ class db:
 
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
-            return False                    
+            return False          
+
+
+    def insertOrUpdateList(self, lista, tabela):
+            
+        try:
+            database = mysql.connector.connect(host=self.cred['host'], user=self.cred['user'], passwd=self.cred['passwd'], db=self.cred['db'])
+            cur = database.cursor()
+
+            for dados in lista:
+
+                keys = ""
+                data = ""
+                update = ""
+
+                for item in dados:
+                    keys += item + ", "
+                    data += dados[item] + ", "
+
+                    if item != 'id_musica':
+                        update += item + "=" + dados[item] + ", "
+
+                sql = "INSERT INTO " + tabela + " (" + keys[:-2] + ") VALUES(" + data[:-2] + ") ON DUPLICATE KEY UPDATE " + update[:-2]
+
+                #print(sql)
+
+                cur.execute(sql)
+            
+            database.commit()
+            database.close()
+
+            return True
+
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False                   
