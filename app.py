@@ -164,7 +164,10 @@ def controlador():
 @app.route('/abrir_biblia', methods=['GET', 'POST'])
 def abrir_biblia():
 
-    return render_template('biblia.jinja')
+    antigo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 1")
+    novo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 2")
+
+    return render_template('biblia.jinja', novo=novo_testamento, antigo=antigo_testamento)
 
 
 @app.route('/abrir_musica', methods=['GET', 'POST'])

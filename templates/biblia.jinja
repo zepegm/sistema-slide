@@ -174,6 +174,12 @@
       transform: translateY(-50%);
     }
 
+    .title {
+      text-align:center;
+      font-weight: bold;
+      color:black;
+    }
+
     </style>
     
   </head>
@@ -199,7 +205,24 @@
             </div>
           </div>
           <div class="row">
-          
+            <div class="col-sm-2">
+              <p class="title">Antigo Testamento</p>
+              <div id="antigo_testamento" class="list-group">
+                {% for item in antigo %}
+                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}" data-classificacao="{{item['classificacao']}}">{{item['descricao']}}</a>
+                {% endfor %}       
+              </div>
+            </div>
+
+            <div class="col-sm-2">
+              <p class="title">Novo Testamento</p>
+              <div id="novo_testamento" class="list-group">
+                {% for item in novo %}
+                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}" data-classificacao="{{item['classificacao']}}">{{item['descricao']}}</a>
+                {% endfor %}       
+              </div>              
+            </div>
+
           </div>
         </section>
       </div>
