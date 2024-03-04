@@ -148,15 +148,12 @@
     }   
 
     #txt_pesquisa_letra,
-    #txt_senha,
-    #txt_filtro {
+    #txt_senha {
       border: solid;
       border-color: rgb(0, 0, 0, 0.3);
     }   
 
-    #lista_geral a.toggled { display: none; }
-
-    #lista_geral a.toggled-vinc { display: none; }
+    a.toggled { display: none; }
 
     img {
         display: block;
@@ -178,6 +175,28 @@
       text-align:center;
       font-weight: bold;
       color:black;
+    }
+
+    #selecionarLivro {
+      border: none;
+      background-color: rgb(201, 130, 0);
+      padding: 12px 48px 12px 24px;
+      border-radius: 4px;
+      color: white;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7.41' height='12' viewBox='0 0 7.41 12'%3E%3Cpath d='M10,6,8.59,7.41,13.17,12,8.59,16.59,10,18l6-6Z' transform='translate(-8.59 -6)' fill='%23fff'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 24px center;
+    }
+
+    #txt_filtro {
+      width: 90%;
+      position: relative;
+      left: 5%;
+    }
+
+    .dropdown-item-text {
+      font-weight: bold;
+      font-size:large;
     }
 
     </style>
@@ -205,24 +224,28 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-sm-2">
-              <p class="title">Antigo Testamento</p>
-              <div id="antigo_testamento" class="list-group">
-                {% for item in antigo %}
-                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}" data-classificacao="{{item['classificacao']}}">{{item['descricao']}}</a>
-                {% endfor %}       
+            <div class="col-sm-4">
+
+              <div class="dropright">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="selecionarLivro" data-toggle="dropdown" aria-expanded="false">
+                  Selecione o Livro
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="selecionarLivro">
+                  <input type="text" id="txt_filtro">
+                  <div class="dropdown-divider"></div>
+                  <span class="dropdown-item-text" id="headAntigo">Antigo Testamento</span>
+                  {% for item in antigo %}              
+                  <li><a class="dropdown-item lsAntigo" href="#" data-id="{{item['id']}}">{{item['descricao']}}</a></li>
+                  {% endfor %}
+                  <div class="dropdown-divider"></div>
+                  <span class="dropdown-item-text lsNovo" id="headNovo">Novo Testamento</span>
+                  {% for item in novo %}              
+                  <li><a class="dropdown-item" href="#" data-id="{{item['id']}}">{{item['descricao']}}</a></li>
+                  {% endfor %}                  
+                </ul>
               </div>
-            </div>
 
-            <div class="col-sm-2">
-              <p class="title">Novo Testamento</p>
-              <div id="novo_testamento" class="list-group">
-                {% for item in novo %}
-                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}" data-classificacao="{{item['classificacao']}}">{{item['descricao']}}</a>
-                {% endfor %}       
-              </div>              
-            </div>
-
+            </div>   
           </div>
         </section>
       </div>
@@ -236,7 +259,23 @@
 
   
 <script>
+  $("#txt_filtro").on('keyup', function() {
+    val = $(this).val().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
+    $(".dropdown-item").each(function(index) {
+      //console.log($(this).text().toLowerCase().normalize("NFD") + " - " + val);
+      if ($(this).text().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().indexOf(val) !== - 1) {
+        $(this).removeClass('toggled');
+      } else {
+        $(this).addClass('toggled');
+      }
+    });
+
+
+    // verificar estado das listas
+    console.log($(".lsAntigo").length);
+
+  });
 </script>
       
   </body>
