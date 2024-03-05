@@ -164,6 +164,43 @@ def controlador():
 @app.route('/abrir_biblia', methods=['GET', 'POST'])
 def abrir_biblia():
 
+    if request.method == 'POST':
+        if request.is_json:
+            info = request.json
+
+            # preciso que liste os capítulos
+            if info['destino'] == 1:
+                capitulos = banco.executarConsultaVetor("select LPAD(cap, 2, '0') as cap from biblia_arc where livro = %s group by cap order by cap" % info['id'])
+                return jsonify(capitulos)
+            
+            # pegar os versículos
+            if info['destino'] == 2:
+                tabelas = banco.executarConsultaVetor('select * from lista_tabelas_biblia')
+
+                lista_final = []
+                lista_intermediaria = {}
+                total = []
+
+                for item in tabelas:
+                    texto = banco.executarConsultaVetor('select texto from %s where livro = %s and cap = %s order by ver' % (item, info['livro'], info['cap']))
+                    lista_intermediaria[item] = texto
+                    total.append(len(texto))
+
+                maximo = max(total)
+
+                for i in range(0, maximo):
+                    dict_aux = {'ver':i + 1}
+
+                    for item in tabelas:
+                        try:
+                            dict_aux[item] = lista_intermediaria[item][i]
+                        except:
+                            dict_aux[item] = '-'
+
+                    lista_final.append(dict_aux)
+
+                return jsonify(lista_final)
+
     antigo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 1")
     novo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 2")
 
