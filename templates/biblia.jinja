@@ -63,13 +63,7 @@
 
     .ce-paragraph {
         border-bottom: solid;
-    }
-
-    #txt_anotacao,
-    #txt_titulo {
-      border: solid;
-      border-color: rgb(0, 0, 0, 0.3);
-    }    
+    }   
 
     #previewSlide {
       width: 426px; /* or whatever width you want. */
@@ -147,10 +141,12 @@
       background:rgba(0,0,0,0);
     }   
 
-    #txt_pesquisa_letra,
+    #txt_capitulo,
     #txt_senha {
       border: solid;
       border-color: rgb(0, 0, 0, 0.3);
+      margin-left: 10px;
+      width: 70px;
     }   
 
     .toggled { display: none; }
@@ -192,6 +188,7 @@
       width: 90%;
       position: relative;
       left: 5%;
+      border: solid black;
     }
 
     .dropdown-item-text {
@@ -201,6 +198,7 @@
 
     .btn-capitulos {
       margin: 3px;
+      width: 60px;
     }
 
     .nd {
@@ -223,10 +221,18 @@
       color: red;
     }    
 
-    td {
-      height: 50px;
-      vertical-align: bottom;
-      color: red;
+    .t_vers {
+      font-size: 30px;
+    }
+
+    .auto_hifen {
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
+    }
+
+    .cel_vers {
+      cursor: pointer;
     }
 
     </style>
@@ -293,6 +299,49 @@
   
 <script>
 
+  function scrollVer() {
+    var element = document.getElementById('divisor_versiculo');
+    var headerOffset = 45;
+    var elementPosition = element.getBoundingClientRect().top;
+    var offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+  
+    window.scrollTo({
+         top: offsetPosition,
+         behavior: "smooth"
+    });   
+  }
+
+  function loadContent(lista) {
+    $("#painel_versiculos").empty();
+
+    $("#painel_versiculos").append("<h3>Versículos</h3>");
+    $("#painel_versiculos").append('<p class="col-sm-12 form-inline form-group"><label for="txt_capitulo" class="form-label">Digite o versículo ou clique no versículo da tabela abaixo:</label><input type="text" class="form-control" id="txt_capitulo"></p>');
+
+    $("#painel_versiculos").append("<table class='table table-hover' id='tb_versiculo'></table>");
+
+    thead = '<tr><th scope="col">Vers.</th>';
+    keys = Object.keys(lista[0]);
+    for (i = 0; i < keys.length - 1; i++) {
+      thead += '<th>' + keys[i].replace('biblia_', '').toUpperCase() + '</th>';
+    }
+    thead += "</tr>";
+
+    $("#tb_versiculo").append('<thead class="table-dark">' + thead + '</thead>');
+
+    tbody = '<tbody>';
+    for (item in lista) {
+      tbody += '<tr">';
+      tbody += '<th class="align-middle t_vers">' + lista[item]['ver'] + '</th>';
+      for (i = 0; i < keys.length - 1; i++) {
+        tbody += '<td lang="pt-br" class="align-middle text-justify auto_hifen cel_vers">' + lista[item][keys[i]] + '</td>';
+      }              
+      tbody += '</tr>';
+    }
+    tbody += '</tbody>';
+
+    $("#tb_versiculo").append(tbody);
+  }
+
   $(".livroBiblia").on('click', function() {
     $(".livroBiblia").removeClass('active');
     $(this).addClass('active');
@@ -311,13 +360,14 @@
       success: function(response) {
         // estou com os capítulos, precis começar a desenhar o meu
         $("#conteudo_principal").empty();
-        $("#conteudo_principal").append('<div class="col-sm-12"><hr></div>')
-        $("#conteudo_principal").append('<div class="col-sm-12" id="painel_capitulos"><h3>Capítulos</h3></div>')
+        $("#conteudo_principal").append('<div class="col-sm-12"><hr></div>');
+        $("#conteudo_principal").append('<div class="col-sm-12"><h3>Capítulos</h3></div>');
+        $("#conteudo_principal").append('<div class="col-sm-12 form-inline form-group"><label for="txt_capitulo" class="form-label">Digite o capítulo ou clique nos botões abaixo:</label><input type="text" class="form-control" id="txt_capitulo"></div>');
+        $("#conteudo_principal").append('<div class="col-sm-12" id="painel_capitulos"></div>');
 
-
-        $("#painel_capitulos").append('<button class="btn btn-primary btn-capitulos">' + response[0] + '</button>')
+        $("#painel_capitulos").append('<button class="btn btn-primary btn-capitulos" data-livro="' + id + '" data-cap="' + response[0] + '">' + String(response[0]).padStart(2, '0') + '</button>')
         for (var i = 1; i < response.length; i++) {
-          $("#painel_capitulos").append('<button class="btn btn-secondary btn-capitulos">' + response[i] + '</button>')
+          $("#painel_capitulos").append('<button class="btn btn-secondary btn-capitulos" data-livro="' + id + '" data-cap="' + response[i] + '">' + String(response[i]).padStart(2, '0') + '</button>')
         }
           
         $.ajax({
@@ -327,33 +377,10 @@
           data: JSON.stringify({'destino':2, 'livro':id, 'cap':1}),
           dataType: "json",
           success: function(response) {
-            $("#conteudo_principal").append('<div class="col-sm-12"><hr></div>');
+            $("#conteudo_principal").append('<div class="col-sm-12" id="divisor_versiculo"><hr></div>');
             $("#conteudo_principal").append('<div class="col-sm-12" id="painel_versiculos"></div>');
 
-
-            $("#painel_versiculos").append("<table class='table' id='tb_versiculo'></table>");
-
-            thead = '<tr><th scope="col">Vers.</th>';
-            keys = Object.keys(response[0]);
-            for (i = 0; i < keys.length - 1; i++) {
-              thead += '<th>' + keys[i].replace('biblia_', '').toUpperCase() + '</th>';
-            }
-            thead += "</tr>";
-
-            $("#tb_versiculo").append('<thead class="table-dark">' + thead + '</thead>');
-
-            tbody = '<tbody>';
-            for (item in response) {
-              tbody += '<tr>';
-              tbody += '<td>' + response[item]['ver'] + '</td>';
-              for (i = 0; i < keys.length - 1; i++) {
-                tbody += '<td>' + response[item][keys[i]] + '</td>';
-              }              
-              tbody += '</tr>';
-            }
-            tbody += '</tbody>';
-
-            $("#tb_versiculo").append(tbody);
+            loadContent(response);
 
           },
           error: function(err) {
@@ -404,6 +431,71 @@
     }
 
   });
+
+
+$("#conteudo_principal").on('click', '.btn-capitulos', function() {
+
+  livro = $(this).attr('data-livro');
+  cap = $(this).attr('data-cap');
+  $("#txt_capitulo").val(cap);
+
+  info = {'destino':2, 'livro':livro, 'cap':cap};
+
+  $(".btn-capitulos").removeClass('btn-primary');
+  $(".btn-capitulos").addClass('btn-secondary');
+  $(this).addClass('btn-primary');
+
+  $.ajax({
+    type: "POST",
+    url: "{{ url_for('abrir_biblia') }}",
+    contentType: "application/json",
+    data: JSON.stringify(info),
+    dataType: "json",
+    success: function(response) {
+      loadContent(response);
+      scrollVer();
+
+    },
+    error: function(err) {
+      console.log(err);
+    }
+  });  
+  
+});
+
+$("#conteudo_principal").on('change', '#txt_capitulo', function() {
+  cap = $(this).val();
+  button = $('button[data-cap="' + cap + '"]');
+
+  if (button.length > 0) {
+
+    $(".btn-capitulos").removeClass('btn-primary');
+    $(".btn-capitulos").addClass('btn-secondary');
+    button.addClass('btn-primary');
+
+    livro = button.attr('data-livro');
+
+    info = {'destino':2, 'livro':livro, 'cap':cap};
+
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('abrir_biblia') }}",
+      contentType: "application/json",
+      data: JSON.stringify(info),
+      dataType: "json",
+      success: function(response) {
+        loadContent(response);
+        scrollVer();
+
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });
+
+  }
+});
+
 </script>
       
   </body>

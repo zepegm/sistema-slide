@@ -170,7 +170,7 @@ def abrir_biblia():
 
             # preciso que liste os capítulos
             if info['destino'] == 1:
-                capitulos = banco.executarConsultaVetor("select LPAD(cap, 2, '0') as cap from biblia_arc where livro = %s group by cap order by cap" % info['id'])
+                capitulos = banco.executarConsultaVetor("select cap from biblia_arc where livro = %s group by cap order by cap" % info['id'])
                 return jsonify(capitulos)
             
             # pegar os versículos
