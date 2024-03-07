@@ -38,7 +38,7 @@ banco = db({'host':"localhost",    # your host, usually localhost
 @app.route('/', methods=['GET', 'POST'])
 def home():
 
-    if estado > 0:
+    if estado == 1:
         titulo = banco.executarConsulta('select titulo from %s where id = %s' % (current_presentation['tipo'], current_presentation['id']))[0]['titulo']
 
         if (current_presentation['tipo'] == 'musicas'):
@@ -142,9 +142,9 @@ def controlador():
     global current_presentation
     global index
 
-    if estado == 0:
+    if estado == 0: # sem apresentação
         return redirect('/')
-    else:
+    elif estado == 1: # música
 
         if (current_presentation['tipo'] == 'musicas'):
 
@@ -160,6 +160,14 @@ def controlador():
             lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides where id_musica = %s order by pos" % current_presentation['id'])
 
             return render_template('controlador.jinja', lista_slides=lista_slides, index=index, fundo=fundo, config=config)
+        
+    elif estado == 2: #biblia
+
+        lista = banco.executarConsulta('select ver, texto from %s where livro = %s and cap = %s order by ver' % (current_presentation['versao'], current_presentation['id'], current_presentation['cap']))
+
+        return str(lista)
+    
+    return 'erro'
 
 @app.route('/abrir_biblia', methods=['GET', 'POST'])
 def abrir_biblia():
@@ -200,6 +208,18 @@ def abrir_biblia():
                     lista_final.append(dict_aux)
 
                 return jsonify(lista_final)
+            
+            # iniciar apresentação
+            if info['destino'] == 3:
+                global current_presentation
+                global estado
+                global index        
+
+                estado = 2 #biblia
+                index = info['ver'] - 1
+                current_presentation = {'id':info['livro'], 'tipo':'biblia', 'cap':info['cap'], 'versao':info['versao']}
+
+                return jsonify(True)
 
     antigo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 1")
     novo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 2")
@@ -227,7 +247,7 @@ def slide():
     if estado == 0:
         fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
         return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0)
-    elif estado == 1: # se iniciou uma apresentação
+    elif estado == 1: # se iniciou uma apresentação de música
 
         # estabelecer configuração da música
         config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}

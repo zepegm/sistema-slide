@@ -19,6 +19,8 @@
     <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='datatable/datatables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='datatable/FixedHeader-4.0.0/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
     
 
     <!-- Simular original -->
@@ -29,6 +31,18 @@
     <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
 
     <style>
+
+      /* Chrome, Safari, Edge, Opera */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      /* Firefox */
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
 
       .bd-placeholder-img {
         font-size: 1.125rem;
@@ -142,12 +156,23 @@
     }   
 
     #txt_capitulo,
-    #txt_senha {
+    #txt_versiculo,
+    #combo_versao {
       border: solid;
       border-color: rgb(0, 0, 0, 0.3);
       margin-left: 10px;
-      width: 70px;
-    }   
+      margin-right: 10px;
+      width: 60px;
+    }  
+
+    #combo_versao {
+      width: 100px;
+      text-align: left;
+    }
+
+    #btn_iniciar {
+      margin-left: 10px;
+    }
 
     .toggled { display: none; }
 
@@ -254,7 +279,7 @@
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
-          <div class="row">
+          <div class="row"> 
             <div class="col-sm-12">
               <h2 class="fw-bold">Abrir Bíblia</h2>
             </div>
@@ -295,6 +320,9 @@
   <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/FixedHeader-4.0.0/js/fixedHeader.bootstrap.min.js') }}"></script>
+
 
   
 <script>
@@ -312,15 +340,24 @@
   }
 
   function loadContent(lista) {
+
+    keys = Object.keys(lista[0]);
+
+    combo = '<select id="combo_versao" class="form-select" aria-label="Default select example">';
+    for (i = 0; i < keys.length - 1; i++) {
+      combo += "<option value='" + keys[i] + "''>" + keys[i].replace('biblia_', '').toUpperCase() + "</option>";
+    }
+    combo += "</select>"
+
     $("#painel_versiculos").empty();
 
     $("#painel_versiculos").append("<h3>Versículos</h3>");
-    $("#painel_versiculos").append('<p class="col-sm-12 form-inline form-group"><label for="txt_capitulo" class="form-label">Digite o versículo ou clique no versículo da tabela abaixo:</label><input type="text" class="form-control" id="txt_capitulo"></p>');
+    $("#painel_versiculos").append('<p class="col-sm-12 form-inline form-group"><label for="txt_versiculo" class="form-label">Digite o versículo</label><input type="number" class="form-control" id="txt_versiculo" value="1"><label for="combo_versao">e escolha a versão</label>' + combo + '<label>ou clique na tabela abaixo:</label><button id="btn_iniciar" class="btn btn-success">Iniciar Apresentação</button></p>');
 
     $("#painel_versiculos").append("<table class='table table-hover' id='tb_versiculo'></table>");
 
     thead = '<tr><th scope="col">Vers.</th>';
-    keys = Object.keys(lista[0]);
+
     for (i = 0; i < keys.length - 1; i++) {
       thead += '<th>' + keys[i].replace('biblia_', '').toUpperCase() + '</th>';
     }
@@ -330,16 +367,23 @@
 
     tbody = '<tbody>';
     for (item in lista) {
-      tbody += '<tr">';
+      tbody += '<tr data-vers="' + lista[item]['ver'] + '">';
       tbody += '<th class="align-middle t_vers">' + lista[item]['ver'] + '</th>';
       for (i = 0; i < keys.length - 1; i++) {
-        tbody += '<td lang="pt-br" class="align-middle text-justify auto_hifen cel_vers">' + lista[item][keys[i]] + '</td>';
+        tbody += '<td lang="pt-br" class="align-middle text-justify auto_hifen cel_vers" data-versao="' + keys[i] + '">' + lista[item][keys[i]] + '</td>';
       }              
       tbody += '</tr>';
     }
     tbody += '</tbody>';
 
     $("#tb_versiculo").append(tbody);
+
+    $('#tb_versiculo').DataTable( {
+      fixedHeader: true,
+      paging: false,
+      responsive: true,
+      searching: false
+    });
   }
 
   $(".livroBiblia").on('click', function() {
@@ -362,7 +406,7 @@
         $("#conteudo_principal").empty();
         $("#conteudo_principal").append('<div class="col-sm-12"><hr></div>');
         $("#conteudo_principal").append('<div class="col-sm-12"><h3>Capítulos</h3></div>');
-        $("#conteudo_principal").append('<div class="col-sm-12 form-inline form-group"><label for="txt_capitulo" class="form-label">Digite o capítulo ou clique nos botões abaixo:</label><input type="text" class="form-control" id="txt_capitulo"></div>');
+        $("#conteudo_principal").append('<div class="col-sm-12 form-inline form-group"><label for="txt_capitulo" class="form-label">Digite o capítulo ou clique nos botões abaixo:</label><input type="number" class="form-control" id="txt_capitulo" value="1"></div>');
         $("#conteudo_principal").append('<div class="col-sm-12" id="painel_capitulos"></div>');
 
         $("#painel_capitulos").append('<button class="btn btn-primary btn-capitulos" data-livro="' + id + '" data-cap="' + response[0] + '">' + String(response[0]).padStart(2, '0') + '</button>')
@@ -432,6 +476,43 @@
 
   });
 
+$("#conteudo_principal").on('click', '#btn_iniciar', function() {
+  cap = $("#txt_capitulo").val();
+
+  ver = parseInt($("#txt_versiculo").val());
+  if (isNaN(ver)) ver = 1;
+
+  versao = $("#combo_versao").val();
+
+  livro = $(".livroBiblia.active").attr('data-id');
+
+  $.ajax({
+    type: "POST",
+    url: "{{ url_for('abrir_biblia') }}",
+    contentType: "application/json",
+    data: JSON.stringify({'destino':3, 'cap':cap, 'ver':ver, 'versao':versao, 'livro':livro}),
+    dataType: "json",
+    success: function(response) {
+      $("#divisor_versiculo").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do(a) Livro/Epístola de <strong>' + $(".livroBiblia.active").text() + '</strong>, cap. <strong>' + cap + '</strong>, verso <strong>' + ver + ' - ' + versao.replace('biblia_', '').toUpperCase() + '</strong> iniciada com sucesso! <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+
+    },
+    error: function(err) {
+      console.log(err);
+    }
+  });  
+  
+});
+
+$("#conteudo_principal").on('click', '.cel_vers', function() {
+  versao = $(this).attr('data-versao');
+  versiculo = $(this).parent().attr('data-vers');
+  
+  $("#txt_versiculo").val(versiculo);
+  $("#combo_versao").val(versao);
+
+  scrollVer();
+});
+
 
 $("#conteudo_principal").on('click', '.btn-capitulos', function() {
 
@@ -493,6 +574,9 @@ $("#conteudo_principal").on('change', '#txt_capitulo', function() {
       }
     });
 
+  } else {
+    cap = $(".btn-primary.btn-capitulos").attr('data-cap');
+    $(this).val(cap);
   }
 });
 
