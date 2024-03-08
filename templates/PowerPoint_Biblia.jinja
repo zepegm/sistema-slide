@@ -1,0 +1,237 @@
+<html>
+    <head>
+        <title>SlideShow</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+        <style>
+            body {
+                background-color: {{config['fundo']}};
+                overflow: hidden;
+            }
+
+            #head {
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: bold;
+                text-decoration: underline;
+                font-size: 80px;
+                text-align: center;
+                color: {{config['letra']}};
+            }
+
+            .slide {
+                width: 90%;
+                position: relative;
+                left:5%;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 95px;
+                text-align: justify;
+                line-height: 1.3;
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;
+                color: {{config['letra']}};                
+            }
+
+            .nd {
+                font-variant: small-caps;
+            }
+
+            .add {
+                font-style: italic;
+            }
+
+            .sc {
+                font-variant: small-caps;
+            }
+
+            .heading {
+                font-weight: bold;
+            }
+
+            .wj {
+                color: red;
+            }    
+
+            /*.auto_hifen {
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;
+            }*/
+
+
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            } 
+
+            @keyframes fade-final {
+                0% {
+                    opacity: 0;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            @keyframes notes {
+              0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 0;
+              }
+              50% {
+                opacity: 1;
+                transform: scale(1.5) translate(50%, -50%);
+              }
+              80% {
+                opacity: 0;
+                transform: scale(1.5) translate(100%, -100%);
+              }
+              100% {
+                transform: scale(1.5) translate(100%, -100%);
+                opacity: 0;
+              }
+            }             
+        </style>
+    </head>
+    <body>
+        <div id="head">{{head['nome']}} {{head['cap']}}:{{versiculo}} - {{head['versao']}}</div>
+        <div class="slide" id="slide1" lang="pt-br">{{lista[index]|safe}}</div>
+        <div class="slide" id="slide2" lang="pt-br"></div>      
+
+        <div id="fim"></div>
+
+    <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script>
+
+        var posicao = 0;
+
+        window.onload = function() {
+            window.scroll({
+                top: posicao,
+                behavior: "smooth",
+            }); 
+        };
+
+        const slides = [document.getElementById("slide1"), document.getElementById("slide2")];
+        var limite_scroll = document.documentElement.scrollHeight - window.innerHeight;
+
+        var lista = {{lista}};
+        var key = 0;
+
+        const getScrollPosition = (el = window) => ({
+        x: el.pageXOffset !== undefined ? el.pageXOffset : el.scrollLeft,
+        y: el.pageYOffset !== undefined ? el.pageYOffset : el.scrollTop
+        });
+
+        function avancar() {
+
+            if (posicao >= limite_scroll) {
+                console.log('mudar slide!');
+            } else {
+                posicao += 500;
+                window.scroll({
+                    top: posicao,
+                    behavior: "smooth",
+                }); 
+            }
+        }
+
+        document.onkeydown = checkKey;
+
+        function checkKey(e) {
+
+            e = e || window.event;
+
+            if (e.keyCode == '27') {
+                e.preventDefault();
+                //avancar();
+            }
+            else if (e.keyCode == '37'  || e.keyCode == '33') {
+                /*e.preventDefault();
+                if (index > 0) {
+                previous();
+                }*/
+            }
+            else if (e.keyCode == '39' || e.keyCode == '34') {
+                e.preventDefault(); 
+                avancar();          
+            }           
+        }
+
+        function changeComponent(slide1, slide2, index) {
+            slide1.classList.remove("in");
+            slide1.classList.add("out");
+
+            slide2.classList.remove("out");
+            slide2.classList.add('in');
+            
+            if (index == 0) {
+                slide2.innerHTML = '';
+                slide2.classList.remove('letra');
+                slide2.classList.add('capa');
+            } else if((index - 1) == slides.length) { // final
+                slide2.innerHTML = '';
+                slide2.classList.remove('letra');
+                slide2.classList.add('capa');
+
+                slide2.classList.remove("in");
+                slide2.classList.add('final-out');
+                vara.draw("draw");
+
+                key_final = true;
+            } else {
+                slide2.classList.remove('capa');
+                slide2.classList.remove('coro');
+                slide2.classList.add('letra');                    
+                slide2.innerHTML = slides[index - 1]['text-slide'];
+                textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
+
+                if (slides[index -1]['categoria'] == 3 || slides[index -1]['categoria'] == 4) {
+                    notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
+                    /*notas.classList.remove('hidden');*/
+                } else {
+                    notas.innerHTML = '';
+                    /*notas.classList.add('hidden');*/
+                }
+
+                if (slides[index -1]['categoria'] == 2 || slides[index -1]['categoria'] == 4) {
+                    slide2.classList.add('coro'); 
+                }
+            }
+        }
+
+        var socket = io();
+        socket.on('update', function(index) {
+
+            if (key_final == true) {
+                location.reload();
+            } else {
+                if (key == 0) {
+                    changeComponent(slide1, slide2, index);
+                    key = 1;
+                } else {
+                    changeComponent(slide2, slide1, index);
+                    key = 0;
+                } 
+            }
+        });        
+     
+        socket.on('refresh', function(result) {
+            location.reload();
+        });
+
+    </script>
+
+    </body>    
+</html>

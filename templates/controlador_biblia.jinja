@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Controlador</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+
+    .nd {
+      font-variant: small-caps;
+    }
+
+    .add {
+      font-style: italic;
+    }
+
+    .sc {
+      font-variant: small-caps;
+    }
+
+    .heading {
+      font-weight: bold;
+    }
+
+    .wj {
+      color: red;
+    }    
+
+    .t_vers {
+      font-size: 15px;
+    }
+
+    .auto_hifen {
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
+    }
+
+    .cel_vers {
+      cursor: pointer;
+    }
+
+    .arrow {
+      font-size: xx-large;
+      color:black;
+    }
+
+    </style>
+    
+  </head>
+
+  <body>
+
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row">
+            <div class="col-sm-12">
+              <h1 class="fw-light">Apresentador de Slides</h1>
+              <p class="lead text-muted">Abaixo você a lista dos versículos, basta clicar em um dos botoes ou utilizar as setas do teclado ou PgDown e PgUp para avançar ou voltar.</p>
+            </div>
+          </div>
+
+          <div class="row" id="painel_head">
+
+            <div class="col-sm-12">
+                {% if index == 1 %}
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                {% else %}
+                <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
+                {% endif %}
+                {% if index == lista|length %}
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+                {% else %}
+                <button id="btn_next" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-right"></i></button>
+                {% endif %}
+            </div>
+
+            <div class="col-sm-12">
+              <hr>
+            </div>
+
+            <div class="col-sm-12 text-dark">
+              <h4>{{head['descricao_livro']}} de <b>{{head['livro']}}</b>, {{head['descricao_cap']}} <b>{{head['cap']}}</b>, {{head['descricao_vers']}} <b>{{index}}</b> - {{head['versao']}}</h4>
+            </div>   
+
+          </div>
+
+          <div class="row" id="painel_versiculos">
+            <table class="table">
+              <tbody>
+              {% for item in lista %}
+              {% if index == item['ver'] %}
+              <tr class="table-warning">
+                <th class="align-middle t_vers">{{item['ver']}}</th>
+                <td class="align-middle">{{item['texto']}}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <th class="align-middle t_vers">{{item['ver']}}</th>
+                <td class="align-middle">{{item['texto']}}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/FixedHeader-4.0.0/js/fixedHeader.bootstrap.min.js') }}"></script>
+
+
+  
+<script>
+
+
+</script>
+      
+  </body>
+</html>

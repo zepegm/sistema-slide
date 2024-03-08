@@ -163,9 +163,32 @@ def controlador():
         
     elif estado == 2: #biblia
 
+        livro = banco.executarConsulta('select descricao, classificacao from livro_biblia where id = %s' % current_presentation['id'])[0]
+        
+        if livro['classificacao'] == 8 or livro['classificacao'] == 9:
+            descricao_livro = 'Epístola'
+        elif livro['classificacao'] == 6:
+            descricao_livro = 'Evangelho'
+        else:
+            descricao_livro = 'Livro'
+
+        if current_presentation['id'] == '19':
+            descricao_cap = 'Número'
+            descricao_vers = 'Verso'
+        else:
+            descricao_cap = 'Capítulo'
+            descricao_vers = 'Versículo'            
+
+        versao = banco.executarConsultaVetor("select descricao_longa from lista_tabelas_biblia where nome_tabela = '%s'" % current_presentation['versao'])[0]
+
+
+        head = {'livro':livro['descricao'].replace('1', 'I').replace('2', 'II'), 'descricao_livro':descricao_livro, 'descricao_cap':descricao_cap, 'cap':current_presentation['cap'], 'descricao_vers':descricao_vers, 'versao':versao}
         lista = banco.executarConsulta('select ver, texto from %s where livro = %s and cap = %s order by ver' % (current_presentation['versao'], current_presentation['id'], current_presentation['cap']))
 
-        return str(lista)
+        if (index + 1) > len(lista):
+            index = len(lista) - 1
+
+        return render_template('controlador_biblia.jinja', head=head, lista=lista, index=index + 1)
     
     return 'erro'
 
@@ -263,6 +286,20 @@ def slide():
             lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides where id_musica = %s order by pos' % current_presentation['id'])
 
             return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=lista_slides, index=index, config=config)
+
+    elif estado == 2: # iniciou uma apresentação da Bíblia
+
+        livro = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % current_presentation['id'])[0].replace('1', 'I').replace('2', 'II')
+        head = {'nome':livro, 'cap':current_presentation['cap'], 'versao':current_presentation['versao'].replace('biblia_', '').upper()}
+
+        lista = banco.executarConsultaVetor('select texto from %s where livro = %s and cap = %s order by ver' % (current_presentation['versao'], current_presentation['id'], current_presentation['cap']))
+
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-biblia-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-biblia-fundo'")[0]['valor']}
+
+        if (index + 1) > len(lista):
+            index = len(lista) - 1        
+
+        return render_template('PowerPoint_Biblia.jinja', head=head, lista=lista, index=index, versiculo=index + 1, config=config)
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
