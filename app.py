@@ -294,7 +294,7 @@ def slide():
 
         lista = banco.executarConsultaVetor('select texto from %s where livro = %s and cap = %s order by ver' % (current_presentation['versao'], current_presentation['id'], current_presentation['cap']))
 
-        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-biblia-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-biblia-fundo'")[0]['valor']}
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-biblia-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-biblia-fundo'")[0]['valor'], 'seta':banco.executarConsulta("select valor from config where id = 'cor-biliba-arrow'")[0]['valor']}
 
         if (index + 1) > len(lista):
             index = len(lista) - 1        
