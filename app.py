@@ -242,6 +242,9 @@ def abrir_biblia():
                 index = info['ver'] - 1
                 current_presentation = {'id':info['livro'], 'tipo':'biblia', 'cap':info['cap'], 'versao':info['versao']}
 
+                socketio.emit('refresh', 1)
+                socketio.emit('update_roteiro', 1)                
+
                 return jsonify(True)
 
     antigo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 1")
