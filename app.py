@@ -323,6 +323,22 @@ def updateSlide():
             #socketio.emit('legenda', legenda)            
             return jsonify(True)
 
+
+@app.route('/updateBiblia', methods=['GET', 'POST'])
+def updateBiblia():            
+    if request.method == 'POST':
+        #print('got a post request!')
+
+        if request.is_json: # application/json
+            # handle your ajax request here!
+
+            info = request.json
+
+            if info['destino'] == 'scroll':
+                socketio.emit('scroll_biblia', info['direcao'])
+
+            return jsonify(True)
+
 @app.route('/changeBackground', methods=['GET', 'POST'])
 def changeBackground():
     if request.method == 'POST':

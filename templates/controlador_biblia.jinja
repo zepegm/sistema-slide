@@ -69,6 +69,24 @@
       color:black;
     }
 
+    /*#head_principal {
+      position: sticky;
+      top: 0;
+    }*/
+
+    #container {
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    #painel_versiculos {
+      overflow: scroll;
+      height: fit-content;
+      box-sizing: border-box;
+    }
+
+
+
     </style>
     
   </head>
@@ -88,35 +106,48 @@
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
-          <div class="row">
+          <div class="row" id="head_principal">
             <div class="col-sm-12">
               <h1 class="fw-light">Apresentador de Slides</h1>
-              <p class="lead text-muted">Abaixo você a lista dos versículos, basta clicar em um dos botoes ou utilizar as setas do teclado ou PgDown e PgUp para avançar ou voltar.</p>
-            </div>
-          </div>
-
-          <div class="row" id="painel_head">
-
-            <div class="col-sm-12">
-                {% if index == 1 %}
-                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
-                {% else %}
-                <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
-                {% endif %}
-                {% if index == lista|length %}
-                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
-                {% else %}
-                <button id="btn_next" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-right"></i></button>
-                {% endif %}
+              <p class="lead text-muted">Abaixo você a lista dos versículos, utilize os botões ou as setas do teclado.</p>
             </div>
 
             <div class="col-sm-12">
-              <hr>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th colspan="2" class="table-info text-center">Controlador</th></th><th colspan="2" class="table-warning text-center">Scroll</th>
+                    <th>Teclado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-center table-info">
+                      {% if index == 1 %}
+                      <button id="btn_previous" class="btn btn-info arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                      {% else %}
+                      <button id="btn_previous" class="btn btn-info arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
+                      {% endif %}
+                    </td>
+                    <td class="text-center table-info">
+                      {% if index == lista|length %}
+                      <button id="btn_next" class="btn btn-info arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+                      {% else %}
+                      <button id="btn_next" class="btn btn-info arrow"><i class="fa-solid fa-circle-arrow-right"></i></button>
+                      {% endif %}
+                    </td>
+
+                    <td class="text-center table-warning"><button id="btn_up" class="btn btn-warning arrow"><i class="fa-solid fa-circle-arrow-up"></i></button></td>
+                    <td class="text-center table-warning"><button id="btn_down" class="btn btn-warning arrow"><i class="fa-solid fa-circle-arrow-down"></i></button></td>
+                    <td>Utilize as setas <b>direita/esquerda</b> do teclado pra <b>avançar/recuar</b> o slide ou utilize as setas <b>baixo/cima</b> para controlar o <b>scroll.</b></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <div class="col-sm-12 text-dark">
-              <h4>{{head['descricao_livro']}} de <b>{{head['livro']}}</b>, {{head['descricao_cap']}} <b>{{head['cap']}}</b>, {{head['descricao_vers']}} <b>{{index}}</b> - {{head['versao']}}</h4>
-            </div>   
+              <h4>{{head['descricao_livro']}} de <b>{{head['livro']}}</b>, {{head['descricao_cap']}} <b>{{head['cap']}}</b>, {{head['descricao_vers']}} <b id="desc_versiculo">{{index}}</b> - {{head['versao']}}</h4>
+            </div>
 
           </div>
 
@@ -125,12 +156,12 @@
               <tbody>
               {% for item in lista %}
               {% if index == item['ver'] %}
-              <tr class="table-warning">
+              <tr class="table-warning ver-{{item['ver']}} line-ver">
                 <th class="align-middle t_vers">{{item['ver']}}</th>
                 <td class="align-middle">{{item['texto']}}</td>
               </tr>
               {% else %}
-              <tr>
+              <tr class="ver-{{item['ver']}} line-ver">
                 <th class="align-middle t_vers">{{item['ver']}}</th>
                 <td class="align-middle">{{item['texto']}}</td>
               </tr>
@@ -155,6 +186,103 @@
 
   
 <script>
+
+  var index = {{index}};
+  var total = {{lista|length}};
+
+  function scroll(direcao) {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('updateBiblia') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'destino':'scroll', 'direcao':direcao}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });     
+  }
+
+  function mudarSlide(index) {
+    $(".line-ver").removeClass('table-warning');
+    $(".ver-" + index).addClass('table-warning');
+    $("#desc_versiculo").text(index);
+  }
+
+  $("#btn_down").on('click', function() {
+    scroll('down');
+  });
+
+  $("#btn_up").on('click', function() {
+    scroll('up');
+  }); 
+
+  $("#btn_next").on('click', function() {
+    index++;
+    mudarSlide(index);
+
+    if (index == total) {
+      $("#btn_next").attr('disabled', '');
+    }
+
+    $("#btn_previous").removeAttr('disabled');
+  });
+
+  $("#btn_previous").on('click', function() {
+    index--;
+    mudarSlide(index);
+
+    if (index == 1) {
+      $("#btn_previous").attr('disabled', '');
+    }
+
+    $("#btn_next").removeAttr('disabled');
+  });
+
+  document.onkeydown = checkKey;
+
+  function checkKey(e) {
+
+      e = e || window.event;
+
+      if (e.keyCode == '38') { // up
+          e.preventDefault();
+          scroll('up')
+      }
+      else if (e.keyCode == '40') {
+          e.preventDefault();
+          scroll('down')        
+      }
+      else if (e.keyCode == '37'  || e.keyCode == '33') {
+          e.preventDefault(); 
+          if (!$("#btn_previous").prop('disabled')) {
+            index--;
+            mudarSlide(index);
+
+            if (index == 1) {
+              $("#btn_previous").attr('disabled', '');
+            }
+
+            $("#btn_next").removeAttr('disabled');
+          }
+      }
+      else if (e.keyCode == '39' || e.keyCode == '34') {
+          e.preventDefault(); 
+          if (!$("#btn_next").prop('disabled')) {
+            index++;
+            mudarSlide(index);
+
+            if (index == total) {
+              $("#btn_next").attr('disabled', '');
+            }
+
+            $("#btn_previous").removeAttr('disabled');
+          }
+      }           
+  }
 
 
 </script>
