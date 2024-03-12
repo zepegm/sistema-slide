@@ -81,8 +81,9 @@
 
     #painel_versiculos {
       overflow: scroll;
-      height: fit-content;
+      height: 40vh;
       box-sizing: border-box;
+      overflow-x: hidden;
     }
 
 
@@ -187,6 +188,21 @@
   
 <script>
 
+  history.scrollRestoration = "manual";
+
+  $( document ).ready(function() {
+      headH = $("#head_principal").height();
+      screenH = window.innerHeight - headH - 150;
+
+      $("#painel_versiculos").height(screenH);
+
+  });
+
+
+  $(window).on('load', function(){
+    $(window).scrollTop(0);
+  });  
+
   var index = {{index}};
   var total = {{lista|length}};
 
@@ -210,6 +226,23 @@
     $(".line-ver").removeClass('table-warning');
     $(".ver-" + index).addClass('table-warning');
     $("#desc_versiculo").text(index);
+
+    $(".ver-" + index)[0].scrollIntoView({ behavior: "smooth", block: "center"});
+
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('updateBiblia') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'destino':'change', 'index':index}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });      
+  
   }
 
   $("#btn_down").on('click', function() {

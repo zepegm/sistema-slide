@@ -211,62 +211,29 @@
             }           
         }*/
 
-        function changeComponent(slide1, slide2, index) {
-            slide1.classList.remove("in");
-            slide1.classList.add("out");
+        function changeComponent(index) {
 
-            slide2.classList.remove("out");
-            slide2.classList.add('in');
-            
-            if (index == 0) {
-                slide2.innerHTML = '';
-                slide2.classList.remove('letra');
-                slide2.classList.add('capa');
-            } else if((index - 1) == slides.length) { // final
-                slide2.innerHTML = '';
-                slide2.classList.remove('letra');
-                slide2.classList.add('capa');
-
-                slide2.classList.remove("in");
-                slide2.classList.add('final-out');
-                vara.draw("draw");
-
-                key_final = true;
+            if (key == 0) {
+                counter = 1;
             } else {
-                slide2.classList.remove('capa');
-                slide2.classList.remove('coro');
-                slide2.classList.add('letra');                    
-                slide2.innerHTML = slides[index - 1]['text-slide'];
-                textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
-
-                if (slides[index -1]['categoria'] == 3 || slides[index -1]['categoria'] == 4) {
-                    notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
-                    /*notas.classList.remove('hidden');*/
-                } else {
-                    notas.innerHTML = '';
-                    /*notas.classList.add('hidden');*/
-                }
-
-                if (slides[index -1]['categoria'] == 2 || slides[index -1]['categoria'] == 4) {
-                    slide2.classList.add('coro'); 
-                }
+                counter = 0;
             }
+
+            slides[key].classList.remove("in");
+            slides[key].classList.add("out");
+
+            slides[counter].classList.remove("out");
+            slides[counter].classList.add('in');
+                               
+            slides[counter].innerHTML = lista[index];
+
+            key = counter;
+
         }
 
         var socket = io();
         socket.on('update', function(index) {
-
-            if (key_final == true) {
-                location.reload();
-            } else {
-                if (key == 0) {
-                    changeComponent(slide1, slide2, index);
-                    key = 1;
-                } else {
-                    changeComponent(slide2, slide1, index);
-                    key = 0;
-                } 
-            }
+            changeComponent(index);
         });        
      
         socket.on('refresh', function(result) {

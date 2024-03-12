@@ -337,6 +337,9 @@ def updateBiblia():
             if info['destino'] == 'scroll':
                 socketio.emit('scroll_biblia', info['direcao'])
 
+            if info['destino'] == 'change':
+                socketio.emit('update', index)
+
             return jsonify(True)
 
 @app.route('/changeBackground', methods=['GET', 'POST'])
