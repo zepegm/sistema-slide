@@ -250,7 +250,7 @@ def abrir_biblia():
     antigo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 1")
     novo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 2")
 
-    return render_template('biblia.jinja', novo=novo_testamento, antigo=antigo_testamento)
+    return render_template('biblia.jinja', novo=novo_testamento, antigo=antigo_testamento, status='')
 
 
 @app.route('/abrir_musica', methods=['GET', 'POST'])
@@ -338,6 +338,8 @@ def updateBiblia():
                 socketio.emit('scroll_biblia', info['direcao'])
 
             if info['destino'] == 'change':
+                global index
+                index = info['index']
                 socketio.emit('update', index)
 
             return jsonify(True)
@@ -588,6 +590,61 @@ async def gerar_pdf():
     await browser.close()
 
     return jsonify(pdf_path)
+
+@app.route('/pesquisarBiblia', methods=['GET', 'POST'])
+def pesquisarBiblia():
+
+    if request.method == 'POST':
+        if 'pesquisa' in request.form:
+            pesquisa = request.form['pesquisa'].replace("'", "''")
+            pesquisa_original = request.form['pesquisa']
+            status = ''
+
+
+        if len(pesquisa) > 2:
+            tabelas = banco.executarConsultaVetor('select nome_tabela from lista_tabelas_biblia')
+            total = 0
+            resultado_final = {}
+
+            pesquisa = '%' + pesquisa.replace(' ', '%') + '%'
+
+            for tabela in tabelas: 
+                resultado = banco.executarConsulta("select livro_biblia.descricao, livro, cap, ver, texto from %s inner join livro_biblia on livro_biblia.id = %s.livro where texto like '%s' order by livro, cap, ver" % (tabela, tabela, pesquisa))
+                total += len(resultado)
+                lista_palavras = pesquisa_original.split(' ')
+
+                for item in resultado:
+                        texto = converHTML_to_List(item['texto'])
+                        texto_final = ''
+
+                        for element in texto:
+                            if len(element['text']) > 0:
+                                aux = element['text'][0]
+                                for palavra in lista_palavras:
+                                    if len(palavra) > 2:
+                                        compiled = re.compile(re.escape(palavra), re.IGNORECASE)
+                                        res = compiled.sub('<span class="highlight">' + palavra + "</span>", aux)
+                                        aux = str(res)
+                                    
+                                texto_final += aux + '&nbsp;'
+
+                        item['texto'] = texto_final
+
+                resultado_final[tabela] = resultado
+            
+            if total > 0:
+                return str('yes')
+            else:
+                status= '<div style="margin-top:1vh;" class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Sem resultados encontrados, verifique os termos utilizados.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'    
+        else:
+            status= '<div style="margin-top:1vh;" class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor utilize uma palavra de três letras ou mais.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+        
+        antigo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 1")
+        novo_testamento = banco.executarConsulta("select livro_biblia.id, livro_biblia.descricao, classificacao from livro_biblia inner join classificacao_livro on classificacao_livro.id = livro_biblia.classificacao inner join testamento on classificacao_livro.testamento = testamento.id where testamento.id = 2")
+
+        return render_template('biblia.jinja', novo=novo_testamento, antigo=antigo_testamento, status=status)
+
 
 @app.route('/pesquisarLetra', methods=['GET', 'POST'])
 def pesquisarLetra():

@@ -165,6 +165,11 @@
       width: 60px;
     }  
 
+    #txt_pesquisa_letra {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);      
+    }
+
     #combo_versao {
       width: 100px;
       text-align: left;
@@ -285,7 +290,7 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-sm-12">
+            <div class="col-sm-8">
 
               <div class="dropright">
                 <button class="btn btn-secondary dropdown-toggle" type="button" id="selecionarLivro" data-toggle="dropdown" aria-expanded="false">
@@ -309,7 +314,21 @@
               </div>
 
             </div>   
+
+            <div class="col-sm-3">
+              <form method="post" action="pesquisarBiblia">
+              <input type="text" name="pesquisa" class="form-control" id="txt_pesquisa_letra" placeholder="Pesquisa por textos da Bíblia" required>
+            </div>
+            <div class="col-sm-1">
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+              </form>
+            </div> 
           </div>
+
+          <div class="row">
+            <div class="col-sm-12">{{status}}</div>
+          </div>
+
           <div class="row" id="conteudo_principal"></div>
         </section>
       </div>

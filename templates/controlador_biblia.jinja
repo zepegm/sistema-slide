@@ -69,10 +69,9 @@
       color:black;
     }
 
-    /*#head_principal {
-      position: sticky;
-      top: 0;
-    }*/
+    .line-ver {
+      cursor: pointer;
+    }
 
     #container {
       height: 100%;
@@ -183,6 +182,7 @@
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
   <script src="{{ url_for('static', filename='datatable/FixedHeader-4.0.0/js/fixedHeader.bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>  
 
 
   
@@ -233,7 +233,7 @@
       type: "POST",
       url: "{{ url_for('updateBiblia') }}",
       contentType: "application/json",
-      data: JSON.stringify({'destino':'change', 'index':index}),
+      data: JSON.stringify({'destino':'change', 'index':(index - 1)}),
       dataType: "json",
       success: function(response) {
         console.log(response);
@@ -273,6 +273,29 @@
     }
 
     $("#btn_next").removeAttr('disabled');
+  });
+
+  $(".line-ver").on('click', function() {
+    $(".line-ver").removeClass('table-warning');
+    $(this).addClass('table-warning');
+
+    index = $(this).find('th').text();
+    $("#desc_versiculo").text(index);
+
+    mudarSlide(index);
+
+    if (index == 1) {
+      $("#btn_previous").attr('disabled', '');
+    } else {
+      $("#btn_previous").removeAttr('disabled');
+    }
+
+    if (index == total) {
+      $("#btn_next").attr('disabled', '');
+    } else {
+      $("#btn_next").removeAttr('disabled');
+    }
+
   });
 
   document.onkeydown = checkKey;
@@ -316,6 +339,11 @@
           }
       }           
   }
+
+  var socket = io();
+  socket.on('refresh', function(result) {
+      location.reload();
+  });
 
 
 </script>
