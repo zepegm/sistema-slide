@@ -123,10 +123,13 @@
             <form id="proxsld" method="post" action="{{ url_for('iniciar_apresentacao') }}">
               <input type="hidden" id="proximaPRS" name="proximaPRS" value="1">
               <input type="submit" class="w-100 btn btn-lg btn-secondary" value="Próxima Apresentação">
-            </form>      
+            </form>
+            {% elif estado == 2 %} 
+            <p class="text"><a href="/controlador">Clique aqui</a> para abrir o controlador da Bíblia</p>
             {% else %}
             <p class="text fw-bold">A lista do Roteiro está vazia!</p>
             <p class="text"><a href="/abrir_musica">Clique aqui</a> para abrir uma <b>Música.</b></p>
+            <p class="text"><a href="/abrir_biblia">Clique aqui</a> para abrir a <b>Bíblia.</b></p>
             {% endif %}
             <hr>
             {% if estado == 0 %}

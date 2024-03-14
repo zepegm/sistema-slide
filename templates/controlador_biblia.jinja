@@ -85,6 +85,9 @@
       overflow-x: hidden;
     }
 
+    #btn_encerrar {
+      margin-bottom: 1vh;
+    }
 
 
     </style>
@@ -145,9 +148,13 @@
               </table>
             </div>
 
-            <div class="col-sm-12 text-dark">
-              <h4>{{head['descricao_livro']}} de <b>{{head['livro']}}</b>, {{head['descricao_cap']}} <b>{{head['cap']}}</b>, {{head['descricao_vers']}} <b id="desc_versiculo">{{index}}</b> - {{head['versao']}}</h4>
+            <div class="col-sm-10 text-dark">
+              <h5>{{head['descricao_livro']}} de <b>{{head['livro']}}</b>, {{head['descricao_cap']}} <b>{{head['cap']}}</b>, {{head['descricao_vers']}} <b id="desc_versiculo">{{index}}</b> - {{head['versao']}}</h5>
             </div>
+            <div class="col-sm-2 text-end">
+              <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
+            </div>
+            
 
           </div>
 
@@ -206,6 +213,25 @@
   var index = {{index}};
   var total = {{lista|length}};
 
+
+  function encerrar() {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('encerrar_apresentacao') }}",
+      contentType: "application/json",
+      data: JSON.stringify(1),
+      dataType: "json",
+      success: function(response) {
+        if (response) {
+          location.reload();
+        }
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });      
+  }
+
   function scroll(direcao) {
     $.ajax({
       type: "POST",
@@ -244,6 +270,10 @@
     });      
   
   }
+
+  $("#btn_encerrar").on('click', function() {
+    encerrar();
+  });
 
   $("#btn_down").on('click', function() {
     scroll('down');
@@ -303,7 +333,11 @@
   function checkKey(e) {
 
       e = e || window.event;
-
+      
+      if (e.keyCode == '27') {
+          e.preventDefault();
+          encerrar();
+      }
       if (e.keyCode == '38') { // up
           e.preventDefault();
           scroll('up')

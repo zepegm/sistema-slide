@@ -41,8 +41,7 @@ def home():
     if estado == 1:
         titulo = banco.executarConsulta('select titulo from %s where id = %s' % (current_presentation['tipo'], current_presentation['id']))[0]['titulo']
 
-        if (current_presentation['tipo'] == 'musicas'):
-            tipo = 'Música'
+        tipo = 'Música'
 
         ls_capa = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
         
@@ -50,6 +49,11 @@ def home():
             capa = 'static/images/capas/' + ls_capa[0]['filename']
         else:
             capa = 'static/images/Background.jpeg'    
+    
+    elif estado == 2:
+        titulo = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % current_presentation['id'])[0] + ' ' + current_presentation['cap'] + ':' + str(index + 1)
+        tipo = 'Bíblia'
+        capa = 'static/images/Biblia.jpg'
     else:
         titulo = None
         tipo = None
@@ -392,6 +396,9 @@ def subtitle():
     global estado
     global index
 
+    head = None
+    align='center'
+
     if (estado == 1): #música
         legenda = banco.executarConsulta('select `text-legenda` from slides where id_musica = %s order by pos' % current_presentation['id'])
         lista = [banco.executarConsulta('select titulo from musicas where id = %s' % current_presentation['id'])[0]['titulo']]
@@ -399,12 +406,29 @@ def subtitle():
             lista.append(item['text-legenda'])
 
         tamanho = 20
+
+    elif (estado == 2): #biblia
+        livro = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % current_presentation['id'])[0].replace('1', 'I').replace('2', 'II')
+        head = {'nome':livro, 'cap':current_presentation['cap'], 'versao':current_presentation['versao'].replace('biblia_', '').upper()}
+        lista = banco.executarConsultaVetor('select texto from %s where livro = %s and cap = %s order by ver' % (current_presentation['versao'], current_presentation['id'], current_presentation['cap']))
+
+        if (index + 1) > len(lista):
+            index = len(lista) - 1  
+
+        print(lista[index])
+
+        if len(lista[index]) > 199:
+            tamanho = 30
+        else:
+            tamanho = 20  
+
+        align = 'justify'
+        
     else:
         lista = []
         tamanho = 0
-        titulo = ''
 
-    return render_template('subtitle.jinja', legenda=lista, index=index, tamanho=tamanho)
+    return render_template('subtitle.jinja', legenda=lista, index=index, tamanho=tamanho, head=head, estado=estado, align=align)
 
 @app.route('/edit_musica', methods=['GET', 'POST'])
 def edit_musica():
