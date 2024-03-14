@@ -603,37 +603,52 @@ def pesquisarBiblia():
 
         if len(pesquisa) > 2:
             tabelas = banco.executarConsultaVetor('select nome_tabela from lista_tabelas_biblia')
-            total = 0
-            resultado_final = {}
 
             pesquisa = '%' + pesquisa.replace(' ', '%') + '%'
 
-            for tabela in tabelas: 
-                resultado = banco.executarConsulta("select livro_biblia.descricao, livro, cap, ver, texto from %s inner join livro_biblia on livro_biblia.id = %s.livro where texto like '%s' order by livro, cap, ver" % (tabela, tabela, pesquisa))
-                total += len(resultado)
+            resultados = banco.executarConsulta("(select livro, cap, ver from biblia_arc where texto like '%s') union (select livro, cap, ver from biblia_naa where texto like '%s') union (select livro, cap, ver from biblia_nvi where texto like '%s') union (select livro, cap, ver from biblia_nvt where texto like '%s') order by livro, cap, ver" % (pesquisa, pesquisa, pesquisa, pesquisa))
+                
+
+            for item in resultados:
+
+                item['desc_livro'] = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s'  % item['livro'])[0]
+
+                sql = 'select '
+                for tb in tabelas:
+                    sql += '%s.texto as %s, ' % (tb, tb)
+
+                sql = sql[:-2] + ' from %s ' % tabelas[0]
+
+                for i in range(1, 4):
+                    sql += 'inner join %s on %s.livro = %s.livro and %s.cap = %s.cap and %s.ver = %s.ver ' % (tabelas[i], tabelas[0], tabelas[i], tabelas[0], tabelas[i], tabelas[0], tabelas[i])
+
+                sql += 'where %s.livro = %s and %s.cap = %s and %s.ver = %s' % (tabelas[0], item['livro'], tabelas[0], item['cap'], tabelas[0], item['ver'])
+
+                texto = banco.executarConsulta(sql)[0]
+
+                
                 lista_palavras = pesquisa_original.split(' ')
+                for tb in tabelas:
+                    txt_aux = converHTML_to_List(texto[tb])
+                    texto_final = ''
 
-                for item in resultado:
-                        texto = converHTML_to_List(item['texto'])
-                        texto_final = ''
+                    for element in txt_aux:
+                        if len(element['text']) > 0:
+                            aux = element['text'][0]
+                            for palavra in lista_palavras:
+                                if len(palavra) > 1:
+                                    compiled = re.compile(re.escape(palavra), re.IGNORECASE)
+                                    res = compiled.sub('<span class="highlight">' + palavra + "</span>", aux)
+                                    aux = str(res)
+                                
+                            texto_final += aux + '&nbsp;'
 
-                        for element in texto:
-                            if len(element['text']) > 0:
-                                aux = element['text'][0]
-                                for palavra in lista_palavras:
-                                    if len(palavra) > 2:
-                                        compiled = re.compile(re.escape(palavra), re.IGNORECASE)
-                                        res = compiled.sub('<span class="highlight">' + palavra + "</span>", aux)
-                                        aux = str(res)
-                                    
-                                texto_final += aux + '&nbsp;'
+                    item[tb] = texto_final
 
-                        item['texto'] = texto_final
 
-                resultado_final[tabela] = resultado
             
-            if total > 0:
-                return str('yes')
+            if len(resultados) > 0:
+                return render_template('resultado_pesquisa_biblia.jinja', resultados=resultados, tabelas=tabelas, pesquisa=pesquisa_original)
             else:
                 status= '<div style="margin-top:1vh;" class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Sem resultados encontrados, verifique os termos utilizados.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'    
         else:
