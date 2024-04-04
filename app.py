@@ -4,6 +4,7 @@ from flask_cors import CORS
 #from threading import Lock
 from waitress import serve
 from PowerPoint import getListText, getListTextHarpa
+from read_csv import readCSVHarpa
 from MySQL import db
 from HTML_U import converHTML_to_List
 import math
@@ -480,6 +481,8 @@ def edit_harpa():
     titulo = ''
     destino = '0'
 
+    autores = banco.executarConsulta('select id, abreviacao from autor_harpa order by abreviacao')
+
     if request.method == "POST":
 
         destino = '0'
@@ -494,9 +497,8 @@ def edit_harpa():
             lista_texto = getListTextHarpa(harpa_dir + nome)
             
             number = int(nome.replace('.pptx', '').replace('HINO ', ''))
-            print(number)
+            titulo = readCSVHarpa(number)
             
-            titulo = nome.replace('.pptx', '')
 
         # recriar lista pro editor
         for item in lista_texto:
@@ -504,7 +506,7 @@ def edit_harpa():
             blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
     
-    return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
+    return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, number=number, destino=destino, autores=autores)
 
 
 @app.route('/enviarDadosNovaMusica', methods=['GET', 'POST'])
@@ -649,8 +651,11 @@ def verificarSenhaHarpa():
         print(destino)
         
         if senha == '120393':
+
+            autores = banco.executarConsulta('select id, abreviacao from autor_harpa order by abreviacao')
+
             if destino == '0':
-                return render_template('editor_harpa.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0')
+                return render_template('editor_harpa.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0', autores=autores)
             else: # ele vai editar e não salvar um novo
                 blocks = []
                 blocks_s = []
@@ -662,7 +667,7 @@ def verificarSenhaHarpa():
                     blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
                     blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
-                return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
+                return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino, autores=autores)
             
         else:
             harpa = banco.executarConsulta('select * from harpa order by id')

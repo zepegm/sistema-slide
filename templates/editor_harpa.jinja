@@ -72,7 +72,9 @@
     }
 
     #txt_anotacao,
-    #txt_titulo {
+    #txt_titulo,
+    #txt_numero,
+    #cb_autor {
       border: solid;
       border-color: rgb(0, 0, 0, 0.3);
     }    
@@ -212,9 +214,20 @@
         <div class="row">
             <div class="col-sm-12"><hr></div>
             <div id="status" class="col-sm-12"></div>
-            <div class="col-sm-6">
+            <div class="col-sm-1">
+              <label for="txt_numero" class="form-label">Número:</label>
+              <input type="number" class="form-control" id="txt_numero" placeholder="Número" value="{{number}}">            
+            </div>
+            <div class="col-sm-4">
               <label for="txt_titulo" class="form-label">Título da Música:</label>
               <input type="text" class="form-control" id="txt_titulo" placeholder="Digite o Nome da Música" value="{{titulo}}">
+            </div>
+            <div class="col-sm-1 align-self-end">
+              <select class="form-select" aria-label="Default select example" id="cb_autor" name="cb_autor">
+                {% for item in autores %}
+                <option value="{{item['id']}}">{{item['abreviacao']}}</option>
+                {% endfor %}
+              </select>
             </div>
             <div class="col-sm-6 align-self-end">
               <button id="btn_view" class="btn btn-secondary">Pré-visualizar</button>
@@ -234,7 +247,7 @@
       </div>
 		</div>
 
-  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica">
+  <form id="formEnviarDados" method="post" action="enviarDadosNovoHino">
     <input id="json_data_send" name="json_data_send" type="hidden">
     <input type='hidden' name='destino' id='destino' value='{{destino}}'>
   </form>
@@ -386,11 +399,13 @@ window.onload = function() {
 
   btn_confirmar_avanco.addEventListener('click', function() {
     var titulo = $("#txt_titulo").val();
+    var numero = $("#txt_numero").val();
+    var autor = $("#cb_autor").val();
     
     if (titulo == "") {
       $("#status").append('<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor digite o título da Música.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
     } else {
-      info = {'titulo':titulo, 'slides':slide};
+      info = {'titulo':titulo, 'numero':numero, 'autor':autor, 'slides':slide};
       $("#json_data_send").val(JSON.stringify(info));
       $("#formEnviarDados").submit();
     }
