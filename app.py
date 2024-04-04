@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 #from threading import Lock
 from waitress import serve
-from PowerPoint import getListText
+from PowerPoint import getListText, getListTextHarpa
 from MySQL import db
 from HTML_U import converHTML_to_List
 import math
@@ -29,6 +29,7 @@ roteiro = []
 temp_pdf = None
 
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
+harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\HARPA' + '\\'
 
 banco = db({'host':"localhost",    # your host, usually localhost
             'user':"root",         # your username
@@ -267,6 +268,15 @@ def abrir_musica():
 
     return render_template('musicas.jinja', musicas=musicas, status='', categoria=categoria)
 
+@app.route('/abrir_harpa', methods=['GET', 'POST'])
+def abrir_harpa():
+
+    harpa = banco.executarConsulta('select * from harpa order by id')
+
+    return render_template('harpa.jinja', status='', harpa=harpa)
+
+
+
 @app.route('/slide', methods=['GET', 'POST'])
 def slide():
 
@@ -461,7 +471,36 @@ def edit_musica():
     
     return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
     
+@app.route('/edit_harpa', methods=['GET', 'POST'])
+def edit_harpa():
 
+    lista_texto = []
+    blocks = []
+    blocks_s = []
+    titulo = ''
+    destino = '0'
+
+    if request.method == "POST":
+
+        destino = '0'
+
+        if 'json_back' in request.form:
+            info = json.loads(request.form.getlist('json_back')[0])
+            titulo = info['listaGeral']['titulo']
+            lista_texto = info['listaGeral']['slides']
+            destino = info['destino']
+        else:
+            nome = request.form.getlist('file')[0]
+            lista_texto = getListTextHarpa(harpa_dir + nome)
+            titulo = nome.replace('.pptx', '')
+
+        # recriar lista pro editor
+        for item in lista_texto:
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+            blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+    
+    return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
 
 
 @app.route('/enviarDadosNovaMusica', methods=['GET', 'POST'])
@@ -584,15 +623,48 @@ def verificarSenha():
                 return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
             
         else:
-            if destino == '1' or destino == '2':
-                musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
-                status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+            status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
-                categoria = banco.executarConsulta('select * from categoria_departamentos')
-                for item in categoria:
-                    item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
+            categoria = banco.executarConsulta('select * from categoria_departamentos')
+            for item in categoria:
+                item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
 
-                return render_template('musicas.jinja', musicas=musicas, status=status, categoria=categoria)
+            return render_template('musicas.jinja', musicas=musicas, status=status, categoria=categoria)
+
+    return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
+
+
+@app.route('/verificarSenhaHarpa', methods=['GET', 'POST'])
+def verificarSenhaHarpa():
+    if request.method == "POST":
+        senha = request.form.getlist('senha')[0]
+        destino = request.form.getlist('destino')[0]
+
+        print('teste----------')
+        print(destino)
+        
+        if senha == '120393':
+            if destino == '0':
+                return render_template('editor_harpa.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0')
+            else: # ele vai editar e não salvar um novo
+                blocks = []
+                blocks_s = []
+                titulo = banco.executarConsulta('select titulo from harpa where id = %s' % destino)[0]['titulo']
+                lista_texto = banco.executarConsulta("select pos, `text-slide`, `text-legenda` as subtitle, ifnull(anotacao, '') as anotacao from slides_harpa where id_harpa = %s order by pos" % destino)
+                
+                # recriar lista pro editor
+                for item in lista_texto:
+                    blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+                    blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+                return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
+            
+        else:
+            harpa = banco.executarConsulta('select * from harpa order by id')
+            status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+            return render_template('harpa.jinja', harpa=harpa, status=status)
 
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 

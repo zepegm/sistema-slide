@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Abrir Harpa</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+   
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+        font-weight: bold;
+      }
+
+      .paragrafo {
+        margin-bottom: 10px;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #anterior,
+    #proximo {
+      color: white;
+    }
+
+    .ce-paragraph {
+        border-bottom: solid;
+    }
+
+    #txt_anotacao,
+    #txt_titulo {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }    
+
+    #previewSlide {
+      width: 426px; /* or whatever width you want. */
+      height: 240px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: black;
+      color: white;
+      line-height: normal;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #previewSubtitle {
+      width: 426px; /* or whatever width you want. */
+      height: 50px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: rgb(0, 0, 0, 0.8); 
+      color: white;
+      line-height: normal;
+      font-family: Arial;      
+    }
+
+    .arrows,
+    .preview {
+      width: 426px;
+    }
+
+    .view-marker {
+      color:rgba(255,207,102);
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
+
+    .arrow {
+      font-size: xx-large;
+    }
+
+    #editorjs_s,
+    #editorjs {
+      color:black;
+    }
+
+    #letras_musicas,
+    #detalhes_musicas {
+      color: black;
+    }
+
+    .numeracao {
+      color:#0070C0;
+    }
+
+    .Forte {
+      background-color: rgb(115, 249, 139);
+      border-radius: 5px;
+      padding: 2%;
+    }
+
+    .Médio {
+      background-color: rgb(250, 191, 135);
+      border-radius: 5px;
+      padding: 2%;
+    }
+
+    .Fraco {
+      background-color: rgb(249, 159, 237);
+      border-radius: 5px;
+      padding: 2%;
+    }
+
+    .text {
+      background-color: rgb(255, 255, 255);
+      border-radius: 5px;
+      padding: 1%;
+      margin-top: 10px;
+    }
+
+    .cdx-marker {
+      color:rgba(192,0,0);
+      font-weight:bold;
+      background:rgba(0,0,0,0);
+    }   
+
+    #txt_pesquisa_letra,
+    #txt_senha,
+    #txt_filtro {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }   
+
+    #lista_geral a.toggled { display: none; }
+
+    #lista_geral a.toggled-vinc { display: none; }
+
+    img {
+        display: block;
+        height: 200px;
+        width: 100%;
+        border: solid;
+        border-width: thin;
+    }
+
+    .center {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+    }
+
+    </style>
+    
+  </head>
+
+  <body>
+
+    <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmar Etapa de Digitação</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="verificarSenhaHarpa" method="post">
+          <div class="modal-body">
+            <label for="txt_senha" class="form-label">Digite a senha do Administrador para prosseguir:</label>
+            <input type="password" name="senha" class="form-control" id="txt_senha" placeholder="Digite a senha">
+            <input type="hidden" name="destino" id="destino" value="0">
+          </div>
+          <div class="modal-footer">
+            <input type="submit" class="btn btn-primary" value="Confirmar">
+            </form>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div> 
+
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row">
+            <div id="status" class="col-sm-12">{{status}}</div>
+            <div id="loading" class="col-sm-12 text-center" hidden>
+              <div class="spinner-border text-danger" role="status">
+                <span class="sr-only">Carregando...</span>
+              </div><span class="center">&nbsp;Renderizando PDF... Por favor aguarde.</span>
+            </div>
+            <div class="col-sm-12">
+              <h2 class="fw-bold">Abrir Hino da Harpa</h2>
+            </div>
+          </div>
+          <div class="row d-flex align-items-center">
+            <div class="col-sm-8">
+              <button id="btn_nova_musica" class="btn btn-primary" data-toggle="modal" data-target="#modalConfirm"><i class="fa-solid fa-plus"></i> Novo Hino</button>
+              <button id="btn_editar_musica" class="btn btn-secondary" data-toggle="modal" data-target="#modalConfirm" disabled><i class="fa-solid fa-pen-to-square"></i> Editar Selecionado</button>
+              <button id="btn_gerar_pdf" class="btn btn-danger"><i class="fa-solid fa-file-pdf"></i> Gerar PDF da Harpa</button>
+            </div>
+            
+            <div class="col-sm-3">
+              <form method="post" action="pesquisarLetra">
+              <input type="text" name="pesquisa" class="form-control" id="txt_pesquisa_letra" placeholder="Pesquisa Profunda (letras e títulos)">
+            </div>
+            <div class="col-sm-1">
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+              </form>
+            </div>
+
+            <div class="col-sm-12">
+              <hr>
+            </div>
+
+          </div>
+          <div class="row">
+            <div class="col-sm-3">
+              <div id="lista_geral" class="list-group">
+                <label for="txt_filtro" class="form-label">Filtrar por Titulo:</label>
+                <input type="text" class="form-control" id="txt_filtro" placeholder="Digite o Nome da Música" value="{{titulo}}">                
+                <br>
+                {% for item in harpa %}
+                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}" data-vinc="{{item['vinc']}}">{{item['titulo']}}</a>
+                {% endfor %}
+              </div>              
+            </div>
+            <div id="letras_musicas" class="col-sm-5"></div>
+            <div id="detalhes_musicas" class="col-sm-4"></div>
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <form id="formEnviarDados" method="post" action="enviarDadosNovaMusica"><input id="json_data_send" name="json_data_send" type="hidden"></form>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  
+<script>
+
+
+</script>
+      
+  </body>
+</html>
