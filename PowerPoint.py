@@ -106,7 +106,7 @@ def getListTextHarpa(dir):
             for paragraph in shape.text_frame.paragraphs:
                 for run in paragraph.runs:
                     if str(run.font.color.rgb) == '0070C0':
-                        text_slide += '<span class="numeracao">' + run.text.lstrip() + ' </span>'
+                        text_slide += '<span class="cdx-num">' + run.text.lstrip() + ' </span>'
                     elif str(run.font.color.rgb) == 'FF0000':
                         if run.text[0:1].isdigit():
                             text_slide += '<span class="red">' + run.text.lstrip() + ' </span>'

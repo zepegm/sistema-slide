@@ -1,9 +1,9 @@
 (function() {
     "use strict";
     try {
-        if (typeof document < "span") {
+        if (typeof document < "u") {
             var e = document.createElement("style");
-            e.appendChild(document.createTextNode(".numeracao{color:#0070C0;}")),
+            e.appendChild(document.createTextNode(".cdx-num{color:#0070C0;}")),
             document.head.appendChild(e)
         }
     } catch (d) {
@@ -12,21 +12,21 @@
 }
 )();
 (function(i, s) {
-    typeof exports == "object" && typeof module < "span" ? module.exports = s() : typeof define == "function" && define.amd ? define(s) : (i = typeof globalThis < "span" ? globalThis : i || self,
+    typeof exports == "object" && typeof module < "u" ? module.exports = s() : typeof define == "function" && define.amd ? define(s) : (i = typeof globalThis < "u" ? globalThis : i || self,
     i.Numeracao = s())
 }
 )(this, function() {
     "use strict";
     const i = ""
-      , s = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M11.3536 9.31802L12.7678 7.90381C13.5488 7.12276 14.8151 7.12276 15.5962 7.90381C16.3772 8.68486 16.3772 9.95119 15.5962 10.7322L14.182 12.1464M11.3536 9.31802L7.96729 12.7043C7.40889 13.2627 7.02827 13.9739 6.8734 14.7482L6.69798 15.6253C6.55804 16.325 7.17496 16.942 7.87468 16.802L8.75176 16.6266C9.52612 16.4717 10.2373 16.0911 10.7957 15.5327L14.182 12.1464M11.3536 9.31802L14.182 12.1464"/><line x1="15" x2="19" y1="17" y2="17" stroke="currentColor" stroke-linecap="round" stroke-width="2"/></svg>';
+      , s = '<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 6.5H20V8H10V6.5Z" fill="#1F2328"/><path d="M10 16.5H20V18H10V16.5Z" fill="#1F2328"/><path d="M10 11.5H20V13H10V11.5Z" fill="#1F2328"/><path d="M7.99847 10H4.44745V8.68805H5.48827V5.87172C5.20838 5.98834 4.87311 6.04665 4.48244 6.04665V4.74344C4.83229 4.74344 5.10634 4.68805 5.30459 4.57726C5.50868 4.4723 5.68069 4.27988 5.82063 4H7.0801V8.68805H7.99847V10Z" fill="#1F2328"/><path d="M8.29928 19H4.12086V17.9986L6.19281 15.9525C6.49784 15.659 6.65036 15.3223 6.65036 14.9424C6.65036 14.5568 6.48921 14.364 6.16691 14.364C5.77554 14.364 5.57986 14.6288 5.57986 15.1583H4C4 14.4619 4.19568 13.9266 4.58705 13.5525C4.97266 13.1842 5.49928 13 6.16691 13C6.82878 13 7.34101 13.1727 7.7036 13.518C8.06619 13.8691 8.24748 14.3439 8.24748 14.9424C8.24748 15.3683 8.16691 15.7252 8.00576 16.0129C7.8446 16.3007 7.5482 16.6518 7.11655 17.0662L6.4518 17.705H8.29928V19Z" fill="#1F2328"/></svg>';
     class n {
         static get CSS() {
-            return "numeracao"
+            return "cdx-num"
         }
         constructor({api: t}) {
             this.api = t,
             this.button = null,
-            this.tag = "numeracao",
+            this.tag = "SPAN",
             this.iconClasses = {
                 base: this.api.styles.inlineToolButton,
                 active: this.api.styles.inlineToolButtonActive
@@ -74,7 +74,7 @@
         }
         static get sanitize() {
             return {
-                numeracao: {
+                span: {
                     class: n.CSS
                 }
             }

@@ -492,6 +492,10 @@ def edit_harpa():
         else:
             nome = request.form.getlist('file')[0]
             lista_texto = getListTextHarpa(harpa_dir + nome)
+            
+            number = int(nome.replace('.pptx', '').replace('HINO ', ''))
+            print(number)
+            
             titulo = nome.replace('.pptx', '')
 
         # recriar lista pro editor

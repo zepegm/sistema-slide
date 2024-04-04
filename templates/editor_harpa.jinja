@@ -63,7 +63,7 @@
         border-bottom: solid;
     }
 
-    .numeracao {
+    .cdx-num {
       color:#0070C0;
     }
 
@@ -249,6 +249,7 @@
   <script src="{{ url_for('static', filename='js/marker.umd.js') }}"></script>
   <script src="{{ url_for('static', filename='js/underline.umd.js') }}"></script>
   <script src="{{ url_for('static', filename='js/numeracao.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editor-red.js') }}"></script>
   <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script>
 
   
@@ -268,13 +269,17 @@
     */
     holder: 'editorjs',
 
-    inlineToolbar: ['bold', 'italic', 'underline', 'numeracao'],
+    inlineToolbar: ['bold', 'italic', 'underline', 'numeracao', 'red'],
 
     tools: {
       // ...
+      underline: Underline,
       numeracao: {
         class: Numeracao,
         shortcut: 'CMD+SHIFT+M',
+      },
+      red: {
+        class: Red
       }
     },
     data: {
@@ -317,6 +322,7 @@ window.onload = function() {
     editor.save()
       .then( data => {
         text_slide = data['blocks'];
+        console.log(text_slide);
 
         editor_s.save()
           .then( data => {
