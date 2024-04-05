@@ -34,7 +34,7 @@ harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretari
 
 banco = db({'host':"localhost",    # your host, usually localhost
             'user':"root",         # your username
-            'passwd':"Yasmin",  # your password
+            'passwd':"",  # your password
             'db':"sistema-slide"})
 
 @app.route('/', methods=['GET', 'POST'])
@@ -507,6 +507,39 @@ def edit_harpa():
 
     
     return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, number=number, destino=destino, autores=autores)
+
+
+@app.route('/enviarDadosNovoHino', methods=['GET', 'POST'])
+def enviarDadosNovoHino():
+    if request.method == "POST":
+        info = json.loads(request.form.getlist('json_data_send')[0])
+        cat_slides = banco.executarConsulta('select * from categoria_slide')
+        cat_slides_list = []
+
+        nome_autor = banco.executarConsulta('select nome from autor_harpa where id = %s' % info['autor'])[0]['nome']
+
+        blocks = []
+        blocks_2 = []
+        for item in info['slides']:
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+
+        destino = request.form.getlist('destino')[0]
+        if destino != '0': # significa que é edição e não acréscimo
+            letras = banco.executarConsulta('select * from letras_harpa where id_harpa = %s and pagina = 1 order by paragrafo' % destino)
+            blocks = []
+
+            for item in letras:
+                blocks.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            letras = banco.executarConsulta('select * from letras_harpa where id_harpa = %s and pagina = 2 order by paragrafo' % destino)
+            blocks_2 = []
+
+            for item in letras:
+                blocks_2.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            cat_slides_list = banco.executarConsulta('select categoria from slides_harpa where id_harpa = %s order by pos' % destino)
+
+        return render_template('save_harpa.jinja', info=info, cat_slides=cat_slides, blocks=blocks, blocks_2=blocks_2, cat_slides_list=cat_slides_list, destino=destino, autor=nome_autor)
 
 
 @app.route('/enviarDadosNovaMusica', methods=['GET', 'POST'])
