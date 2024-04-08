@@ -632,6 +632,20 @@ async def converto_to_pdf_list():
 
     return jsonify(pdf_path)
 
+
+@app.route('/get_info_harpa', methods=['GET', 'POST'])
+def get_info_harpa():
+    if request.method == "POST":
+        if request.is_json:
+
+            id = request.json
+            letras = banco.executarConsulta('select texto from letras_harpa where id_harpa = %s order by paragrafo' % id['id'])
+            numero = 'HINO %s' % '{0:03}'.format(int(id['id']))
+            titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id['id'])[0]
+            autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id['id'])[0]
+
+            return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor})
+
 @app.route('/get_info_musica', methods=['GET', 'POST'])
 def get_info_musica():
 
@@ -716,15 +730,16 @@ def verificarSenhaHarpa():
             else: # ele vai editar e não salvar um novo
                 blocks = []
                 blocks_s = []
-                titulo = banco.executarConsulta('select titulo from harpa where id = %s' % destino)[0]['titulo']
+                titulo = banco.executarConsulta('select descricao from harpa where id = %s' % destino)[0]['descricao']
+                autor = banco.executarConsultaVetor('select autor from harpa where id = %s' % destino)[0]
                 lista_texto = banco.executarConsulta("select pos, `text-slide`, `text-legenda` as subtitle, ifnull(anotacao, '') as anotacao from slides_harpa where id_harpa = %s order by pos" % destino)
-                
+
                 # recriar lista pro editor
                 for item in lista_texto:
                     blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
                     blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
-                return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino, autores=autores, autor=0)
+                return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino, autores=autores, number=destino, autor=autor)
             
         else:
             harpa = banco.executarConsulta('select * from harpa order by id')

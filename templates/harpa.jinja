@@ -116,9 +116,48 @@
       color: black;
     }
 
-    .numeracao {
+    .cdx-num {
       color:#0070C0;
     }
+
+    .red {
+      color:#FF0000;
+    }
+
+    #lb_titulo {
+      color:#978473;
+      font-weight: bold;
+      border:solid 1px rgb(0,0,0,0);
+      position:absolute;
+      left: 20px;
+      top: 70px;
+      text-align: center;
+
+      width: 50%;
+      height: 35px;
+    }
+
+    #lb_numero {
+      color:#978473;
+      font-size:40px;
+      font-style: italic;
+      position: absolute;
+      left: 55px;
+      top:-10px;
+    }    
+
+    #lb_autor {
+      color:black;
+      border:solid 1px rgb(0,0,0,0);
+      position:absolute;
+      left: 20px;
+      top: 105px;
+      text-align: center;
+
+      width: 50%;
+      height: 30px;      
+    }
+
 
     .Forte {
       background-color: rgb(115, 249, 139);
@@ -278,10 +317,61 @@
   <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
 
   
 <script>
 
+  $("#btn_nova_musica").on('click', function() {
+    $("#destino").val('0');
+  });
+
+  $("#btn_editar_musica").on('click', function() {
+    $("#destino").val($("#lista_geral a.active").attr('data-id'));
+  });
+
+  $("#lista_geral").on('click', '.list-group-item', function() {
+    $(".list-group-item").removeClass('active');
+    $(this).addClass('active');
+
+    $("#letras_musicas").empty();
+    $("#detalhes_musicas").empty();
+    $("#letras_musicas").append('<h4><span class="fw-bold text-primary">' + $(this).text().substring(0, 4) + ' </span><span class="text-primary">' + $(this).text().substring(5, 100) + '</span></h4>');
+
+    info = {'id':$(this).attr('data-id')};
+
+    $.ajax({
+        type: "POST",
+        url: "get_info_harpa",
+        contentType: "application/json",
+        data: JSON.stringify(info),
+        dataType: "json",
+        success: function(data) {
+            //console.log(data);
+
+            // adicionar imagem da capa
+            $("#detalhes_musicas").append("<img src='/static/images/Harpa.jpg'></img><br>");
+            $("#detalhes_musicas").append("<div id='lb_numero'>" + data['numero'] + "</div>");
+            $("#detalhes_musicas").append("<div id='lb_titulo'>" + data['titulo'] + "</div>");
+            textFit($("#lb_titulo"), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 230});
+            $("#detalhes_musicas").append("<div id='lb_autor'>" + data['autor'] + "</div>");
+            textFit($("#lb_autor"), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 230});
+           
+            $("#letras_musicas").append('<div id="pagina_texto"></div>');
+
+
+            for (letra in data['letras']) {
+              $("#pagina_texto").append('<p>' + data['letras'][letra]['texto'].replaceAll('<mark ', '<span ').replaceAll('</mark>', '</span> ') + '</p>');
+            }
+
+            $("#btn_editar_musica").removeAttr('disabled');
+            $("#btn_iniciar_apresentacao").removeAttr('disabled');
+            $("#btn_adicionar_roteiro").removeAttr('disabled');
+        },
+    });    
+
+    console.log(info);
+  });
 
 </script>
       
