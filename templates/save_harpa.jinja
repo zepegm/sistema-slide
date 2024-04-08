@@ -146,6 +146,8 @@
 
       width: 640px; /* or whatever width you want. */
       height: 360px; /* or whatever width you want. */      
+
+      border: solid 1px;
     }
 
     #lb_numero {
@@ -348,8 +350,8 @@
       </div>
 		</div>
 
-  <form id="formBack" method="post" action="edit_musica"><input id="json_back" name="json_back" type="hidden"></form>
-  <form id="formSend" method="post" action="addMusica"><input id="json_send" name="json_send" type="hidden"></form>
+  <form id="formBack" method="post" action="edit_harpa"><input id="json_back" name="json_back" type="hidden"></form>
+  <form id="formSend" method="post" action="addHarpa"><input id="json_send" name="json_send" type="hidden"></form>
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
@@ -360,7 +362,9 @@
 
   <script src="{{ url_for('static', filename='js/marker.umd.js') }}"></script>
   <script src="{{ url_for('static', filename='js/underline.umd.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script> 
+  <script src="{{ url_for('static', filename='js/numeracao.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editor-red.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script>
 
   
 <script>
@@ -393,7 +397,7 @@ textFit($("#lb_autor"), {alignVert: true, multiLine: false, minFontSize: 20, max
               texto_2.push({'texto':aux})
             }
 
-            info = [{'titulo':"{{info['titulo']}}", 'letras':texto, 'letras_2':texto_2, 'cont':'', 'pag':'1'}]
+            info = [{'titulo':"{{'%03d' % info['numero']|int}}. {{info['titulo']}}", 'letras':texto, 'letras_2':texto_2, 'cont':'', 'pag':'1'}]
             console.log(info);
 
             $.ajax({
@@ -464,7 +468,9 @@ textFit($("#lb_autor"), {alignVert: true, multiLine: false, minFontSize: 20, max
   function getInfo() {
 
     titulo = '{{info['titulo']}}';
-    vinculos = [{'vinc':$("#vinc1").val(), 'status':$("#status1").val(), 'descricao':$("#desc_vinc1").val()}];
+    numero = '{{info['numero']}}';
+    autor = '{{info['autor']}}'
+    
     slides = {{info['slides']}};
 
     // acrescentando as categorias a lista
@@ -474,15 +480,7 @@ textFit($("#lb_autor"), {alignVert: true, multiLine: false, minFontSize: 20, max
 
     letras = [];
 
-    if ($("#add_vinc2").val() != 0) {
-      vinculos.push({'vinc':$("#add_vinc2").val(), 'status':$("#status2").val(), 'descricao':$("#desc_vinc2").val()});
-    }
-
-    if ($("#add_vinc3").val() != 0) {
-      vinculos.push({'vinc':$("#add_vinc3").val(), 'status':$("#status3").val(), 'descricao':$("#desc_vinc3").val()});
-    }
-
-    return {'titulo':titulo, 'vinculos':vinculos, 'slides':slides};
+    return {'titulo':titulo, 'numero':numero, 'autor':autor, 'slides':slides};
 
   }
 
@@ -528,14 +526,17 @@ textFit($("#lb_autor"), {alignVert: true, multiLine: false, minFontSize: 20, max
     */
     holder: 'editorjs',
 
-    inlineToolbar: ['bold', 'italic', 'underline', 'Marker'],
+    inlineToolbar: ['bold', 'italic', 'underline', 'numeracao', 'red'],
 
     tools: {
       // ...
       underline: Underline,
-      Marker: {
-        class: Marker,
+      numeracao: {
+        class: Numeracao,
         shortcut: 'CMD+SHIFT+M',
+      },
+      red: {
+        class: Red
       }
     },
     data: {

@@ -39,6 +39,44 @@ class db:
 
         return result
     
+    def inserirNovoHino(self, harpa):
+        try:
+            database = mysql.connector.connect(host=self.cred['host'], user=self.cred['user'], passwd=self.cred['passwd'], db=self.cred['db'])
+            cur = database.cursor()      
+
+            # inserir slides
+            sql = 'DELETE FROM slides_harpa WHERE id_harpa = %s' % harpa['numero']
+            cur.execute(sql)
+
+            for sld in harpa['slides']:
+                anotacao = 'null'
+
+                if 'anotacao' in sld.keys():
+                    if sld['anotacao'] != '':
+                        anotacao = "'%s'" % sld['anotacao']
+
+                sql = "INSERT INTO slides_harpa VALUES(%s, %s, '%s', '%s', %s, %s)" % (harpa['numero'], sld['pos'], sld['text-slide'], sld['subtitle'], sld['cat'], anotacao)
+                cur.execute(sql)  
+
+
+            # inserir letras
+
+            sql = 'DELETE FROM letras_harpa WHERE id_harpa = %s' % harpa['numero']
+            cur.execute(sql)
+
+            for letra in harpa['letra']:
+                sql = "INSERT INTO letras_harpa VALUES(%s, %s, '%s', %s)" % (harpa['numero'], letra['paragrafo'], letra['texto'], letra['pagina'])
+                cur.execute(sql)
+
+            database.commit()
+            database.close()
+            return True                
+
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False
+
+
     def inserirNovaMusica(self, musica):   
 
         try:

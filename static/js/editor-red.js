@@ -3,7 +3,7 @@
     try {
         if (typeof document < "u") {
             var e = document.createElement("style");
-            e.appendChild(document.createTextNode(".red{color:#FF0000;font-weight:bold;background:rgba(0,0,0,0)}")),
+            e.appendChild(document.createTextNode(".red{color:#FF0000}")),
             document.head.appendChild(e)
         }
     } catch (d) {

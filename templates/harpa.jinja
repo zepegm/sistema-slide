@@ -260,7 +260,7 @@
                 <input type="text" class="form-control" id="txt_filtro" placeholder="Digite o Nome da Música" value="{{titulo}}">                
                 <br>
                 {% for item in harpa %}
-                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}" data-vinc="{{item['vinc']}}">{{item['titulo']}}</a>
+                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}">{{'%03d' % item['id']}}. {{item['descricao']}}</a>
                 {% endfor %}
               </div>              
             </div>

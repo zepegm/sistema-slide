@@ -34,7 +34,7 @@ harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretari
 
 banco = db({'host':"localhost",    # your host, usually localhost
             'user':"root",         # your username
-            'passwd':"",  # your password
+            'passwd':"Yasmin",  # your password
             'db':"sistema-slide"})
 
 @app.route('/', methods=['GET', 'POST'])
@@ -371,7 +371,27 @@ def changeBackground():
 
             socketio.emit('change', completo)
             return jsonify(True)
+
+@app.route('/addHarpa', methods=['GET', 'POST'])
+def addHarpa():
+    if request.method == 'POST':   
+        info = json.loads(request.form.getlist('json_send')[0]) 
         
+        print(info)
+        # inserir harpa
+        if banco.insertOrUpdate({'id':info['numero'], 'descricao':"'" + info['titulo'] + "'", 'autor':info['autor']}, 'harpa'):
+            if banco.inserirNovoHino(info):
+                status= '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Informações do Hino de número <strong>' + info['numero'] + '. ' + info['titulo'] + '</strong> inseridas com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+        else:
+            status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir dados, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+        
+        harpa = banco.executarConsulta('select * from harpa order by id')
+
+        return render_template('harpa.jinja', harpa=harpa, status=status)
+
+
 @app.route('/addMusica', methods=['GET', 'POST'])
 def addMusica():
     if request.method == 'POST':    
@@ -479,6 +499,7 @@ def edit_harpa():
     blocks = []
     blocks_s = []
     titulo = ''
+    autor = 0
     destino = '0'
 
     autores = banco.executarConsulta('select id, abreviacao from autor_harpa order by abreviacao')
@@ -489,7 +510,10 @@ def edit_harpa():
 
         if 'json_back' in request.form:
             info = json.loads(request.form.getlist('json_back')[0])
+            print(info)
             titulo = info['listaGeral']['titulo']
+            number = info['listaGeral']['numero']
+            autor = info['listaGeral']['autor']
             lista_texto = info['listaGeral']['slides']
             destino = info['destino']
         else:
@@ -506,7 +530,7 @@ def edit_harpa():
             blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
     
-    return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, number=number, destino=destino, autores=autores)
+    return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, number=number, destino=destino, autores=autores, autor=autor)
 
 
 @app.route('/enviarDadosNovoHino', methods=['GET', 'POST'])
@@ -688,7 +712,7 @@ def verificarSenhaHarpa():
             autores = banco.executarConsulta('select id, abreviacao from autor_harpa order by abreviacao')
 
             if destino == '0':
-                return render_template('editor_harpa.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0', autores=autores)
+                return render_template('editor_harpa.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0', autores=autores, autor=0)
             else: # ele vai editar e não salvar um novo
                 blocks = []
                 blocks_s = []
@@ -700,7 +724,7 @@ def verificarSenhaHarpa():
                     blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
                     blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
-                return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino, autores=autores)
+                return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino, autores=autores, autor=0)
             
         else:
             harpa = banco.executarConsulta('select * from harpa order by id')
