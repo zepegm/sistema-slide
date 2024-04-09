@@ -64,7 +64,7 @@
     }
 
     .capa {
-      background-image: url("{{ url_for('static', filename=fundo) }}");  
+      background-image: url("{{ url_for('static', filename='images/Harpa.jpg') }}");  
       background-size: contain;
       background-repeat: no-repeat;
       background-size: 100% 100%;
@@ -93,12 +93,6 @@
 
     .big-box {
       cursor: pointer;
-    }
-
-    .cdx-marker {
-      color:{{config['mark']}};
-      font-weight:bold;
-      background:rgba(0,0,0,0)
     }
 
     .arrow {
@@ -140,8 +134,12 @@
       font-size: 20px;
     }
 
-    .coro {
-      color:{{config['mark']}};
+    .cdx-num {
+      color:{{config['num']}}
+    }
+
+    .red {
+      color:{{config['red']}}
     }
 
     </style>
@@ -332,8 +330,6 @@
 
     $(".big-box").on('click', function() {
       index = $(this).attr('data-index');
-
-      console.log(index);
 
       // modificar slide Principal
       $("#slideAtual").text('Slide Atual: ' + (parseInt(index) + 1));

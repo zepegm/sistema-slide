@@ -40,6 +40,9 @@ banco = db({'host':"localhost",    # your host, usually localhost
 @app.route('/', methods=['GET', 'POST'])
 def home():
 
+    number = None
+    nome_autor = None
+
     if estado == 1:
         titulo = banco.executarConsulta('select titulo from %s where id = %s' % (current_presentation['tipo'], current_presentation['id']))[0]['titulo']
 
@@ -56,12 +59,19 @@ def home():
         titulo = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % current_presentation['id'])[0] + ' ' + current_presentation['cap'] + ':' + str(index + 1)
         tipo = 'Bíblia'
         capa = 'static/images/Biblia.jpg'
+    elif estado == 3:
+        titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % current_presentation['id'])[0]
+        number = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
+        print(number)
+        nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % current_presentation['id'])[0]
+        tipo = 'Harpa'
+        capa = 'static/images/Harpa.jpg'
     else:
         titulo = None
         tipo = None
         capa = 'static/images/Background.jpeg'
 
-    return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa)
+    return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor)
 
 @app.route('/render_pdf', methods=['GET', 'POST'])
 def render_pdf():
@@ -196,6 +206,12 @@ def controlador():
 
         return render_template('controlador_biblia.jinja', head=head, lista=lista, index=index + 1)
     
+    elif estado == 3: #harpa
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-harpa-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-harpa-fundo'")[0]['valor'], 'num':banco.executarConsulta("select valor from config where id = 'cor-harpa-num'")[0]['valor'], 'red':banco.executarConsulta("select valor from config where id = 'cor-harpa-red'")[0]['valor']}
+        lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides_harpa where id_harpa = %s order by pos" % current_presentation['id'])
+
+        return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config)
+
     return 'erro'
 
 @app.route('/abrir_biblia', methods=['GET', 'POST'])
@@ -945,7 +961,12 @@ def iniciar_apresentacao():
         if request.is_json:
             info = request.json
             current_presentation = {'id':info['id'], 'tipo':info['tipo']}
-            estado = 1
+
+            if info['tipo'] == 'musicas':
+                estado = 1
+            elif info['tipo'] == 'harpa':
+                estado = 3
+
             index = 0
 
             socketio.emit('refresh', 1)

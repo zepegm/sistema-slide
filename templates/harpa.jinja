@@ -291,6 +291,13 @@
               <hr>
             </div>
 
+            <div class="col-sm-12">
+                <p>
+                  <button id="btn_iniciar_apresentacao" class="btn btn-info" disabled><i class="fa-solid fa-circle-play"></i> Iniciar Apresentação</button>
+                  <button id="btn_adicionar_roteiro" class="btn btn-success" disabled><i class="fa-solid fa-list-check"></i> Adicionar ao Roteiro</button>
+                </p>           
+            </div>          
+
           </div>
           <div class="row">
             <div class="col-sm-3">
@@ -321,6 +328,35 @@
 
   
 <script>
+
+  $("#btn_iniciar_apresentacao").on('click', function() {
+    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'harpa'};
+    
+    $.ajax({
+        type: "POST",
+        url: "iniciar_apresentacao",
+        contentType: "application/json",
+        data: JSON.stringify(info),
+        dataType: "json",
+        success: function(data) {
+            if (data) {
+              $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + '</strong> iniciada com sucesso. <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
+        },
+    });    
+
+  });
+
+  $('#txt_filtro').on('keyup', function (e) {
+    var value = $(this).val().toLowerCase();
+    $("#lista_geral a").toggleClass('toggled', true);
+    $("#lista_geral a").filter(function() {
+      if ($(this).text().toLowerCase().indexOf(value) > -1) {
+        $(this).removeClass('toggled');
+      }
+      //console.log($(this).find("label").find("input").data("pasta"))
+    });
+  });
 
   $("#btn_nova_musica").on('click', function() {
     $("#destino").val('0');
