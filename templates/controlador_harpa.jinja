@@ -153,6 +153,16 @@
       top:-8px;
     }
 
+    #lb_numero {
+      text-align: left;
+      color:#978473;
+      font-size:70px;
+      font-style: italic;
+      position: relative;
+      left: 75px;
+      top:-18px;
+    }    
+
     #lb_titulo_mini {
       color:#978473;
       font-weight: bold;
@@ -165,6 +175,18 @@
       height: 30px;
     }
 
+    #lb_titulo {
+      color:#978473;
+      font-weight: bold;
+      border:solid 1px rgb(0,0,0,0);
+      position:relative;
+      left: 20px;
+      text-align: center;
+
+      width: 320px;
+      height: 60px;
+    }    
+
     #lb_autor_mini {
       color:black;
       border:solid 1px rgb(0,0,0,0);
@@ -176,6 +198,18 @@
       width: 150px;
       height: 20px;      
     }
+
+    #lb_autor {
+      color:black;
+      border:solid 1px rgb(0,0,0,0);
+      position:relative;
+      left: 20px;
+      top:0px;
+      text-align: center;
+
+      width: 320px;
+      height: 50px;      
+    }    
 
     </style>
   </head>
@@ -210,7 +244,11 @@
               <div class="col-sm-7">
                 <div id="card_principal" class="card shadow-sm">
                     {% if index == 0 or (index - 1) == lista_slides|length %}
-                      <div class="capa" id="slidePrincipal"></div>
+                      <div class="capa" id="slidePrincipal">
+                        <div id="lb_numero">{{numero}}</div>
+                        <div id="lb_titulo">{{titulo}}</div>
+                        <div id="lb_autor">{{autor}}</div>                          
+                      </div>
                     {% else %}
                       {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
                       <div class="letra coro" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
@@ -336,6 +374,9 @@
     var slides = {{lista_slides}};
     var chave = true;
 
+    var font_titulo = 0;
+    var font_autor = 0;
+
     var socket = io();
     socket.on('refresh', function(result) {
         location.reload();
@@ -345,6 +386,9 @@
 
       textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 50});
       textFit($('.mini-capa'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 50});
+
+      textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+      textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
 
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
@@ -362,6 +406,9 @@
       textFit($(".mini-box"), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100})
 
       $("#loading").remove();
+
+      font_titulo = $("#lb_titulo .textFitted").css('font-size');
+      font_autor = $("#lb_autor .textFitted").css('font-size');
     };
 
     $(".big-box").on('click', function() {
@@ -392,6 +439,18 @@
         $("#slidePrincipal").addClass('capa');
         $("#slidePrincipal").removeClass('letra');        
         $("#slidePrincipal").empty();
+
+        $("#slidePrincipal").append('<div id="lb_numero">{{numero}}</div>');
+        $("#slidePrincipal").append('<div id="lb_titulo">{{titulo}}</div>');
+        $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');  
+
+        $("#lb_titulo").css({
+          fontSize: font_titulo
+        });
+
+        $("#lb_autor").css({
+          fontSize: font_autor
+        });        
       }
 
       
@@ -469,6 +528,11 @@
       if (index == 0) {
         $("#slidePrincipal").empty();
         $("#slidePrincipal").addClass('capa');
+
+        $("#slidePrincipal").append('<div id="lb_numero">{{numero}}</div>');
+        $("#slidePrincipal").append('<div id="lb_titulo">{{titulo}}</div>');
+        $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');
+              
         $("#slidePrincipal").removeClass('letra');        
       } else {
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
@@ -501,6 +565,14 @@
 
       changeBox(index);
 
+        $("#lb_titulo").css({
+          fontSize: font_titulo
+        });
+
+        $("#lb_autor").css({
+          fontSize: font_autor
+        });       
+
       $.ajax({
         type: "POST",
         url: "{{ url_for('updateSlide') }}",
@@ -508,7 +580,7 @@
         data: JSON.stringify(index),
         dataType: "json",
         success: function(response) {
-          console.log(response);
+          console.log(response);      
         },
         error: function(err) {
           console.log(err);
