@@ -86,7 +86,8 @@
       width: 428px; /* or whatever width you want. */
     }
 
-    .mini-box {
+    .mini-box,
+    .mini-capa-box {
       height: 140px;
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -140,6 +141,40 @@
 
     .red {
       color:{{config['red']}}
+    }
+
+    #lb_numero_mini {
+      text-align: left;
+      color:#978473;
+      font-size:30px;
+      font-style: italic;
+      position: relative;
+      left: 30px;
+      top:-8px;
+    }
+
+    #lb_titulo_mini {
+      color:#978473;
+      font-weight: bold;
+      border:solid 1px rgb(0,0,0,0);
+      position:relative;
+      left: 20px;
+      text-align: center;
+
+      width: 150px;
+      height: 30px;
+    }
+
+    #lb_autor_mini {
+      color:black;
+      border:solid 1px rgb(0,0,0,0);
+      position:relative;
+      left: 20px;
+      top:0px;
+      text-align: center;
+
+      width: 150px;
+      height: 20px;      
     }
 
     </style>
@@ -252,7 +287,11 @@
               {% else %}
               <div id="box0" data-index="0" class="card shadow-sm big-box">
               {% endif %}              
-                <div class="capa mini-box"></div>
+                <div class="capa mini-capa-box">
+                  <div id="lb_numero_mini">{{numero}}</div>
+                  <div class="mini-capa" id="lb_titulo_mini">{{titulo}}</div>
+                  <div class="mini-capa" id="lb_autor_mini">{{autor}}</div>                  
+                </div>
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Slide: 1</h4>
                 </div>
@@ -304,11 +343,8 @@
 
     window.onload = function() {
 
-      if (index > slides.length) {
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
-      } else {
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
-      }
+      textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 50});
+      textFit($('.mini-capa'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 50});
 
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
@@ -335,6 +371,7 @@
       $("#slideAtual").text('Slide Atual: ' + (parseInt(index) + 1));
 
       if (index > 0) {
+        $("#btn_previous").removeAttr('disabled');
         $("#slidePrincipal").addClass('letra');
         $("#slidePrincipal").removeClass('capa');
 

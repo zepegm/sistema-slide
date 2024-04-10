@@ -62,7 +62,6 @@ def home():
     elif estado == 3:
         titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % current_presentation['id'])[0]
         number = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
-        print(number)
         nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % current_presentation['id'])[0]
         tipo = 'Harpa'
         capa = 'static/images/Harpa.jpg'
@@ -210,7 +209,11 @@ def controlador():
         config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-harpa-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-harpa-fundo'")[0]['valor'], 'num':banco.executarConsulta("select valor from config where id = 'cor-harpa-num'")[0]['valor'], 'red':banco.executarConsulta("select valor from config where id = 'cor-harpa-red'")[0]['valor']}
         lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides_harpa where id_harpa = %s order by pos" % current_presentation['id'])
 
-        return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config)
+        titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % current_presentation['id'])[0]
+        number = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
+        nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % current_presentation['id'])[0]
+
+        return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config, titulo=titulo, numero=number, autor=nome_autor)
 
     return 'erro'
 

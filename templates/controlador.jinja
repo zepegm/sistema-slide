@@ -339,6 +339,7 @@
       $("#slideAtual").text('Slide Atual: ' + (parseInt(index) + 1));
 
       if (index > 0) {
+        $("#btn_previous").removeAttr('disabled');
         $("#slidePrincipal").addClass('letra');
         $("#slidePrincipal").removeClass('capa');
 
