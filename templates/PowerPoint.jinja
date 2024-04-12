@@ -56,6 +56,11 @@
                 left:0%;            
             }     
             
+            .first-in {
+                animation-name: fade-in;
+                animation-duration: 4s;                
+            }
+
             .in {
                 animation-name: fade-in;
                 animation-duration: 0.5s;
@@ -188,7 +193,7 @@
         </div>
 
         {% if index == 0 or (index - 1) == lista_slides|length %}
-        <div class="slide capa in" id="slide1"></div>
+        <div class="slide capa first-in" id="slide1"></div>
         {% else %}
             {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
             <div class="slide coro letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>

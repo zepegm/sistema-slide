@@ -306,7 +306,8 @@ def slide():
 
     if estado == 0:
         fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
-        return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0)
+        config = {'fundo':'black', 'mark':'white', 'letra':'white'}
+        return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0, config=config)
     elif estado == 1: # se iniciou uma apresentação de música
 
         # estabelecer configuração da música
@@ -353,8 +354,7 @@ def updateSlide():
             index = int(request.json)
 
             socketio.emit('update', index)
-            #legenda = DB.executarConsulta('Musicas.db', 'SELECT sub_linha_1 || CASE WHEN sub_linha_2 != "" THEN "<br>" ELSE "" END || sub_linha_2 as legenda from lista WHERE slide = %s' % index)[0]
-            #socketio.emit('legenda', legenda)            
+          
             return jsonify(True)
 
 
@@ -474,6 +474,14 @@ def subtitle():
 
         align = 'justify'
         
+    elif (estado == 3): #harpa
+        legenda = banco.executarConsulta('select `text-legenda` from slides_harpa where id_harpa = %s order by pos' % current_presentation['id'])
+        lista = [banco.executarConsulta('select descricao from harpa where id = %s' % current_presentation['id'])[0]['descricao']]
+        for item in legenda:
+            lista.append(item['text-legenda'])
+
+        tamanho = 20        
+    
     else:
         lista = []
         tamanho = 0

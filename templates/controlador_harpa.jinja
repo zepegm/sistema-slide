@@ -209,7 +209,42 @@
 
       width: 320px;
       height: 50px;      
-    }    
+    }
+
+    #lb_numero_prox {
+      text-align: left;
+      color:#978473;
+      font-size:70px;
+      font-style: italic;
+      position: relative;
+      left: 75px;
+      top:-18px;
+    }  
+
+    #lb_titulo_prox {
+      color:#978473;
+      font-weight: bold;
+      border:solid 1px rgb(0,0,0,0);
+      position:relative;
+      left: 20px;
+      text-align: center;
+
+      width: 320px;
+      height: 60px;
+    }  
+
+    #lb_autor_prox {
+      color:black;
+      border:solid 1px rgb(0,0,0,0);
+      position:relative;
+      left: 20px;
+      top:0px;
+      text-align: center;
+
+      width: 320px;
+      height: 50px;      
+    }
+
 
     </style>
   </head>
@@ -290,7 +325,11 @@
             {% elif index == lista_slides|length %}
             <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
-                <div id="slideProx" class="capa"></div>
+                <div id="slideProx" class="capa">
+                  <div id="lb_numero_prox">{{numero}}</div>
+                  <div id="lb_titulo_prox">{{titulo}}</div>
+                  <div id="lb_autor_prox">{{autor}}</div>
+                </div>
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
                 </div>
@@ -384,15 +423,19 @@
 
     window.onload = function() {
 
-      textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 50});
+      if (index != slides.length) {
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 50});
+      }
+      
       textFit($('.mini-capa'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 50});
-
-      textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
-      textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
 
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+        if ((index - 1) != slides.length) {
+          textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+        } else {
+          textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});        
+        }
       } else {
         $("#btn_previous").attr('disabled', '');
       }
@@ -404,6 +447,9 @@
       }
 
       textFit($(".mini-box"), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100})
+
+      textFit($('#lb_titulo'), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 103});
+      textFit($('#lb_autor'), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 103});
 
       $("#loading").remove();
 
@@ -444,13 +490,21 @@
         $("#slidePrincipal").append('<div id="lb_titulo">{{titulo}}</div>');
         $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');  
 
-        $("#lb_titulo").css({
-          fontSize: font_titulo
-        });
 
-        $("#lb_autor").css({
-          fontSize: font_autor
-        });        
+        if (font_titulo > 0) {
+          $("#lb_titulo").css({
+            fontSize: font_titulo
+          });
+
+          $("#lb_autor").css({
+            fontSize: font_autor
+          }); 
+        } else {
+          textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});          
+        }
+
+       
       }
 
       
@@ -473,7 +527,11 @@
         } else {
           $("#slideProx").addClass('capa');
           $("#slideProx").removeClass('letra');        
-          $("#slideProx").empty();          
+          $("#slideProx").empty();
+
+          $("#slideProx").append('<div id="lb_numero_prox">{{numero}}</div>');
+          $("#slideProx").append('<div id="lb_titulo_prox">{{titulo}}</div>');
+          $("#slideProx").append('<div id="lb_autor_prox">{{autor}}</div>');
         }
       }
 
@@ -509,7 +567,11 @@
 
         $("#slideProx").empty();
         $("#slideProx").addClass('capa');
-        $("#slideProx").removeClass('letra');             
+        $("#slideProx").removeClass('letra');    
+
+        $("#slideProx").append('<div id="lb_numero_prox">{{numero}}</div>');
+        $("#slideProx").append('<div id="lb_titulo_prox">{{titulo}}</div>');
+        $("#slideProx").append('<div id="lb_autor_prox">{{autor}}</div>');                 
       } else {
         $("#slideProx").addClass('letra');
         $("#slideProx").removeClass('capa');
@@ -565,13 +627,18 @@
 
       changeBox(index);
 
-        $("#lb_titulo").css({
-          fontSize: font_titulo
-        });
+        if (font_titulo > 0) {
+          $("#lb_titulo").css({
+            fontSize: font_titulo
+          });
 
-        $("#lb_autor").css({
-          fontSize: font_autor
-        });       
+          $("#lb_autor").css({
+            fontSize: font_autor
+          }); 
+        } else {
+          textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});            
+        }    
 
       $.ajax({
         type: "POST",
