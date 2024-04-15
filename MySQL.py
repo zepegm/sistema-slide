@@ -1,4 +1,5 @@
 import mysql.connector
+from SQLite_DB import insert_log
 
 class db:
     def __init__(self, credenciais):
@@ -112,6 +113,10 @@ class db:
 
             database.commit()
             database.close()
+
+            # inserir no log
+            insert_log(1, 2, id, 0)
+
             return {'id':id, 'log':'Operação realizada com sucesso!'}
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
@@ -165,6 +170,9 @@ class db:
 
             database.commit()
             database.close()
+
+            insert_log(2, 2, musica['destino'], 0)
+
             return {'id':int(musica['destino']), 'log':'Alteração realizada com sucesso!'}
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero

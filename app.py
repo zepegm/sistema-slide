@@ -7,6 +7,7 @@ from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
 from MySQL import db
 from HTML_U import converHTML_to_List
+from SQLite_DB import insert_log
 import math
 import json
 import os
@@ -401,6 +402,7 @@ def addHarpa():
         if banco.insertOrUpdate({'id':info['numero'], 'descricao':"'" + info['titulo'] + "'", 'autor':info['autor']}, 'harpa'):
             if banco.inserirNovoHino(info):
                 status= '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Informações do Hino de número <strong>' + info['numero'] + '. ' + info['titulo'] + '</strong> inseridas com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                insert_log(3, 3, info['numero'], 0)
             else:
                 status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
         else:
@@ -788,8 +790,10 @@ async def gerar_pdf():
         handleSIGHUP=False
     )
 
+    hostname = request.headers.get('Host')
+
     page = await browser.newPage()
-    await page.goto('http://localhost:120/render_pdf?ls=%s' % ls, {'waitUntil':'networkidle2'})
+    await page.goto('http://%s/render_pdf?ls=%s' % (hostname, ls), {'waitUntil':'networkidle2'})
     await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
     await browser.close()
 
