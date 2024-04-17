@@ -5,9 +5,11 @@ from flask_cors import CORS
 from waitress import serve
 from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
-from MySQL import db
-from HTML_U import converHTML_to_List
+#from MySQL import db
+from SQLite_DB import db
 from SQLite_DB import insert_log
+from HTML_U import converHTML_to_List
+import locale
 import math
 import json
 import os
@@ -32,11 +34,8 @@ temp_pdf = None
 
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\HARPA' + '\\'
-
-banco = db({'host':"localhost",    # your host, usually localhost
-            'user':"root",         # your username
-            'passwd':"Yasmin",  # your password
-            'db':"sistema-slide"})
+locale.setlocale(locale.LC_ALL, "")
+banco = db()
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -282,7 +281,8 @@ def abrir_biblia():
 @app.route('/abrir_musica', methods=['GET', 'POST'])
 def abrir_musica():
 
-    musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas order by titulo')
+    musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas')
+    musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
     categoria = banco.executarConsulta('select * from categoria_departamentos')
     for item in categoria:
         item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
@@ -673,6 +673,8 @@ def get_info_harpa():
             titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id['id'])[0]
             autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id['id'])[0]
 
+            print(letras)
+
             return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor})
 
 @app.route('/get_info_musica', methods=['GET', 'POST'])
@@ -684,7 +686,7 @@ def get_info_musica():
             id = request.json
 
             sql = 'select ' + \
-                    "concat(categoria_departamentos.descricao, ' - ', subcategoria_departamentos.descricao) as vinculo, " + \
+                    "categoria_departamentos.descricao || ' - ' || subcategoria_departamentos.descricao as vinculo, " + \
                     "status_vinculo.descricao as desc_status, " + \
                     "vinculos_x_musicas.descricao " + \
                 "from vinculos_x_musicas " + \
