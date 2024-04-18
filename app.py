@@ -399,7 +399,7 @@ def addHarpa():
         
         print(info)
         # inserir harpa
-        if banco.insertOrUpdate({'id':info['numero'], 'descricao':"'" + info['titulo'] + "'", 'autor':info['autor']}, 'harpa'):
+        if banco.insertOrUpdate({'id':info['numero'], 'descricao':"'" + info['titulo'] + "'", 'autor':info['autor']}, 'id', 'harpa'):
             if banco.inserirNovoHino(info):
                 status= '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Informações do Hino de número <strong>' + info['numero'] + '. ' + info['titulo'] + '</strong> inseridas com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
                 insert_log(3, 3, info['numero'], 0)
@@ -637,7 +637,7 @@ def upload_capa():
 
     isthisFile.save('./static/images/capas/' + filename)
 
-    banco.insertOrUpdate({'id_musica':id, 'filename':"'" + filename + "'"}, 'capas')
+    banco.insertOrUpdate({'id_musica':id, 'filename':"'" + filename + "'"}, 'id_musica', 'capas')
 
     return jsonify('./static/images/capas/' + filename)
 
@@ -816,8 +816,8 @@ def pesquisarBiblia():
 
             pesquisa = '%' + pesquisa.replace(' ', '%') + '%'
 
-            resultados = banco.executarConsulta("(select livro, cap, ver from biblia_arc where texto like '%s') union (select livro, cap, ver from biblia_naa where texto like '%s') union (select livro, cap, ver from biblia_nvi where texto like '%s') union (select livro, cap, ver from biblia_nvt where texto like '%s') order by livro, cap, ver" % (pesquisa, pesquisa, pesquisa, pesquisa))
-                
+            resultados = banco.executarConsulta("select livro, cap, ver from biblia_arc where texto like '%s' union select livro, cap, ver from biblia_naa where texto like '%s' union select livro, cap, ver from biblia_nvi where texto like '%s' union select livro, cap, ver from biblia_nvt where texto like '%s' order by livro, cap, ver" % (pesquisa, pesquisa, pesquisa, pesquisa))
+            
 
             for item in resultados:
 
@@ -840,18 +840,21 @@ def pesquisarBiblia():
                 lista_palavras = pesquisa_original.split(' ')
                 for tb in tabelas:
                     txt_aux = converHTML_to_List(texto[tb])
+                    #print(txt_aux)
                     texto_final = ''
 
                     for element in txt_aux:
                         if len(element['text']) > 0:
-                            aux = element['text'][0]
-                            for palavra in lista_palavras:
-                                if len(palavra) > 1:
-                                    compiled = re.compile(re.escape(palavra), re.IGNORECASE)
-                                    res = compiled.sub('<span class="highlight">' + palavra + "</span>", aux)
-                                    aux = str(res)
+                            for txt in element['text']:
+                                aux = txt
+                                print(aux)
+                                for palavra in lista_palavras:
+                                    if len(palavra) > 1:
+                                        compiled = re.compile(re.escape(palavra), re.IGNORECASE)
+                                        res = compiled.sub('<span class="highlight">' + palavra + "</span>", aux)
+                                        aux = str(res)
                                 
-                            texto_final += aux + '&nbsp;'
+                                texto_final += aux + '&nbsp;'
 
                     item[tb] = texto_final
 
@@ -942,8 +945,7 @@ def alterar_fundo():
         if request.is_json:
             info = request.json
             
-            for item in info:
-                banco.insertOrUpdate(item, 'config')
+            banco.change_config(info)
 
             socketio.emit('refresh', 1)
 

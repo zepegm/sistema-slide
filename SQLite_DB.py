@@ -175,7 +175,24 @@ class db:
             print("An exception occurred:", error) # An exception occurred: division by zero
             return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error)}        
 
-    def insertOrUpdate(self, dados, tabela):
+    def change_config(self, lista):
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()
+
+            for item in lista:
+                sql = "UPDATE config SET valor = %s WHERE id = %s" % (item['valor'], item['id'])
+                print(sql)
+                cur.execute(sql)
+
+            con.commit()
+            con.close() 
+            return True 
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False
+
+    def insertOrUpdate(self, dados, id_name, tabela):
             
         try:
             con = sqlite3.connect(caminho)
@@ -189,17 +206,17 @@ class db:
                 keys += item + ", "
                 data += dados[item] + ", "
 
-                if item != 'id_musica':
+                if item != 'id_musica' and item != 'id_harpa' and item != 'id':
                     update += item + "=" + dados[item] + ", "
 
-            sql = "INSERT OR IGNORE INTO " + tabela + " (" + keys[:-2] + ") VALUES(" + data[:-2] + ")"
+            sql = "INSERT INTO " + tabela + " (" + keys[:-2] + ") VALUES(" + data[:-2] + ") ON CONFLICT(" + id_name + ") DO UPDATE SET " + update[:-2]
 
             print(sql)
 
             cur.execute(sql)
 
-            sql = 'UPDATE %s SET %s WHERE ' % (tabela, update[:-2])
-            print(sql)
+            #sql = 'UPDATE %s SET %s WHERE ' % (tabela, update[:-2])
+            #print(sql)
             con.commit()
             con.close()
 
