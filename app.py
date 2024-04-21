@@ -654,8 +654,11 @@ async def converto_to_pdf_list():
         handleSIGHUP=False
     )
 
+    hostname = request.headers.get('Host')
+
     page = await browser.newPage()
-    await page.goto('http://localhost:120/render_pdf?ls=render_preview')
+    #await page.goto('http://localhost:120/render_pdf?ls=render_preview')
+    await page.goto('http://%s/render_pdf?ls=render_preview' % (hostname), {'waitUntil':'networkidle2'})
     await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
     await browser.close()
 
@@ -1091,8 +1094,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0',port=120)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run('0.0.0.0',port=120)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
