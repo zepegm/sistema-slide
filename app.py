@@ -340,6 +340,16 @@ def slide():
 
         return render_template('PowerPoint_Biblia.jinja', head=head, lista=lista, index=index, versiculo=index + 1, config=config)
 
+    elif estado == 3: #harpa
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-harpa-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-harpa-fundo'")[0]['valor'], 'num':banco.executarConsulta("select valor from config where id = 'cor-harpa-num'")[0]['valor'], 'red':banco.executarConsulta("select valor from config where id = 'cor-harpa-red'")[0]['valor']}
+        fundo = 'images/Harpa.jpg'
+        info = banco.executarConsulta('select harpa.descricao as nome, autor_harpa.nome as autor from harpa inner join autor_harpa on autor_harpa.id = harpa.autor where harpa.id = %s' % current_presentation['id'])[0]
+
+        lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides_harpa where id_harpa = %s order by pos' % current_presentation['id'])
+
+        return render_template('PowerPoint_Harpa.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index)
+        
+
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
 def updateSlide():
