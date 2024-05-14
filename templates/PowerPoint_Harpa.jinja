@@ -127,8 +127,16 @@
               animation-delay: 2s;
             }
 
-            .coro {
-                color:{{config['mark']}};
+            #lb_titulo {
+                color:#978473;
+                font-weight: bold;
+                border:solid 1px rgb(0,0,0,1);
+                position:relative;
+                left: 10%;
+                text-align: center;
+
+                width: 60vw;
+                height: 30vh;
             }
 
             @keyframes fade-in {
@@ -190,7 +198,9 @@
         </div>
 
 
-        <div class="capa slide" id="capa"></div>
+        <div class="capa slide" id="capa">
+            <div id="lb_titulo">{{info['nome']}}</div>
+        </div>
         <div class="slide" id="slide1"></div>
         <div class="slide" id="slide2"></div>
 
@@ -211,8 +221,10 @@
         const slide1 = document.getElementById("slide1");
         const slide2 = document.getElementById("slide2");
         const notas = document.getElementById("notas");
+        const capa = document.getElementById('capa');
         //const source = document.getElementById("myVideo");
 
+       textFit(capa, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 230});        
        textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});        
 
 
