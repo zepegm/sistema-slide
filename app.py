@@ -346,8 +346,9 @@ def slide():
         info = banco.executarConsulta('select harpa.descricao as nome, autor_harpa.nome as autor from harpa inner join autor_harpa on autor_harpa.id = harpa.autor where harpa.id = %s' % current_presentation['id'])[0]
 
         lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides_harpa where id_harpa = %s order by pos' % current_presentation['id'])
+        numero = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
 
-        return render_template('PowerPoint_Harpa.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info)
+        return render_template('PowerPoint_Harpa.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info, num=numero)
         
 
 

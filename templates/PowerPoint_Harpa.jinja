@@ -15,7 +15,7 @@
                 text-shadow: rebeccapurple 0 0 10px;
             }
 
-            .num {
+            .cdx-num {
                 color:{{config['num']}};
                 background:rgba(0,0,0,0);
                 /* margin-right: 20px;  */
@@ -32,6 +32,10 @@
                 background-size: contain;
                 background-repeat: no-repeat;
                 background-size: 100% 100%;
+
+                {% if index > 0 and index < lista_slides|length + 1 %}
+                opacity: 0;
+                {% endif %}
             }
 
             .letra {
@@ -43,6 +47,7 @@
             }
 
             .slide {
+                color: black;
                 background-size: contain;
                 background-repeat: no-repeat;
                 position: fixed;
@@ -127,16 +132,53 @@
               animation-delay: 2s;
             }
 
+            #lb_numero {
+                text-align: left;
+                color:#978473;
+                font-size:11vw;
+                font-style: italic;
+                position: absolute;
+                top:-5%;
+                left:12%;
+            }            
+
             #lb_titulo {
                 color:#978473;
                 font-weight: bold;
-                border:solid 1px rgb(0,0,0,1);
-                position:relative;
-                left: 10%;
+                border:solid 1px rgb(0,0,0,0);
+                position:absolute;
+                text-align: center;
+                top: 30%;
+                left: 7%;
+
+                width: 70vw;
+                height: 20vh;
+            }
+
+            #lb_autor {
+                color:black;
+                border:solid 1px rgb(0,0,0,0);
+                position:absolute;
+                left: 7%;
+                top:50%;
                 text-align: center;
 
-                width: 60vw;
-                height: 30vh;
+                width: 70vw;
+                height: 15vh;      
+            }   
+
+            #black_screen {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                left: 0px;
+                top: 0px;
+                z-index: 1000;
+            }
+
+            .b_screen {
+                background-color: black;
             }
 
             @keyframes fade-in {
@@ -186,6 +228,7 @@
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
         </video> -->
 
+
         <div id="notas" class="muzieknootjes">
             {% if lista_slides|length > 0 and index < lista_slides|length %}
             {% if lista_slides[index - 1]['categoria'] == 3 or lista_slides[index - 1]['categoria'] == 4 %}
@@ -197,14 +240,25 @@
             {% endif %}
         </div>
 
+        
 
         <div class="capa slide" id="capa">
+            <div id="lb_numero">{{num}}</div>
             <div id="lb_titulo">{{info['nome']}}</div>
+            <div id="lb_autor">{{info['autor']}}</div>
         </div>
+        {% if index > 0 and index < lista_slides|length + 1 %}
+        <div class="slide letra" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
+        {% else %}
         <div class="slide" id="slide1"></div>
+        {% endif %}
+
+
         <div class="slide" id="slide2"></div>
 
         <div id="fim"></div>
+
+        <div id="black_screen"></div>        
 
     <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
@@ -224,8 +278,18 @@
         const capa = document.getElementById('capa');
         //const source = document.getElementById("myVideo");
 
-       textFit(capa, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 230});        
-       textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});        
+        window.addEventListener("load", (event) => {
+            var titulo = document.getElementById('lb_titulo');
+            var autor = document.getElementById('lb_autor');
+            var black_screen = document.getElementById('black_screen');
+
+            textFit(titulo, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});     
+            textFit(autor, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});     
+            textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
+
+            black_screen.classList.add('out');
+        });        
+     
 
 
         function changeComponent(slide1, slide2, index) {
@@ -238,18 +302,24 @@
             if (index == 0) {
                 slide2.innerHTML = '';
                 slide2.classList.remove('letra');
-                slide2.classList.add('capa');
+                //slide2.classList.add('capa');
+                capa.classList.remove("out");
+                capa.classList.add('in');
             } else if((index - 1) == slides.length) { // final
                 slide2.innerHTML = '';
                 slide2.classList.remove('letra');
-                slide2.classList.add('capa');
+                //slide2.classList.add('capa');
+                capa.classList.remove("out");
+                capa.classList.add('in');
 
-                slide2.classList.remove("in");
-                slide2.classList.add('final-out');
+                capa.classList.remove("in");
+                capa.classList.add('final-out');
+                document.body.style.backgroundColor = 'black';                
                 vara.draw("draw");
 
                 key_final = true;
             } else {
+                capa.classList.add('out');
                 slide2.classList.remove('capa');
                 slide2.classList.remove('coro');
                 slide2.classList.add('letra');                    
