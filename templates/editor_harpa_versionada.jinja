@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Edição de Hino da Harpa</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+        font-weight: bold;
+      }
+
+      .card-body {
+        background-color: #FFFFCC;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #anterior,
+    #proximo {
+      color: white;
+    }
+
+    .ce-paragraph {
+        border-bottom: solid;
+    }
+
+    .cdx-num {
+      color:#0070C0;
+    }
+
+    .red {
+      color:#FF0000;
+    }
+
+    #txt_anotacao,
+    #txt_titulo,
+    #txt_titulo_versao,
+    #txt_desc_versao,
+    #txt_numero,
+    #txt_autor {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }    
+
+    #previewSlide {
+      width: 426px; /* or whatever width you want. */
+      height: 240px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: white;
+      color: black;
+      line-height: normal;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #previewSubtitle {
+      width: 426px; /* or whatever width you want. */
+      height: 50px; /* or whatever width you want. */
+      display: inline-block;    
+      background-color: rgb(0, 0, 0, 0.8); 
+      color: white;
+      line-height: normal;
+      font-family: Arial;      
+    }
+
+    .arrows,
+    .preview {
+      width: 426px;
+    }
+
+    .view-marker {
+      color:rgba(255,207,102);
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
+
+    .arrow {
+      font-size: xx-large;
+    }
+
+    #editorjs_s,
+    #editorjs {
+      color:black;
+    }
+
+    </style>
+    
+  </head>
+
+  <body>
+
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form action="../edit_harpa" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title">Importar Slide</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label for="formFile" class="form-label">Selecionar Arquivo do PowerPoint:</label>
+          <input class="form-control" type="file" id="file" name="file" accept=".pptx" required>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-primary" value="Confirmar">
+          </form>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar Etapa de Digitação</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Deseja confirmar Digitação e Avançar para Próxima Etapa?
+        </div>
+        <div class="modal-footer">
+          <button id="btn_confirmar_avanco" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
+        </div>
+      </div>
+    </div>
+  </div>  
+
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row">
+            <h1 class="fw-light text-center">Editor de Versões Alternativas da Harpa</h1>
+            <div class="col-sm-12">&nbsp;</div>
+            <div class="col-sm-6 mx-auto">
+              <div class="card shadow-sm preview">
+                <div id="previewSlide" class="text-center"></div>
+                <div class="card-body">
+                  <h1 class="card-text text-center" id="slideAtual">Prévia Slide <span class="text-danger">1</span></h1>
+                </div>
+              </div>        
+            </div>
+            <div class="col-sm-6">
+              <div class="card shadow-sm preview">
+                <div id="previewSubtitle" class="text-center"></div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Prévia Legenda</h4>
+                </div>
+              </div>
+              <div class="arrows">
+                <br>
+                <label for="txt_anotacao" class="form-label">Anotações:</label>
+                <textarea id="txt_anotacao" class="form-control"></textarea>
+              </div>
+              <div class="arrows text-center">
+                <br>
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+              </div>
+            </div> 
+          </div>
+        </section>
+        <div class="row">
+            <div class="col-sm-12"><hr></div>
+            <div id="status" class="col-sm-12"></div>
+            <div class="col-sm-1">
+              <label for="txt_numero" class="form-label">Número:</label>
+              <input type="number" class="form-control" id="txt_numero" placeholder="Número" value="{{number}}" disabled>            
+            </div>
+            <div class="col-sm-2">
+              <label for="txt_titulo" class="form-label">Título da Música:</label>
+              <input type="text" class="form-control" id="txt_titulo" placeholder="Digite o Nome da Música" value="{{titulo}}" disabled>
+            </div>
+            <div class="col-sm-1 align-self-end">
+              <input type="text" class="form-control" id="txt_autor" value="{{autor_desc}}" disabled>
+              <input type="hidden" id="id_autor" value="{{autor}}">
+            </div>
+
+            <div class="col-sm-6 align-self-end">
+              <button id="btn_view" class="btn btn-secondary">Pré-visualizar</button>
+              <button id="btn_import" class="btn btn-success" data-toggle="modal" data-target="#exampleModal">Importar</button>
+              <button id="btn_send" class="btn btn-primary" data-toggle="modal" data-target="#modalConfirm">Confirmar</button>
+            </div>            
+            <div class="col-sm-12">&nbsp;</div>
+            <div class="col-sm-4">
+              <label for="txt_titulo_versao" class="form-label">Título da Versão:</label>
+              <input type="text" class="form-control" id="txt_titulo_versao" value="{{titulo_versao}}" placeholder="Digite o Título da Versão">
+            </div> 
+            <div class="col-sm-6">
+              <label for="txt_titulo_versao" class="form-label">Descrição da Versão:</label>
+              <input type="text" class="form-control" id="txt_desc_versao" value="{{desc_versao}}" placeholder="Digite a Descrição da Versão">            
+            </div>
+            <div class="col-sm-12">&nbsp;</div>
+            <div class="col-sm-6">
+              <h4 class="text-center fw-bold">Digite o texto do Slide aqui</h4>
+              <div id="editorjs"></div>
+            </div>
+            <div class="col-sm-6">
+              <h4 class="text-center fw-bold">Digite o texto da Legenda aqui</h4>
+              <div id="editorjs_s"></div>
+            </div>
+        </div>
+      </div>
+		</div>
+
+  <form id="formEnviarDados" method="post" action="enviarDadosNovaVersaoHino">
+    <input id="json_data_send" name="json_data_send" type="hidden">
+    <input type='hidden' name='destino' id='destino' value='{{destino}}'>
+  </form>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/marker.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/underline.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/numeracao.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editor-red.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script>
+
+  
+<script>
+
+  var slide = {{lista_texto}};
+  var slide_count = 1;
+
+  const btn_next = document.getElementById('btn_next');
+  const btn_previous = document.getElementById('btn_previous');
+  const btn_view = document.getElementById('btn_view');
+  const btn_confirmar_avanco = document.getElementById("btn_confirmar_avanco");
+
+  const editor = new EditorJS({
+    /**
+    * Id of Element that should contain Editor instance
+    */
+    holder: 'editorjs',
+
+    inlineToolbar: ['bold', 'italic', 'underline', 'numeracao', 'red'],
+
+    tools: {
+      // ...
+      underline: Underline,
+      numeracao: {
+        class: Numeracao,
+        shortcut: 'CMD+SHIFT+M',
+      },
+      red: {
+        class: Red
+      }
+    },
+    data: {
+      blocks: {{blocks}}
+    }
+  });
+
+  const editor_s = new EditorJS({
+    /**
+    * Id of Element that should contain Editor instance
+    */
+    holder: 'editorjs_s',
+
+    inlineToolbar: ['bold', 'italic', 'underline'],
+
+    tools: {
+      // ...
+      underline: Underline,
+    },
+    data: {
+      blocks: {{blocks_s}}
+    }
+  });
+
+window.onload = function() {
+  if (slide.length > 0) {
+    load();
+    btn_next.disabled = false;
+  } else {
+    slide.push({'pos':1, 'text-slide':'Digite o Texto', 'subtitle':'-'});
+    load();
+  }
+};
+
+  btn_view.addEventListener('click', function () {
+
+    var text_slide = [];
+    var text_subtitle = [];
+
+    editor.save()
+      .then( data => {
+        text_slide = data['blocks'];
+        console.log(text_slide);
+
+        editor_s.save()
+          .then( data => {
+            text_subtitle = data['blocks'];
+
+            // recuperar anotações antes de limpar o arquivo do slide
+            anotacoes = []
+            for (item in slide) {
+              anotacoes.push(slide[item]['anotacao']);
+            }
+
+            slide = [];
+
+            if (text_slide.length == text_subtitle.length) {
+              for (i = 0; i < text_slide.length; i++) {
+
+                anotacao = '';
+                if (i < anotacoes.length) {
+                  anotacao = anotacoes[i];
+                }
+
+                slide.push({'pos':(i + 1), 'text-slide':text_slide[i]['data']['text'], 'subtitle':text_subtitle[i]['data']['text'], 'anotacao':anotacao});
+              }
+
+              if (slide_count > 1) {
+                btn_previous.disabled = false;
+              } else {
+                btn_previous.disabled = true;
+              }
+
+              if (slide_count < slide.length) {
+                btn_next.disabled = false;
+              } else {
+                btn_next.disabled = true;
+              }
+
+              load();
+            } else {
+              $("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
+          })
+          .catch((error) => {
+            console.error('Saving error', error);
+            $("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+          });
+      })
+      .catch((error) => {
+        console.error('Saving error', error);
+        $("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+      });
+
+  });
+
+  btn_next.addEventListener('click', function () {
+    next();
+  });
+
+  btn_previous.addEventListener('click', function () {
+    previous();
+  });
+
+  btn_confirmar_avanco.addEventListener('click', function() {
+    var titulo = '{{titulo}}';
+    var numero = '{{number}}';
+    var autor = '{{autor}}';
+    var autor_desc = '{{autor_desc}}'
+    var titulo_versao = $("#txt_titulo_versao").val()
+    var desc_versao = $("#txt_desc_versao").val();
+    
+    if (desc_versao == "") {
+      $("#status").append('<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor digite o título da Versão.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+    } else {
+      info = {'titulo':titulo, 'titulo_versao':titulo_versao, 'desc_versao':desc_versao, 'numero':numero, 'autor':autor, 'autor_desc':autor_desc, 'slides':slide};
+      $("#json_data_send").val(JSON.stringify(info));
+      $("#formEnviarDados").submit();
+    }
+  });
+
+  function next() {
+    btn_previous.disabled = false;
+    slide_count += 1;
+    load();
+
+    if (slide_count == slide.length) {
+      btn_next.disabled = true;
+    }
+  }
+
+  function previous() {
+    btn_next.disabled = false;
+    slide_count -= 1;
+    load();
+
+    if (slide_count == 1) {
+      btn_previous.disabled = true;
+    }
+  }  
+
+  function load() {
+    $("#previewSlide").html(slide[slide_count - 1]['text-slide'].replaceAll('cdx-marker', 'view-marker'));
+    textFit($('#previewSlide'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+
+    $("#previewSubtitle").html(slide[slide_count - 1]['subtitle']);
+    textFit($('#previewSubtitle'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 43});   
+
+    $("#slideAtual").html("Prévia Slide <span class='text-danger'>" + slide_count + '</span>'); 
+
+    $("#txt_anotacao").val(slide[slide_count - 1]['anotacao']);
+  }
+
+    $("#txt_anotacao").on('change', function() {
+      nova_anotacao = $("#txt_anotacao").val();
+      slide[slide_count - 1]['anotacao'] = nova_anotacao;
+    });
+
+</script>
+      
+  </body>
+</html>

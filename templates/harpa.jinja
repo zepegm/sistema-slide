@@ -217,6 +217,14 @@
       transform: translateY(-50%);
     }
 
+    #cb_versao {
+      width: 70%;
+    }
+
+    #btn_add_versao {
+      width: 100%;
+    }
+
     </style>
     
   </head>
@@ -237,6 +245,7 @@
             <label for="txt_senha" class="form-label">Digite a senha do Administrador para prosseguir:</label>
             <input type="password" name="senha" class="form-control" id="txt_senha" placeholder="Digite a senha">
             <input type="hidden" name="destino" id="destino" value="0">
+            <input type="hidden" name="id_versao" id="id_versao" value="0">
           </div>
           <div class="modal-footer">
             <input type="submit" class="btn btn-primary" value="Confirmar">
@@ -334,6 +343,31 @@
       return s.substr(s.length-size);
   }
 
+  $("#detalhes_musicas").on('change', '#cb_versao', function() {
+    id = $(this).val();
+    
+    if (id > 0) {
+      $("#letras_musicas").empty();
+      $.ajax({
+          type: "POST",
+          url: "get_info_harpa_versionada",
+          contentType: "application/json",
+          data: JSON.stringify({'id':$('#cb_versao').val()}),
+          dataType: "json",
+          success: function(data) {  
+            //console.log(data);
+            $("#letras_musicas").append(data['titulo']);
+            $("#letras_musicas").append('<div id="pagina_texto"></div>');
+            for (par in data['letras']) {
+              $("#pagina_texto").append('<p>' + data['letras'][par]['texto'] + '</p>');
+            }
+            $("#detalhes_musicas").append('<p><b>Nome da Versão: </b>' + $("#cb_versao").text() + '</p>');
+            $("#detalhes_musicas").append('<p><b>Descrição da Versão: </b>' + $("#cb_versao").attr('data-desc') + '</p>');
+          }
+      });    
+    }
+  });
+
   $("#btn_adicionar_roteiro").on('click', function() {
     info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'harpa', 'check':false, 'titulo':'HINO ' + pad($("#lista_geral a.active").attr('data-id'), 3), 'tipo_show':'Harpa'};
 
@@ -390,6 +424,11 @@
     $("#destino").val($("#lista_geral a.active").attr('data-id'));
   });
 
+  $("#detalhes_musicas").on('click', '#btn_add_versao', function() {
+    $("#destino").val('-1');
+    $("#id_versao").val($("#lista_geral a.active").attr('data-id'));
+  });
+
   $("#lista_geral").on('click', '.list-group-item', function() {
     $(".list-group-item").removeClass('active');
     $(this).addClass('active');
@@ -416,6 +455,25 @@
             textFit($("#lb_titulo"), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 230});
             $("#detalhes_musicas").append("<div id='lb_autor'>" + data['autor'] + "</div>");
             textFit($("#lb_autor"), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 230});
+
+            if (data['versoes'].length > 0) {
+              select = '<label for="cb_versao">Versões</label>';
+              select += '<div class="input-group mb-3">';
+              select += '<select id="cb_versao" name="cb_versao">';
+              select += '<option value="0">Padrão</option>';
+
+              for (versao in data['versoes']) {
+                select += '<option value="' + data['versoes'][versao]['id'] + '" data-desc="' + data['versoes'][versao]['desc_versao'] + '">' + data['versoes'][versao]['titulo_versao'] + '</option>';
+              }
+
+              select += '</select>'
+              select += '<div class="input-group-append">';
+              select += '<button class="btn btn-primary" id="btn_add_versao" data-toggle="modal" data-target="#modalConfirm">+</button>';
+              select += '</div>';            
+              select += '</div>';
+
+              $("#detalhes_musicas").append(select);
+            }
            
             $("#letras_musicas").append('<div id="pagina_texto"></div>');
 

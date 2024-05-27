@@ -36,6 +36,32 @@ class db:
         con.close()
 
         return result
+
+    def inserirNovoHinoVersionado(self, info):
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()   
+
+            sql = "INSERT INTO harpa_versionada(id_harpa, titulo_versao, desc_versao) VALUES(%s, '%s', '%s')" % (info['numero'], info['titulo_versao'], info['desc_versao'])
+            cur.execute(sql)
+
+            id = cur.lastrowid
+
+            for sld in info['slides']:
+                sql = "INSERT INTO slides_harpa_versionada VALUES(%s, %s, '%s', '%s', %s, '%s')" % (id, sld['pos'], sld['text-slide'], sld['subtitle'], sld['cat'], sld['anotacao'])
+                cur.execute(sql)
+
+            for paragrafo in info['letra']:
+                sql = "INSERT INTO letras_harpa_versionada VALUES(%s, %s, '%s', %s)" % (id, paragrafo['paragrafo'], paragrafo['texto'], paragrafo['pagina'])
+                cur.execute(sql)
+
+            con.commit()
+            con.close()
+            return True
+
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False
     
     def inserirNovoHino(self, harpa):
         try:

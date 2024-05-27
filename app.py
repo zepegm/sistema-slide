@@ -403,6 +403,23 @@ def changeBackground():
             socketio.emit('change', completo)
             return jsonify(True)
 
+@app.route('/addHarpa_versionada', methods=['GET', 'POST'])
+def addHarpa_versionada():
+    if request.method == 'POST':   
+        info = json.loads(request.form.getlist('json_send')[0]) 
+        
+        if info['destino'] == '-1': # inserir novo hino versionado
+            if banco.inserirNovoHinoVersionado(info):
+                status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Nova Versão do Hino de número <strong>' + info['numero'] + '. ' + info['titulo'] + '</strong> criada com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+        else:
+            status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+        harpa = banco.executarConsulta('select * from harpa order by id')
+
+        return render_template('harpa.jinja', harpa=harpa, status=status)
+
 @app.route('/addHarpa', methods=['GET', 'POST'])
 def addHarpa():
     if request.method == 'POST':   
@@ -531,7 +548,51 @@ def edit_musica():
 
     
     return render_template('editor_musica.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
+
+@app.route('/edit_harpa_versionada', methods=['GET', 'POST'])
+def edit_harpa_versionada():
+
+    lista_texto = []
+    blocks = []
+    blocks_s = []
+    titulo = ''
+    autor = 0
+    destino = '0'
+
+    autores = banco.executarConsulta('select id, abreviacao from autor_harpa order by abreviacao')
+
+    if request.method == "POST":
+
+        destino = '0'
+
+        if 'json_back' in request.form:
+            info = json.loads(request.form.getlist('json_back')[0])
+            print(info)
+            titulo = info['listaGeral']['titulo']
+            titulo_versao = info['listaGeral']['titulo_versao']
+            desc_versao = info['listaGeral']['desc_versao']
+            number = info['listaGeral']['numero']
+            autor = info['listaGeral']['autor']
+            autor_desc = info['listaGeral']['autor_desc']
+            lista_texto = info['listaGeral']['slides']
+            destino = info['destino']
+        else:
+            nome = request.form.getlist('file')[0]
+            lista_texto = getListTextHarpa(harpa_dir + nome)
+            
+            number = int(nome.replace('.pptx', '').replace('HINO ', ''))
+            titulo = readCSVHarpa(number)
+            
+
+        # recriar lista pro editor
+        for item in lista_texto:
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+            blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
     
+    return render_template('editor_harpa_versionada.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, number=number, destino=destino, autores=autores, autor=autor, autor_desc=autor_desc, titulo_versao=titulo_versao, desc_versao=desc_versao)
+
+
 @app.route('/edit_harpa', methods=['GET', 'POST'])
 def edit_harpa():
 
@@ -571,6 +632,54 @@ def edit_harpa():
 
     
     return render_template('editor_harpa.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, number=number, destino=destino, autores=autores, autor=autor)
+
+@app.route('/enviarDadosNovaVersaoHino', methods=['GET', 'POST'])
+def enviarDadosNovaVersaoHino():
+    if request.method == "POST":
+        info = json.loads(request.form.getlist('json_data_send')[0])
+        #print(info)
+        cat_slides = banco.executarConsulta('select * from categoria_slide')
+        cat_slides_list = []
+
+        nome_autor = banco.executarConsulta('select nome from autor_harpa where id = %s' % info['autor'])[0]['nome']
+
+        blocks = []
+        blocks_2 = []
+        for item in info['slides']:
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+
+        destino = request.form.getlist('destino')[0]
+        if destino != '-1': # significa que é edição e não acréscimo
+            letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa = %s and pagina = 1 order by paragrafo' % destino)
+            blocks = []
+
+            for item in letras:
+                blocks.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa = %s and pagina = 2 order by paragrafo' % destino)
+            blocks_2 = []
+
+            for item in letras:
+                blocks_2.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            cat_slides_list = banco.executarConsulta('select categoria from slides_harpa_versionada where id_harpa = %s order by pos' % destino)
+        else: # significa que é acréscimo, portanto vai buscar a letra da harpa padrão
+            letras = banco.executarConsulta('select * from letras_harpa where id_harpa = %s and pagina = 1 order by paragrafo' % info['numero'])
+            blocks = []
+
+            for item in letras:
+                blocks.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            letras = banco.executarConsulta('select * from letras_harpa where id_harpa = %s and pagina = 2 order by paragrafo' % info['numero'])
+            blocks_2 = []
+
+            for item in letras:
+                blocks_2.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            cat_slides_list = banco.executarConsulta('select categoria from slides_harpa where id_harpa = %s order by pos' % info['numero'])
+
+
+        return render_template('save_harpa_versionada.jinja', info=info, cat_slides=cat_slides, blocks=blocks, blocks_2=blocks_2, cat_slides_list=cat_slides_list, destino=destino, autor=nome_autor, titulo_versao=info['titulo_versao'], desc_versao=info['desc_versao'], desc_autor=info['autor_desc'])
 
 
 @app.route('/enviarDadosNovoHino', methods=['GET', 'POST'])
@@ -686,10 +795,25 @@ def get_info_harpa():
             numero = 'HINO %s' % '{0:03}'.format(int(id['id']))
             titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id['id'])[0]
             autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id['id'])[0]
+            versoes = banco.executarConsulta('select id, titulo_versao, desc_versao from harpa_versionada where id_harpa = %s' % id['id'])
 
             #print(letras)
 
-            return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor})
+            return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor, 'versoes':versoes})
+        
+@app.route('/get_info_harpa_versionada', methods=['GET', 'POST'])
+def get_info_harpa_versionada():
+    if request.method == "POST":
+        if request.is_json:
+
+            info = request.json
+
+            letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa_versionada = %s' % info['id'])
+            titulo = banco.executarConsulta('select id_harpa, harpa.descricao from harpa_versionada inner join harpa on harpa.id = harpa_versionada.id_harpa')[0]
+            txt_titulo = '<h4><span class="fw-bold text-primary">%03d.</span><span class="text-primary"> %s</span></h4>' % (titulo['id_harpa'], titulo['descricao'])
+
+
+            return {'titulo':txt_titulo, 'letras':letras}
 
 @app.route('/get_info_musica', methods=['GET', 'POST'])
 def get_info_musica():
@@ -763,7 +887,6 @@ def verificarSenhaHarpa():
         senha = request.form.getlist('senha')[0]
         destino = request.form.getlist('destino')[0]
 
-        print('teste----------')
         print(destino)
         
         if senha == '120393':
@@ -772,6 +895,22 @@ def verificarSenhaHarpa():
 
             if destino == '0':
                 return render_template('editor_harpa.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0', autores=autores, autor=0)
+            elif destino == '-1': # ele vai adicionar uma nova versão da música da harpa
+                id_versao = request.form.getlist('id_versao')[0]
+
+                blocks = []
+                blocks_s = []
+                titulo = banco.executarConsulta('select descricao from harpa where id = %s' % id_versao)[0]['descricao']
+                autor = banco.executarConsultaVetor('select autor from harpa where id = %s' % id_versao)[0]
+                desc_autor = banco.executarConsulta('select abreviacao from autor_harpa where id = %s' % autor)[0]['abreviacao']
+                lista_texto = banco.executarConsulta("select pos, `text-slide`, `text-legenda` as subtitle, ifnull(anotacao, '') as anotacao from slides_harpa where id_harpa = %s order by pos" % id_versao)
+
+                # recriar lista pro editor
+                for item in lista_texto:
+                    blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+                    blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+                return render_template('editor_harpa_versionada.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino, autores=autores, number=id_versao, autor=autor, autor_desc=desc_autor)
             else: # ele vai editar e não salvar um novo
                 blocks = []
                 blocks_s = []
