@@ -687,7 +687,7 @@ def get_info_harpa():
             titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id['id'])[0]
             autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id['id'])[0]
 
-            print(letras)
+            #print(letras)
 
             return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor})
 
@@ -1012,7 +1012,12 @@ def iniciar_apresentacao():
                 if (not item['check']):
                     item['check'] = True
                     current_presentation = {'id':item['id'], 'tipo':item['tipo']}
-                    estado = 1
+
+                    if (item['tipo'] == 'musicas'):
+                        estado = 1
+                    elif (item['tipo'] == 'harpa'):
+                        estado = 3
+
                     index = 0
 
                     socketio.emit('refresh', 1)
@@ -1036,7 +1041,12 @@ def proxima_prs():
                     for item in roteiro:
                         if not item['check']:
                             item['check'] = True
-                            estado = 1
+
+                            if (item['tipo'] == 'musicas'):
+                                estado = 1
+                            elif (item['tipo'] == 'harpa'):
+                                estado = 3
+                            
                             current_presentation = {'id':item['id'], 'tipo':item['tipo']}
                             index = 0
 
@@ -1105,8 +1115,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run('0.0.0.0',port=120)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run('0.0.0.0',port=120)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
