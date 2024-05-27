@@ -181,6 +181,17 @@
                 background-color: black;
             }
 
+            .b_final_color {
+                animation-name: color-change;
+                animation-duration: 4s;
+                background-color: black;
+            }
+
+            @keyframes color-change {
+                from {background-color:white;}
+                to {background-color:black;}
+            }
+
             @keyframes fade-in {
                 from {opacity: 0;}
                 to {opacity: 1;}
@@ -220,7 +231,7 @@
                 transform: scale(1.5) translate(100%, -100%);
                 opacity: 0;
               }
-            }             
+            }
         </style>
     </head>
     <body>
@@ -306,15 +317,26 @@
                 capa.classList.remove("out");
                 capa.classList.add('in');
             } else if((index - 1) == slides.length) { // final
+                //document.body.style.backgroundColor = 'black';
                 slide2.innerHTML = '';
                 slide2.classList.remove('letra');
-                //slide2.classList.add('capa');
-                capa.classList.remove("out");
-                capa.classList.add('in');
+                /*black_screen.classList.remove('out');
+                black_screen.classList.add('in');*/
 
-                capa.classList.remove("in");
+                document.body.classList.add('b_final_color');
+
+                //slide2.classList.add('out');
+                capa.classList.remove("out");
+                capa.classList.add('first-in');             
+
+                capa.classList.remove("first-in");
                 capa.classList.add('final-out');
-                document.body.style.backgroundColor = 'black';                
+
+                //document.body.style.backgroundColor = 'black';
+
+                /*black_screen.classList.remove('in');
+                black_screen.classList.add('out');*/
+                
                 vara.draw("draw");
 
                 key_final = true;
@@ -395,6 +417,8 @@
                 if (erase) {
                     o.container.style.transition = "opacity 1s 1s";
                     o.container.style.opacity = 0;
+                    /*black_screen.classList.remove('out');
+                    black_screen.classList.add('in');*/
                 }
             });
 

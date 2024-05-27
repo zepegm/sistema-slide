@@ -214,11 +214,11 @@
     #lb_numero_prox {
       text-align: left;
       color:#978473;
-      font-size:70px;
+      font-size:45px;
       font-style: italic;
       position: relative;
-      left: 75px;
-      top:-18px;
+      left: 55px;
+      top:-10px;
     }  
 
     #lb_titulo_prox {
@@ -226,10 +226,11 @@
       font-weight: bold;
       border:solid 1px rgb(0,0,0,0);
       position:relative;
-      left: 20px;
+      left: 10px;
+      top:-10px;
       text-align: center;
 
-      width: 320px;
+      width: 250px;
       height: 60px;
     }  
 
@@ -238,11 +239,11 @@
       border:solid 1px rgb(0,0,0,0);
       position:relative;
       left: 20px;
-      top:0px;
+      top:-10px;
       text-align: center;
 
-      width: 320px;
-      height: 50px;      
+      width: 250px;
+      height: 30px;      
     }
 
 
@@ -501,7 +502,10 @@
           }); 
         } else {
           textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
-          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});          
+          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});         
+
+          font_titulo = $("#lb_titulo .textFitted").css('font-size');
+          font_autor = $("#lb_autor .textFitted").css('font-size');           
         }
 
        
@@ -532,6 +536,9 @@
           $("#slideProx").append('<div id="lb_numero_prox">{{numero}}</div>');
           $("#slideProx").append('<div id="lb_titulo_prox">{{titulo}}</div>');
           $("#slideProx").append('<div id="lb_autor_prox">{{autor}}</div>');
+
+          textFit($('#lb_titulo_prox'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+          textFit($('#lb_autor_prox'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});             
         }
       }
 
@@ -571,7 +578,10 @@
 
         $("#slideProx").append('<div id="lb_numero_prox">{{numero}}</div>');
         $("#slideProx").append('<div id="lb_titulo_prox">{{titulo}}</div>');
-        $("#slideProx").append('<div id="lb_autor_prox">{{autor}}</div>');                 
+        $("#slideProx").append('<div id="lb_autor_prox">{{autor}}</div>');      
+
+        textFit($('#lb_titulo_prox'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+        textFit($('#lb_autor_prox'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});                      
       } else {
         $("#slideProx").addClass('letra');
         $("#slideProx").removeClass('capa');
@@ -686,7 +696,25 @@
       } else { // recolocar o background da imagem
         $("#slidePrincipal").empty();
         $("#slidePrincipal").addClass('capa');
-        $("#slidePrincipal").removeClass('letra');        
+        $("#slidePrincipal").removeClass('letra');
+
+        $("#slidePrincipal").append('<div id="lb_numero">{{numero}}</div>');
+        $("#slidePrincipal").append('<div id="lb_titulo">{{titulo}}</div>');
+        $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');
+
+        if (typeof font_titulo !== 'undefined') {
+          $("#lb_titulo").css({
+            fontSize: font_titulo
+          });
+
+          $("#lb_autor").css({
+            fontSize: font_autor
+          });
+        } else {
+          textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});  
+        }
+        
       }
 
       $("#slideProx").removeClass('coro');
@@ -702,6 +730,14 @@
         $("#slideProx").empty();
         $("#slideProx").addClass('capa');
         $("#slideProx").removeClass('letra');
+
+        $("#slideProx").append('<div id="lb_numero_prox">{{numero}}</div>');
+        $("#slideProx").append('<div id="lb_titulo_prox">{{titulo}}</div>');
+        $("#slideProx").append('<div id="lb_autor_prox">{{autor}}</div>');
+
+        textFit($('#lb_titulo_prox'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+        textFit($('#lb_autor_prox'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103}); 
+
       } else {
         $("#slideProx").addClass('letra');
         $("#slideProx").removeClass('capa');
