@@ -65,6 +65,15 @@ def home():
         nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % current_presentation['id'])[0]
         tipo = 'Harpa'
         capa = 'static/images/Harpa.jpg'
+    elif estado == 4:
+        id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]
+        titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id_harpa)[0]
+        number = 'HINO %s' % '{0:03}'.format(int(id_harpa))
+        print(number)
+        nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id_harpa)[0]
+        tipo = 'Harpa'
+        capa = 'static/images/Harpa.jpg'        
+
     else:
         titulo = None
         tipo = None
@@ -149,6 +158,63 @@ def render_pdf():
         page += 1
 
     return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje)
+
+
+@app.route('/render_pdf_harpa', methods=['GET', 'POST'])
+def render_pdf_harpa():
+    tipo = int(request.args.get('tipo'))
+    print(type(tipo))
+
+    now = datetime.date.today()
+
+    # convert to string
+    hoje = now.strftime("%d/%m/%Y") 
+
+    lista_final = []
+
+    lista_harpa = banco.executarConsulta('select id, descricao from harpa')
+
+    match tipo:
+        case 1:
+            total = banco.executarConsultaVetor('select (select count(*) from harpa) + (select count(*) from harpa_versionada) as total')[0]
+        case 2:
+            total = banco.executarConsultaVetor('select count(*) from harpa as total')[0]
+        case 3:
+            total = banco.executarConsultaVetor('select count(*) from harpa_versionada as total')[0]
+
+    #montar o sumário
+    if (total > 30):
+        page = math.ceil((total - 32) / 35) + 4
+    else:
+        page = 4
+
+    for item in lista_harpa:
+
+        pagina_1 = banco.executarConsultaVetor('select texto from letras_harpa where id_harpa = %s and pagina = 1 order by paragrafo' % item['id'])
+        pagina_2 = banco.executarConsultaVetor('select texto from letras_harpa where id_harpa = %s and pagina = 2 order by paragrafo' % item['id'])
+
+        lista_final.append({'numero':'%03d' % item['id'], 'titulo':item['descricao'], 'letras':pagina_1, 'letras_2':pagina_2, 'versao':'', 'pag':page})
+
+        if (len(pagina_2) > 0):
+            page += 1
+
+        page += 1
+
+        versoes = banco.executarConsulta('select * from harpa_versionada where id_harpa = %s' % item['id'])
+
+        for hino in versoes:
+
+            pagina_1 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 1 order by paragrafo' % hino['id'])
+            pagina_2 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 2 order by paragrafo' % hino['id'])
+
+            lista_final.append({'numero':'%03d' % item['id'], 'titulo':item['descricao'], 'letras':pagina_1, 'letras_2':pagina_2, 'versao':hino['titulo_versao'], 'pag':page})
+
+            if (len(pagina_2) > 0):
+                page += 1
+
+            page += 1            
+
+    return render_template('render_pdf_harpa.jinja', lista=lista_final, total=total, data=hoje)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():
@@ -1002,6 +1068,25 @@ async def gerar_pdf():
 
     return jsonify(pdf_path)
 
+@app.route('/gerar_pdf_harpa', methods=['GET', 'POST'])
+async def gerar_pdf_harpa():
+    pdf_path = 'static/docs/harpa.pdf'
+
+    browser = await launch(
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False
+    )
+
+    hostname = request.headers.get('Host')
+
+    page = await browser.newPage()
+    await page.goto('http://%s/render_pdf_harpa' % hostname, {'waitUntil':'networkidle2'})
+    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
+    await browser.close()
+
+    return jsonify(pdf_path)
+
 @app.route('/pesquisarBiblia', methods=['GET', 'POST'])
 def pesquisarBiblia():
 
@@ -1266,7 +1351,7 @@ def iniciar_apresentacao():
                         estado = 1
                     elif (item['tipo'] == 'harpa'):
                         estado = 3
-                    elif info['tipo'] == 'harpa_versionada':
+                    elif item['tipo'] == 'harpa_versionada':
                         estado = 4
 
                     index = 0
@@ -1297,6 +1382,8 @@ def proxima_prs():
                                 estado = 1
                             elif (item['tipo'] == 'harpa'):
                                 estado = 3
+                            elif (item['tipo'] == 'harpa_versionada'):
+                                estado = 4                                
                             
                             current_presentation = {'id':item['id'], 'tipo':item['tipo']}
                             index = 0

@@ -179,7 +179,7 @@
             <h3><strong>Título: </strong><span class="text-primary">{{titulo}}</span></h3>
             <h3><strong>Tipo: </strong>{{tipo}}</h3>
             <div id="miniatura">
-              {% if estado == 3 %}
+              {% if estado == 3 or estado == 4 %}
               <div id="lb_numero">{{number}}</div>
               <div id="lb_titulo">{{titulo}}</div>
               <div id="lb_autor">{{autor}}</div>
@@ -204,7 +204,7 @@
   
   key = 0;
 
-  {% if estado == 3 %}
+  {% if estado == 3 or estado == 4 %}
   textFit($("#lb_titulo"), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 230});
   textFit($("#lb_autor"), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 230});
   {% endif %}

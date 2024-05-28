@@ -273,19 +273,36 @@
             </div>
           </div>
           <div class="row d-flex align-items-center">
-            <div class="col-sm-8">
+            <div class="col-sm-6">
               <button id="btn_nova_musica" class="btn btn-primary" data-toggle="modal" data-target="#modalConfirm"><i class="fa-solid fa-plus"></i> Novo Hino</button>
               <button id="btn_editar_musica" class="btn btn-secondary" data-toggle="modal" data-target="#modalConfirm" disabled><i class="fa-solid fa-pen-to-square"></i> Editar Selecionado</button>
-              <button id="btn_gerar_pdf" class="btn btn-danger"><i class="fa-solid fa-file-pdf"></i> Gerar PDF da Harpa</button>
+              <!-- <button id="btn_gerar_pdf" class="btn btn-danger"><i class="fa-solid fa-file-pdf"></i> Gerar PDF da Harpa</button> -->
             </div>
-            
-            <div class="col-sm-3">
+
+            <div class="col-sm-5">
               <form method="post" action="pesquisarLetraHarpa">
               <input type="text" name="pesquisa" class="form-control" id="txt_pesquisa_letra" placeholder="Pesquisa Profunda (letras e títulos)">
             </div>
             <div class="col-sm-1">
               <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
               </form>
+            </div>
+
+            <div class="col-sm-12">&nbsp;</div>
+
+            <div class="col-sm-12">
+              <div class="form-inline">
+                  <div class="form-group">
+                      <div class="input-group">            
+                          <button class="btn btn-danger" id="btn_gerar_pdf">Gerar PDF da Harpa</button>&nbsp;
+                          <select class="form-select" id="opcoes">
+                              <option value="0">Completa</option>
+                              <option value="1">Clássica</option>
+                              <option value="2">Alternativa</option>
+                          </select>
+                      </div>
+                  </div>
+              </div>
             </div>
 
             <div class="col-sm-12">
@@ -335,6 +352,26 @@
       return s.substr(s.length-size);
   }
 
+  $("#btn_gerar_pdf").on('click', function() {    
+
+    $("#loading").removeAttr('hidden');
+    $("#btn_gerar_pdf").attr('disabled', '');
+
+    $.ajax({
+        type: "POST",
+        url: "gerar_pdf_harpa",
+        contentType: "application/json",
+        data: JSON.stringify({'tipo':$("#opcoes").val()}),
+        dataType: "json",
+        success: function(data) {
+          window.open(data);
+          $("#loading").attr('hidden', '');
+          $("#btn_gerar_pdf").removeAttr('disabled');
+        },
+    });
+
+  });
+
   $("#detalhes_musicas").on('change', '#cb_versao', function() {
     id = $(this).val();
 
@@ -379,6 +416,14 @@
 
   $("#btn_adicionar_roteiro").on('click', function() {
     info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'harpa', 'check':false, 'titulo':'HINO ' + pad($("#lista_geral a.active").attr('data-id'), 3), 'tipo_show':'Harpa'};
+    status = '<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + '</strong> adicionada ao roteiro com sucesso. <a href="/">Clique aqui</a> para abrir a lista do Roteiro.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+    if (typeof $("#cb_versao").val() !== 'undefined') {
+      if ($("#cb_versao").val() > 0) {
+        info = {'id':$("#cb_versao").val(), 'tipo':'harpa_versionada', 'check':false, 'titulo':'HINO ' + pad($("#lista_geral a.active").attr('data-id'), 3) + ' - ' + $("#cb_versao option:selected").text(), 'tipo_show':'Harpa'};
+        status = '<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + ' - ' + $("#cb_versao option:selected").text() + '</strong> adicionada ao roteiro com sucesso. <a href="/">Clique aqui</a> para abrir a lista do Roteiro.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+      }
+    }
 
     $.ajax({
         type: "POST",
@@ -388,7 +433,7 @@
         dataType: "json",
         success: function(data) {
             if (data) {
-              $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + '</strong> adicionada ao roteiro com sucesso. <a href="/">Clique aqui</a> para abrir a lista do Roteiro.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+              $("#status").append(status);
             }
         },
     }); 
