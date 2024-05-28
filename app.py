@@ -172,7 +172,10 @@ def render_pdf_harpa():
 
     lista_final = []
 
-    lista_harpa = banco.executarConsulta('select id, descricao from harpa')
+    if tipo == 3:
+        lista_harpa = 'yes'
+    else:
+        lista_harpa = banco.executarConsulta('select id, descricao from harpa')
 
     match tipo:
         case 1:
