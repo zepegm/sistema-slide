@@ -246,6 +246,20 @@
       height: 30px;      
     }
 
+    #lb_versao {
+      color:black;
+      border:solid 1px rgb(0,0,0,0);
+      position:relative;
+      left: 200px;
+      top:60px;
+      text-align: center;
+      font-weight: bold;
+      font-style: italic;
+
+      width: 250px;
+      height: 50px;       
+    }
+
 
     </style>
   </head>
@@ -283,7 +297,8 @@
                       <div class="capa" id="slidePrincipal">
                         <div id="lb_numero">{{numero}}</div>
                         <div id="lb_titulo">{{titulo}}</div>
-                        <div id="lb_autor">{{autor}}</div>                          
+                        <div id="lb_autor">{{autor}}</div>
+                        <div id="lb_versao">{{titulo_versao}}</div>
                       </div>
                     {% else %}
                       {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
@@ -416,6 +431,7 @@
 
     var font_titulo = 0;
     var font_autor = 0;
+    var font_versao = 0;
 
     var socket = io();
     socket.on('refresh', function(result) {
@@ -451,11 +467,13 @@
 
       textFit($('#lb_titulo'), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 103});
       textFit($('#lb_autor'), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 103});
+      textFit($('#lb_versao'), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 103});
 
       $("#loading").remove();
 
       font_titulo = $("#lb_titulo .textFitted").css('font-size');
       font_autor = $("#lb_autor .textFitted").css('font-size');
+      font_versao = $("#lb_versao .textFitted").css('font-size');
     };
 
     $(".big-box").on('click', function() {
@@ -489,7 +507,8 @@
 
         $("#slidePrincipal").append('<div id="lb_numero">{{numero}}</div>');
         $("#slidePrincipal").append('<div id="lb_titulo">{{titulo}}</div>');
-        $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');  
+        $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');
+        $("#slidePrincipal").append('<div id="lb_versao">{{titulo_versao}}</div>');
 
 
         if (font_titulo > 0) {
@@ -500,12 +519,18 @@
           $("#lb_autor").css({
             fontSize: font_autor
           }); 
+
+          $("#lb_versao").css({
+            fontSize: font_versao
+          });           
         } else {
           textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
-          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});         
+          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+          textFit($('#lb_versao'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
 
           font_titulo = $("#lb_titulo .textFitted").css('font-size');
-          font_autor = $("#lb_autor .textFitted").css('font-size');           
+          font_autor = $("#lb_autor .textFitted").css('font-size');
+          font_versao = $("#lb_versao .textFitted").css('font-size');
         }
 
        
@@ -604,6 +629,7 @@
         $("#slidePrincipal").append('<div id="lb_numero">{{numero}}</div>');
         $("#slidePrincipal").append('<div id="lb_titulo">{{titulo}}</div>');
         $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');
+        $("#slidePrincipal").append('<div id="lb_versao">{{titulo_versao}}</div>');
               
         $("#slidePrincipal").removeClass('letra');        
       } else {
@@ -645,9 +671,14 @@
           $("#lb_autor").css({
             fontSize: font_autor
           }); 
+
+          $("#lb_versao").css({
+            fontSize: font_versao
+          });           
         } else {
           textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
-          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});            
+          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+          textFit($('#lb_versao'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
         }    
 
       $.ajax({
@@ -701,6 +732,7 @@
         $("#slidePrincipal").append('<div id="lb_numero">{{numero}}</div>');
         $("#slidePrincipal").append('<div id="lb_titulo">{{titulo}}</div>');
         $("#slidePrincipal").append('<div id="lb_autor">{{autor}}</div>');
+        $("#slidePrincipal").append('<div id="lb_versao">{{titulo_versao}}</div>');
 
         if (typeof font_titulo !== 'undefined') {
           $("#lb_titulo").css({
@@ -710,9 +742,14 @@
           $("#lb_autor").css({
             fontSize: font_autor
           });
+
+          $("#lb_versao").css({
+            fontSize: font_versao
+          });          
         } else {
           textFit($('#lb_titulo'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
-          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});  
+          textFit($('#lb_autor'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
+          textFit($('#lb_versao'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});
         }
         
       }

@@ -62,6 +62,32 @@ class db:
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
             return False
+        
+    def editarNovoHinoVersionado(self, id, info):
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()   
+
+            sql = "UPDATE harpa_versionada SET titulo_versao = '%s', desc_versao = '%s' WHERE id = %s" % (info['titulo_versao'], info['desc_versao'], id)
+            cur.execute(sql)
+
+            cur.execute('DELETE FROM slides_harpa_versionada WHERE id_harpa_versionada = %s' % id)
+            for sld in info['slides']:
+                sql = "INSERT INTO slides_harpa_versionada VALUES(%s, %s, '%s', '%s', %s, '%s')" % (id, sld['pos'], sld['text-slide'], sld['subtitle'], sld['cat'], sld['anotacao'])
+                cur.execute(sql)
+
+            cur.execute('DELETE FROM letras_harpa_versionada WHERE id_harpa_versionada = %s' % id)
+            for paragrafo in info['letra']:
+                sql = "INSERT INTO letras_harpa_versionada VALUES(%s, %s, '%s', %s)" % (id, paragrafo['paragrafo'], paragrafo['texto'], paragrafo['pagina'])
+                cur.execute(sql)
+
+            con.commit()
+            con.close()
+            return True
+
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False        
     
     def inserirNovoHino(self, harpa):
         try:

@@ -217,14 +217,6 @@
       transform: translateY(-50%);
     }
 
-    #cb_versao {
-      width: 70%;
-    }
-
-    #btn_add_versao {
-      width: 100%;
-    }
-
     </style>
     
   </head>
@@ -345,9 +337,12 @@
 
   $("#detalhes_musicas").on('change', '#cb_versao', function() {
     id = $(this).val();
+
+    $("#lb_desc_versao").remove();
     
     if (id > 0) {
-      $("#letras_musicas").empty();
+      $("#btn_edit_versao").removeAttr('disabled');
+      $("#pagina_texto").empty();
       $.ajax({
           type: "POST",
           url: "get_info_harpa_versionada",
@@ -356,15 +351,29 @@
           dataType: "json",
           success: function(data) {  
             //console.log(data);
-            $("#letras_musicas").append(data['titulo']);
-            $("#letras_musicas").append('<div id="pagina_texto"></div>');
             for (par in data['letras']) {
               $("#pagina_texto").append('<p>' + data['letras'][par]['texto'] + '</p>');
             }
-            $("#detalhes_musicas").append('<p><b>Nome da Versão: </b>' + $("#cb_versao").text() + '</p>');
-            $("#detalhes_musicas").append('<p><b>Descrição da Versão: </b>' + $("#cb_versao").attr('data-desc') + '</p>');
+            $("#detalhes_musicas").append('<p id="lb_desc_versao"><b>Descrição da Versão: </b>' + data['desc_versao'] + '</p>');
           }
       });    
+    } else {
+      $("#btn_edit_versao").attr('disabled', '');
+      $("#pagina_texto").empty();
+
+      $.ajax({
+          type: "POST",
+          url: "get_info_harpa",
+          contentType: "application/json",
+          data: JSON.stringify({'id':$("#lista_geral a.active").attr('data-id')}),
+          dataType: "json",
+          success: function(data) {  
+            //console.log(data);
+            for (par in data['letras']) {
+              $("#pagina_texto").append('<p>' + data['letras'][par]['texto'] + '</p>');
+            }
+          }
+      })      
     }
   });
 
@@ -388,7 +397,16 @@
 
 
   $("#btn_iniciar_apresentacao").on('click', function() {
+
     info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'harpa'};
+    status = '<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + '</strong> iniciada com sucesso. <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+    if (typeof $("#cb_versao").val() !== 'undefined') {
+      if ($("#cb_versao").val() > 0) {
+        info = {'id':$("#cb_versao").val(), 'tipo':'harpa_versionada'};
+        status = '<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + ' - ' + $("#cb_versao option:selected").text() + '</strong> iniciada com sucesso. <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+      }
+    }
     
     $.ajax({
         type: "POST",
@@ -398,7 +416,7 @@
         dataType: "json",
         success: function(data) {
             if (data) {
-              $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + '</strong> iniciada com sucesso. <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+              $("#status").append(status);
             }
         },
     });    
@@ -428,6 +446,11 @@
     $("#destino").val('-1');
     $("#id_versao").val($("#lista_geral a.active").attr('data-id'));
   });
+
+  $("#detalhes_musicas").on('click', '#btn_edit_versao', function() {
+    $("#destino").val('-2');
+    $("#id_versao").val($("#cb_versao").val());
+  });  
 
   $("#lista_geral").on('click', '.list-group-item', function() {
     $(".list-group-item").removeClass('active');
@@ -467,8 +490,9 @@
               }
 
               select += '</select>'
-              select += '<div class="input-group-append">';
-              select += '<button class="btn btn-primary" id="btn_add_versao" data-toggle="modal" data-target="#modalConfirm">+</button>';
+              select += '<div class="input-group-append">&nbsp;';
+              select += '<button class="btn btn-primary" id="btn_add_versao" data-toggle="modal" data-target="#modalConfirm"><i class="fa-solid fa-plus"></i></button>&nbsp;';
+              select += '<button class="btn btn-secondary" id="btn_edit_versao" data-toggle="modal" data-target="#modalConfirm" disabled><i class="fa-solid fa-pen-to-square"></i></button>';
               select += '</div>';            
               select += '</div>';
 

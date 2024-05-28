@@ -165,7 +165,21 @@
 
                 width: 70vw;
                 height: 15vh;      
-            }   
+            }
+
+            #lb_versao {
+                color:black;
+                border:solid 1px rgb(0,0,0,0);
+                position:absolute;
+                left: 20%;
+                top:80%;
+                text-align: center;
+                font-weight: bold;
+                font-style: italic;
+
+                width: 60vw;
+                height: 15vh;      
+            }            
 
             #black_screen {
                 position: absolute;
@@ -257,6 +271,7 @@
             <div id="lb_numero">{{num}}</div>
             <div id="lb_titulo">{{info['nome']}}</div>
             <div id="lb_autor">{{info['autor']}}</div>
+            <div id="lb_versao">{{titulo_versao}}</div>
         </div>
         {% if index > 0 and index < lista_slides|length + 1 %}
         <div class="slide letra" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
@@ -292,10 +307,12 @@
         window.addEventListener("load", (event) => {
             var titulo = document.getElementById('lb_titulo');
             var autor = document.getElementById('lb_autor');
+            var versao = document.getElementById('lb_versao');
             var black_screen = document.getElementById('black_screen');
 
-            textFit(titulo, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});     
-            textFit(autor, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});     
+            textFit(titulo, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});
+            textFit(autor, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});
+            textFit(versao, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});
             textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
 
             black_screen.classList.add('out');

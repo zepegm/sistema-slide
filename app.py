@@ -213,7 +213,17 @@ def controlador():
         number = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
         nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % current_presentation['id'])[0]
 
-        return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config, titulo=titulo, numero=number, autor=nome_autor)
+        return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config, titulo=titulo, numero=number, autor=nome_autor, titulo_versao='')
+    elif estado == 4: # harpa versionada
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-harpa-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-harpa-fundo'")[0]['valor'], 'num':banco.executarConsulta("select valor from config where id = 'cor-harpa-num'")[0]['valor'], 'red':banco.executarConsulta("select valor from config where id = 'cor-harpa-red'")[0]['valor']}
+        lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides_harpa_versionada where id_harpa_versionada = %s order by pos" % current_presentation['id'])
+
+        titulo = banco.executarConsultaVetor('select descricao from harpa where id = (select id_harpa from harpa_versionada where id = %s)' % current_presentation['id'])[0]
+        number = 'HINO %s' % '{0:03}'.format(int(banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]))
+        nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = (select id_harpa from harpa_versionada where id = %s))' % current_presentation['id'])[0]
+        titulo_versao = banco.executarConsultaVetor('select titulo_versao from harpa_versionada where id = %s' % current_presentation['id'])[0]
+
+        return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config, titulo=titulo, numero=number, autor=nome_autor, titulo_versao=titulo_versao)
 
     return 'erro'
 
@@ -348,8 +358,18 @@ def slide():
         lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides_harpa where id_harpa = %s order by pos' % current_presentation['id'])
         numero = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
 
-        return render_template('PowerPoint_Harpa.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info, num=numero)
-        
+        return render_template('PowerPoint_Harpa.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info, num=numero, titulo_versao='')
+
+    elif estado == 4: # harpa versionada
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-harpa-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-harpa-fundo'")[0]['valor'], 'num':banco.executarConsulta("select valor from config where id = 'cor-harpa-num'")[0]['valor'], 'red':banco.executarConsulta("select valor from config where id = 'cor-harpa-red'")[0]['valor']}
+        fundo = 'images/Harpa.jpg'
+        info = banco.executarConsulta('select harpa.descricao as nome, autor_harpa.nome as autor from harpa inner join autor_harpa on autor_harpa.id = harpa.autor where harpa.id = (select id_harpa from harpa_versionada where id = %s)' % current_presentation['id'])[0]
+
+        lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides_harpa_versionada where id_harpa_versionada = %s order by pos' % current_presentation['id'])
+        numero = 'HINO %s' % '{0:03}'.format(int(banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]))
+        titulo_versao = banco.executarConsultaVetor('select titulo_versao from harpa_versionada where id = %s' % current_presentation['id'])[0]
+
+        return render_template('PowerPoint_Harpa.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info, num=numero, titulo_versao=titulo_versao)
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
@@ -407,14 +427,18 @@ def changeBackground():
 def addHarpa_versionada():
     if request.method == 'POST':   
         info = json.loads(request.form.getlist('json_send')[0]) 
+        print(info)
         
         if info['destino'] == '-1': # inserir novo hino versionado
             if banco.inserirNovoHinoVersionado(info):
                 status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Nova Versão do Hino de número <strong>' + info['numero'] + '. ' + info['titulo'] + '</strong> criada com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
             else:
                 status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
-        else:
-            status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+        else: # editar hino versionado
+            if banco.editarNovoHinoVersionado(info['destino'], info):
+                status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> <b>"' + info['titulo_versao'] + '"</b> do Hino de número <strong>' + info['numero'] + '. ' + info['titulo'] + '</strong> editada com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
         harpa = banco.executarConsulta('select * from harpa order by id')
 
@@ -510,8 +534,14 @@ def subtitle():
         for item in legenda:
             lista.append(item['text-legenda'])
 
-        tamanho = 20        
-    
+        tamanho = 20
+    elif (estado == 4): #harpa versionada
+        legenda = banco.executarConsulta('select `text-legenda` from slides_harpa_versionada where id_harpa_versionada = %s order by pos' % current_presentation['id'])
+        lista = [banco.executarConsulta('select descricao from harpa where id = (select id_harpa from harpa_versionada where id = %s)' % current_presentation['id'])[0]['descricao']]
+        for item in legenda:
+            lista.append(item['text-legenda'])
+
+        tamanho = 20
     else:
         lista = []
         tamanho = 0
@@ -650,19 +680,19 @@ def enviarDadosNovaVersaoHino():
 
         destino = request.form.getlist('destino')[0]
         if destino != '-1': # significa que é edição e não acréscimo
-            letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa = %s and pagina = 1 order by paragrafo' % destino)
+            letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 1 order by paragrafo' % destino)
             blocks = []
 
             for item in letras:
                 blocks.append({'type':'paragraph', 'data':{'text':item['texto']}})
 
-            letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa = %s and pagina = 2 order by paragrafo' % destino)
+            letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 2 order by paragrafo' % destino)
             blocks_2 = []
 
             for item in letras:
                 blocks_2.append({'type':'paragraph', 'data':{'text':item['texto']}})
 
-            cat_slides_list = banco.executarConsulta('select categoria from slides_harpa_versionada where id_harpa = %s order by pos' % destino)
+            cat_slides_list = banco.executarConsulta('select categoria from slides_harpa_versionada where id_harpa_versionada = %s order by pos' % destino)
         else: # significa que é acréscimo, portanto vai buscar a letra da harpa padrão
             letras = banco.executarConsulta('select * from letras_harpa where id_harpa = %s and pagina = 1 order by paragrafo' % info['numero'])
             blocks = []
@@ -809,11 +839,10 @@ def get_info_harpa_versionada():
             info = request.json
 
             letras = banco.executarConsulta('select * from letras_harpa_versionada where id_harpa_versionada = %s' % info['id'])
-            titulo = banco.executarConsulta('select id_harpa, harpa.descricao from harpa_versionada inner join harpa on harpa.id = harpa_versionada.id_harpa')[0]
-            txt_titulo = '<h4><span class="fw-bold text-primary">%03d.</span><span class="text-primary"> %s</span></h4>' % (titulo['id_harpa'], titulo['descricao'])
+            desc_versao = banco.executarConsultaVetor('select desc_versao from harpa_versionada where id = %s' % info['id'])[0]
 
 
-            return {'titulo':txt_titulo, 'letras':letras}
+            return {'letras':letras, 'desc_versao':desc_versao}
 
 @app.route('/get_info_musica', methods=['GET', 'POST'])
 def get_info_musica():
@@ -911,6 +940,25 @@ def verificarSenhaHarpa():
                     blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
 
                 return render_template('editor_harpa_versionada.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino, autores=autores, number=id_versao, autor=autor, autor_desc=desc_autor)
+            elif destino == '-2': # ele vai editar a versão do hino da harpa
+                id_versao = request.form.getlist('id_versao')[0]
+
+                blocks = []
+                blocks_s = []
+                numero = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_versao)[0]
+                titulo = banco.executarConsulta('select descricao from harpa where id = (select id_harpa from harpa_versionada where id = %s)' % id_versao)[0]['descricao']
+                autor = banco.executarConsultaVetor('select autor from harpa where id = (select id_harpa from harpa_versionada where id = %s)' % id_versao)[0]
+                desc_autor = banco.executarConsulta('select abreviacao from autor_harpa where id = %s' % autor)[0]['abreviacao']
+                lista_texto = banco.executarConsulta("select pos, `text-slide`, `text-legenda` as subtitle, ifnull(anotacao, '') as anotacao from slides_harpa_versionada where id_harpa_versionada = %s order by pos" % id_versao)
+                titulo_versao = banco.executarConsultaVetor('select titulo_versao from harpa_versionada where id = %s' % id_versao)[0]
+                desc_versao = banco.executarConsultaVetor('select desc_versao from harpa_versionada where id = %s' % id_versao)[0]
+
+                # recriar lista pro editor
+                for item in lista_texto:
+                    blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+                    blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+                return render_template('editor_harpa_versionada.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=id_versao, autores=autores, number=numero, autor=autor, autor_desc=desc_autor, titulo_versao=titulo_versao, desc_versao=desc_versao)
             else: # ele vai editar e não salvar um novo
                 blocks = []
                 blocks_s = []
@@ -1138,6 +1186,8 @@ def iniciar_apresentacao():
                 estado = 1
             elif info['tipo'] == 'harpa':
                 estado = 3
+            elif info['tipo'] == 'harpa_versionada':
+                estado = 4
 
             index = 0
 
@@ -1156,6 +1206,8 @@ def iniciar_apresentacao():
                         estado = 1
                     elif (item['tipo'] == 'harpa'):
                         estado = 3
+                    elif info['tipo'] == 'harpa_versionada':
+                        estado = 4
 
                     index = 0
 
