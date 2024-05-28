@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Resultado da Pesquisa</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='datatable/datatables.min.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+      .highlight {
+        background: #FFC107;
+      }
+
+      .cdx-marker {
+        color:rgba(192,0,0);
+        font-weight:bold;
+        background:rgba(0,0,0,0);
+        padding-right: 0.1em;
+      }
+
+      .cdx-num {
+        color:#0070C0;
+      }
+
+      .red {
+        color:#FF0000;
+      }      
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+        font-weight: bold;
+      }
+
+      .line-result {
+        cursor: pointer;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #loading {
+      background-color: white;
+      height: 100%;
+      left: 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 9999;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      bottom: 0;
+      margin: auto;
+      border: 20px solid #EAF0F6;
+      border-radius: 50%;
+      border-top: 20px solid #FF7A59;
+      width: 200px;
+      height: 200px;
+      animation: spinner 4s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }   
+
+    img {
+        display: block;
+        height: 300px;
+        width: 100%;
+        border: solid;
+        border-width: thin;
+    }
+
+    #txt_pesquisa_letra,
+    #txt_senha,
+    #txt_filtro {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }  
+
+    #letras_musicas,
+    #detalhes_musicas {
+      color: black;
+    }
+
+    .Forte {
+      background-color: rgb(115, 249, 139);
+      border-radius: 5px;
+      padding: 2%;
+    }
+
+    .Médio {
+      background-color: rgb(250, 191, 135);
+      border-radius: 5px;
+      padding: 2%;
+    }
+
+    .Fraco {
+      background-color: rgb(249, 159, 237);
+      border-radius: 5px;
+      padding: 2%;
+    }
+
+    .text {
+      background-color: rgb(255, 255, 255);
+      border-radius: 5px;
+      padding: 1%;
+      margin-top: 10px;
+    }        
+
+    </style>
+
+    
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div id="loading"><div class="loader"></div></div>
+          <div class="row">
+            <div id="status" class="col-sm-12"></div>
+          </div>
+          <div class="row text-center">
+            <h4 class="fw-light"><span class="fw-bold">Resultado da Pesquisa: </span><span class="text-danger">"{{pesquisa}}"</span></h4>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <table id="tabela_resultados" class="table table-hover">
+                <thead class="table-dark">
+                  <tr class="text-center">
+                    <th scope="col">Número</th>
+                    <th scope="col">Título</th>
+                    <th scope="col">Trecho</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in resultado_pesquisa %}
+                  <tr data-titulo="{{item['descricao']}}" data-id="{{item['id_harpa']}}" class="line-result">
+                    <th class="text-center align-middle">{{item['id_harpa']}}</th>
+                    <td class="text-center align-middle">{{item['descricao']}}</td>
+                    <td class="align-middle">{{item['texto']}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-sm-12"><hr></div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <button id="btn_iniciar_apresentacao" class="btn btn-info" disabled><i class="fa-solid fa-circle-play"></i> Iniciar Apresentação</button>
+              <button id="btn_adicionar_roteiro" class="btn btn-success" disabled><i class="fa-solid fa-list-check"></i> Adicionar ao Roteiro</button>
+              <button id="btn_retornar" class="btn btn-secondary"><i class="fa-solid fa-circle-left"></i> Sair da Pesquisa</button>
+            </div>
+            <div class="col-sm-12"><hr></div>
+          </div>
+          <div class="row">
+            <div class="col-sm-6">
+              <div id="letras_musicas"></div>
+            </div>
+            <div class="col-sm-6">
+              <div id="detalhes_musicas"></div>
+            </div>            
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+  
+  <script>
+
+  function pad(num, size) {
+      var s = "000000000" + num;
+      return s.substr(s.length-size);
+  }
+
+    var selecionado = {'id':0, 'titulo':''};
+
+    window.onload = function() {
+      $("#loading").remove();
+    };
+
+    $("#btn_retornar").on('click', function() {
+      window.location.href = "abrir_harpa";
+    });
+
+    $(".line-result").on('click', function() {
+      dataTable.$(".line-result").removeClass('table-primary');
+      $(this).addClass('table-primary');
+
+      $("#btn_iniciar_apresentacao").removeAttr('disabled');
+      $("#btn_adicionar_roteiro").removeAttr('disabled');
+
+      $("#letras_musicas").empty();
+      $("#detalhes_musicas").empty();
+      $("#letras_musicas").append('<h4><span class="fw-bold">Título: </span><span class="text-primary">' + $(this).attr('data-titulo') + '</span></h4>');
+
+      selecionado['id'] = $(this).attr('data-id');
+      selecionado['titulo'] = $(this).attr('data-titulo');
+
+      info = {'id':selecionado['id']};
+
+      $.ajax({
+          type: "POST",
+          url: "get_info_harpa",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+              //console.log(data);
+
+              // adicionar imagem da capa
+              //$("#detalhes_musicas").append("<img src='" + data['capa'] + "'></img><br>");
+
+              
+              $("#letras_musicas").append('<div id="pagina_texto"></div>');
+
+
+              for (letra in data['letras']) {
+                $("#pagina_texto").append('<p>' + data['letras'][letra]['texto'].replaceAll('<mark ', '<span ').replaceAll('</mark>', '</span> ') + '</p>');
+              }
+          },
+      });      
+    });
+
+    let dataTable = new DataTable("#tabela_resultados", {
+            lengthMenu: [
+                [5, 10, 50, 100],
+                [5, 10, 50, 100],
+            ], 
+            "autoWidth": false,
+            "oLanguage": {
+                "sSearch": "Pesquisar:",
+            },
+            "language": {
+                "lengthMenu": "Exibir _MENU_ itens por página",
+                "zeroRecords": "Nada encontrado - Desculpe",
+                "info": "Exibindo _START_ até _END_ de um total de _TOTAL_ registro(s)",
+                "infoEmpty": "Sem registros",
+                "infoFiltered": "(filtrado de um total de _MAX_ registro(s))",
+                "paginate": {
+                    "previous": "Anterior",
+                    "next": "Próximo"
+                }
+            }                    
+        });     
+
+    $("#btn_iniciar_apresentacao").on('click', function() {
+      info = {'id':selecionado['id'], 'tipo':'harpa'};
+      //console.log(info)
+      
+      $.ajax({
+          type: "POST",
+          url: "iniciar_apresentacao",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+              if (data) {
+                $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do Hino da Harpa <strong>' + $("#lista_geral a.active").text() + '</strong> iniciada com sucesso. <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+              }
+          },
+      });    
+
+    });
+
+  $("#btn_adicionar_roteiro").on('click', function() {
+    info = {'id':selecionado['id'], 'tipo':'harpa', 'check':false, 'titulo':'HINO ' + pad(selecionado['id'], 3), 'tipo_show':'Harpa'};
+
+    $.ajax({
+        type: "POST",
+        url: "adicionar_roteiro",
+        contentType: "application/json",
+        data: JSON.stringify(info),
+        dataType: "json",
+        success: function(data) {
+            if (data) {
+              $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação da música <strong>' + $("#lista_geral a.active").text() + '</strong> adicionada ao Roteiro com sucesso! <a href="/">Clique aqui</a> para abrir a lista dos Roteiros.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
+        },
+    }); 
+
+  });    
+
+  </script>
+      
+  </body>
+</html>

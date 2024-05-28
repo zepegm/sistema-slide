@@ -1074,6 +1074,66 @@ def pesquisarBiblia():
 
         return render_template('biblia.jinja', novo=novo_testamento, antigo=antigo_testamento, status=status)
 
+@app.route('/pesquisarLetraHarpa', methods=['GET', 'POST'])
+def pesquisarLetraHarpa():
+
+    if request.method == 'POST':
+        if 'pesquisa' in request.form:
+            pesquisa = request.form['pesquisa'].replace("'", '’')
+            pesquisa_original = pesquisa
+            status = ''
+
+            if pesquisa != '':
+                if len(pesquisa) > 2:
+                    lista_palavras = pesquisa.split(' ')
+                    pesquisa = r'%' + pesquisa.replace(' ', r'%') + r'%'
+
+
+                    resultado_pesquisa = banco.executarConsulta("select letras_harpa.id_harpa, harpa.descricao, replace(texto, '<br>', ' ') as texto from letras_harpa inner join harpa on harpa.id = letras_harpa.id_harpa where letras_harpa.texto like '%s' or harpa.descricao like '%s' group by id_harpa order by harpa.id" % (pesquisa, pesquisa))
+
+                    for item in resultado_pesquisa:
+
+                        texto = converHTML_to_List(item['texto'])
+                        texto_final = ''
+
+                        for element in texto:
+                            if len(element['text']) > 0:
+                                aux = element['text'][0]
+                                #print(aux)
+                                for palavra in lista_palavras:
+                                    if len(palavra) > 2:
+                                        compiled = re.compile(re.escape(palavra), re.IGNORECASE)
+                                        res = compiled.sub('<span class="highlight">' + palavra + "</span>", aux)
+                                        aux = str(res)
+
+                                if element['css'] == 'mark':
+                                    texto_final += '<span class="cdx-marker">' + aux + '</span>&nbsp;'
+                                elif element['css'] == 'b':
+                                    texto_final += '<b>' + aux + '</b>&nbsp;'
+                                elif element['css'] == 'u':
+                                    texto_final += '<u class="cdx-underline">' + aux + '</u>&nbsp;'
+                                elif element['css'] == 'u-b':
+                                    texto_final += '<u class="cdx-underline"><b>' + aux + '</b></u>&nbsp;'
+                                else:
+                                    texto_final += aux + '&nbsp;'
+
+
+
+                        item['texto'] = texto_final
+
+                    if len(resultado_pesquisa) > 0:
+                        return render_template('resultado_pesquisa_harpa.jinja', resultado_pesquisa=resultado_pesquisa, lista_palavras=lista_palavras, pesquisa=pesquisa_original)
+                    else:
+                        status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Sem resultados encontrados, por favor revise os termos pesquisados.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                else:
+                    status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor utilize uma palavra de três letras ou mais.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status= '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor digite algumas palavras na pesquisa.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            
+            harpa = banco.executarConsulta('select * from harpa order by id')
+
+            return render_template('harpa.jinja', status=status, harpa=harpa)
+
 
 @app.route('/pesquisarLetra', methods=['GET', 'POST'])
 def pesquisarLetra():
