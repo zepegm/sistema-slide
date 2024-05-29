@@ -69,7 +69,7 @@ def home():
         id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]
         titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id_harpa)[0]
         number = 'HINO %s' % '{0:03}'.format(int(id_harpa))
-        print(number)
+        #print(number)
         nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id_harpa)[0]
         tipo = 'Harpa'
         capa = 'static/images/Harpa.jpg'        
@@ -172,17 +172,17 @@ def render_pdf_harpa():
 
     lista_final = []
 
-    if tipo == 3:
-        lista_harpa = 'yes'
-    else:
+    if tipo == 3: # apenas as versões alternativas
+        lista_harpa = banco.executarConsulta('select harpa_versionada.id as id_versao, harpa.id, harpa.descricao, harpa_versionada.titulo_versao from harpa_versionada inner join harpa on harpa.id = harpa_versionada.id_harpa order by harpa.id')
+    else: # todas as versões
         lista_harpa = banco.executarConsulta('select id, descricao from harpa')
 
     match tipo:
-        case 1:
+        case 1: # geral
             total = banco.executarConsultaVetor('select (select count(*) from harpa) + (select count(*) from harpa_versionada) as total')[0]
-        case 2:
+        case 2: # apenas o formato clássico dos hinos
             total = banco.executarConsultaVetor('select count(*) from harpa as total')[0]
-        case 3:
+        case 3: # apenas as versões alternativas 
             total = banco.executarConsultaVetor('select count(*) from harpa_versionada as total')[0]
 
     #montar o sumário
@@ -191,6 +191,23 @@ def render_pdf_harpa():
     else:
         page = 4
 
+    if (tipo == 3): # no caso de ser apenas versões alternativas
+        for item in lista_harpa:
+
+            pagina_1 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 1 order by paragrafo' % item['id_versao'])
+            pagina_2 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 2 order by paragrafo' % item['id_versao'])
+
+
+            lista_final.append({'numero':'%03d' % item['id'], 'titulo':item['descricao'], 'letras':pagina_1, 'letras_2':pagina_2, 'versao':item['titulo_versao'], 'pag':page})
+
+            if (len(pagina_2) > 0):
+                page += 1
+
+            page += 1
+
+        return render_template('render_pdf_harpa.jinja', lista=lista_final, total=total, data=hoje, tipo=tipo) # encerra a função e retorna a harpa versionada
+
+    # a partir daqui será executado no caso de tipo 1 ou 2 (completa ou clássica)
     for item in lista_harpa:
 
         pagina_1 = banco.executarConsultaVetor('select texto from letras_harpa where id_harpa = %s and pagina = 1 order by paragrafo' % item['id'])
@@ -203,21 +220,23 @@ def render_pdf_harpa():
 
         page += 1
 
-        versoes = banco.executarConsulta('select * from harpa_versionada where id_harpa = %s' % item['id'])
+        if tipo == 1: # se for completa pega também as versões alternativas
 
-        for hino in versoes:
+            versoes = banco.executarConsulta('select * from harpa_versionada where id_harpa = %s' % item['id'])
 
-            pagina_1 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 1 order by paragrafo' % hino['id'])
-            pagina_2 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 2 order by paragrafo' % hino['id'])
+            for hino in versoes:
 
-            lista_final.append({'numero':'%03d' % item['id'], 'titulo':item['descricao'], 'letras':pagina_1, 'letras_2':pagina_2, 'versao':hino['titulo_versao'], 'pag':page})
+                pagina_1 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 1 order by paragrafo' % hino['id'])
+                pagina_2 = banco.executarConsultaVetor('select texto from letras_harpa_versionada where id_harpa_versionada = %s and pagina = 2 order by paragrafo' % hino['id'])
 
-            if (len(pagina_2) > 0):
-                page += 1
+                lista_final.append({'numero':'%03d' % item['id'], 'titulo':item['descricao'], 'letras':pagina_1, 'letras_2':pagina_2, 'versao':hino['titulo_versao'], 'pag':page})
 
-            page += 1            
+                if (len(pagina_2) > 0):
+                    page += 1
 
-    return render_template('render_pdf_harpa.jinja', lista=lista_final, total=total, data=hoje)
+                page += 1            
+
+    return render_template('render_pdf_harpa.jinja', lista=lista_final, total=total, data=hoje, tipo=tipo)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():
@@ -1074,6 +1093,7 @@ async def gerar_pdf():
 @app.route('/gerar_pdf_harpa', methods=['GET', 'POST'])
 async def gerar_pdf_harpa():
     pdf_path = 'static/docs/harpa.pdf'
+    info = request.json
 
     browser = await launch(
         handleSIGINT=False,
@@ -1084,7 +1104,8 @@ async def gerar_pdf_harpa():
     hostname = request.headers.get('Host')
 
     page = await browser.newPage()
-    await page.goto('http://%s/render_pdf_harpa' % hostname, {'waitUntil':'networkidle2'})
+
+    await page.goto('http://%s/render_pdf_harpa?tipo=%s' % (hostname, info['tipo']), {'waitUntil':'networkidle2'})
     await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
     await browser.close()
 

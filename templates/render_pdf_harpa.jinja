@@ -224,7 +224,13 @@
             <div id="capa" class="capa">
                 <div class="titulo-capa">Assembleia de Deus Ministério De Cachoeira Paulista</div>
                 <img id="logo" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-                <div class="texto-capa">Harpa Cristã - Versão ADCPTA</div>
+                {% if tipo == 1 %}
+                <div class="texto-capa">Harpa Cristã + Versões ADCPTA</div>
+                {% elif tipo == 2 %}
+                <div class="texto-capa">Harpa Cristã Clássica</div>
+                {% else %}
+                <div class="texto-capa">Harpa Versão ADCPTA</div>
+                {% endif %}
                 <div class="foot-capa"><b>Edição: </b>{{data}}</div>
             </div>
             <div id="info" class="pagina">
