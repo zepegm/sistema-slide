@@ -1348,6 +1348,25 @@ def slide_pix():
 
     return render_template('slide_pix.jinja', pix=pix)
 
+@app.route('/wallpaper', methods=['GET', 'POST'])
+def wallpaper():
+
+    if request.method == 'POST':
+        if request.is_json:
+            info = request.json
+
+            print(info)
+            return jsonify(True)
+
+    path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+
+    onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    atual = '/static/images/Wallpaper/' + banco.executarConsultaVetor("select valor from config where id='wallpaper'")[0]
+
+    print(atual)
+
+    return render_template('wallpaper.jinja', lista=onlyfiles, atual=atual)
+
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
 def iniciar_apresentacao():
