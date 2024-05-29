@@ -250,6 +250,10 @@
             location.reload();
         });
 
+        socket.on('pix', function(result) {
+            window.location.replace("/slide_pix");
+        });
+
         socket.on('scroll_biblia', function(direcao) {
 
             console.log('scroll!');

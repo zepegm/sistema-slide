@@ -1,0 +1,40 @@
+<html lang="pt">
+    <head>
+        <title>Slide PIX</title>
+        <style>
+            .capa {
+                background-image: url("{{ url_for('static', filename='images/PIX.png') }}");  
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-size: 100% 100%;
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                top:0%;    
+                left:0%;                
+            }    
+
+            #slide_principal {
+                position: fixed;
+                top: 1%;
+                left: 23%;
+                width: 75%;
+                height: 75%;
+
+                border: solid 9px yellow;
+            }    
+        </style>
+    </head>
+    <body>
+        <div class="capa"></div>
+        <iframe id="slide_principal" src="/slide" title="description"></iframe>
+
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script>
+        var socket = io();
+        socket.on('pix', function(result) {
+            window.location.replace("/slide");
+        });        
+    </script>
+    </body>
+</html>

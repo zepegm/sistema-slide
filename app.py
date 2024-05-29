@@ -1337,6 +1337,17 @@ def alterar_fundo():
     return 'yes'
 
 
+@app.route('/slide_pix', methods=['GET', 'POST'])
+def slide_pix():
+
+    if request.method == 'POST': # significa que o comando de solicitação de troca foi feito
+        socketio.emit('pix', 1)
+        return jsonify(True)
+
+    pix = banco.executarConsultaVetor("select valor from config where id = 'chave-pix-igreja'")[0]
+
+    return render_template('slide_pix.jinja', pix=pix)
+
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
 def iniciar_apresentacao():

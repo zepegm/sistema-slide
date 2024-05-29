@@ -287,6 +287,11 @@
             location.reload();
         });
 
+        socket.on('pix', function(result) {
+            window.location.replace("/slide_pix");
+        });
+
+
         var idealFontSize = 300, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
         fontSize = (screen.width / idealScreenSize) * idealFontSize;
 

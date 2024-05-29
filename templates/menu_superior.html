@@ -11,7 +11,22 @@
           <li class="nav-item">
             <a class="nav-link" href="../subtitle"><i class="fa-solid fa-closed-captioning">&nbsp;</i>Abrir Legenda</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="javascript:call_func();"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;Alternar Slide/Tela de PIX</a>
+          </li>
         </ul>
       </div>
     </div>
   </nav>
+
+  <script>
+    function call_func() {
+      const xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+        //document.getElementById("demo").innerHTML = this.responseText;
+        console.log(this.responseText);
+        }
+      xhttp.open("POST", "/slide_pix", true);
+      xhttp.send();
+    }
+  </script>
