@@ -33,10 +33,10 @@
         border: solid 3px black;
 
         display: block;
-        width: 100vw;
+        width: 50vw;
         max-width: 177.78vh;
         /* 16/9 = 1.778 */
-        height: 56.25vw;
+        height: 28.12vw;
         /* height:width ratio = 9/16 = .5625  */
         max-height: 100vh;
 
@@ -54,11 +54,18 @@
 
       #lista_geral a.toggled { display: none; }
 
-      .preview {
-        width: 480px;
-        height: 300px;
+      #preview {
+        width: 25vw;
+        max-width: 177.78vh;
+        /* 16/9 = 1.778 */
+        height: 14.06vw;
+        /* height:width ratio = 9/16 = .5625  */
+        max-height: 100vh;
         border: 1px solid black;
 
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
       }
 
     </style>
@@ -99,12 +106,16 @@
                 <input type="text" class="form-control" id="txt_filtro" placeholder="Digite o Nome do Arquivo">
                 <br>
                 {% for item in lista %}
-                  <a href="#" class="list-group-item list-group-item-action">{{item}}</a>
+                  <a href="#preview_wallpaper" class="list-group-item list-group-item-action">{{item}}</a>
                 {% endfor %}
               </div>              
             </div>
             <div id="preview_wallpaper" class="col-sm-6"></div>
           </div>
+
+          <form action='wallpaper' method="POST" id="form_principal">
+            <input type="hidden" id="nome_arquivo", name="nome_arquivo">
+          </form>
 
         </section>
       </div>
@@ -137,9 +148,19 @@
 
     $("#preview_wallpaper").empty();
     $("#preview_wallpaper").append('<label for="txt_filtro" class="form-label">Prévia:</label>');
-    $("#preview_wallpaper").append('<div class="preview"></div>');
+    $("#preview_wallpaper").append('<div id="preview"></div>');
+
+    $("#preview").css("background-image", 'url("/static/images/Wallpaper/' + $(this).text() + '")');
+
+    $("#nome_arquivo").val($(this).text());
+
+    $("#preview_wallpaper").append('<br><button class="btn btn-primary" id="btn_confirmar_alteracao">Confirmar Alteração</button>');
 
     
+  });
+
+  $("#preview_wallpaper").on('click', '#btn_confirmar_alteracao', function() {
+    $("#form_principal").submit();
   });
 
   </script>

@@ -404,7 +404,7 @@ def slide():
     global index
 
     if estado == 0:
-        fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
+        fundo = 'images/Wallpaper/' + banco.executarConsulta("select valor from config where id = 'wallpaper'")[0]['valor']
         config = {'fundo':'black', 'mark':'white', 'letra':'white'}
         return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0, config=config)
     elif estado == 1: # se iniciou uma apresentação de música
@@ -1352,18 +1352,26 @@ def slide_pix():
 def wallpaper():
 
     if request.method == 'POST':
-        if request.is_json:
-            info = request.json
+        
+        if 'nome_arquivo' in request.form:
 
-            print(info)
-            return jsonify(True)
+            arquivo = "'%s'" % request.form['nome_arquivo']
+
+            info = [{'id':"'wallpaper'", 'valor':arquivo}]
+
+            banco.change_config(info)
+
+
+            socketio.emit('change_wallpaper', 1)
+            
+            
 
     path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
 
     onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     atual = '/static/images/Wallpaper/' + banco.executarConsultaVetor("select valor from config where id='wallpaper'")[0]
 
-    print(atual)
+    #print(atual)
 
     return render_template('wallpaper.jinja', lista=onlyfiles, atual=atual)
 

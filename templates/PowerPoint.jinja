@@ -291,6 +291,11 @@
             window.location.replace("/slide_pix");
         });
 
+        socket.on('change_wallpaper', function(result) {
+            if (slides.length == 0) {
+                location.reload();
+            }
+        });        
 
         var idealFontSize = 300, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
         fontSize = (screen.width / idealScreenSize) * idealFontSize;
