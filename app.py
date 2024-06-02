@@ -18,10 +18,12 @@ import re
 import datetime
 import random
 from pyppeteer import launch
+from pptx_file import ppt
 
 app=Flask(__name__)
 app.secret_key = "abc123"
 app.config['SECRET_KEY'] = 'justasecretkeythatishouldputhere'
+#app.config['UPLOAD_FOLDER'] = r'C:\Users\Operador\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Backup\sistema-slide\static\uploads'
 socketio = SocketIO(app, async_mode='threading')
 #socketio = SocketIO(app)
 CORS(app)
@@ -1374,6 +1376,29 @@ def wallpaper():
     #print(atual)
 
     return render_template('wallpaper.jinja', lista=onlyfiles, atual=atual)
+
+
+@app.route('/abrir_pptx', methods=['GET', 'POST'])
+def abrir_pptx():
+
+    if request.method == 'POST':
+
+        file = request.files.get('file')
+
+        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\uploads\\file.pptx'
+
+        file.save(path) # processo de salvamento do arquivo
+
+        # agora que salvei o arquivo, preciso acessar e convertê-lo em uma lista de imagens e salvá-las
+        prs = ppt(path)
+
+        # iniciar comando para exportar os slides
+        result = prs.convertToListJPG()
+        print(result)
+
+
+
+    return render_template('abrir_pptx.jinja')
 
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])

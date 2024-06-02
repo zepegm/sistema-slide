@@ -542,6 +542,19 @@
               select += '</div>';
 
               $("#detalhes_musicas").append(select);
+            } else {
+              select = '<label for="cb_versao">Versões</label>';
+              select += '<div class="input-group mb-3">';
+              select += '<select id="cb_versao" name="cb_versao" disabled>';
+              select += '<option value="0">Padrão</option>';
+              select += '</select>'
+              select += '<div class="input-group-append">&nbsp;';
+              select += '<button class="btn btn-primary" id="btn_add_versao" data-toggle="modal" data-target="#modalConfirm"><i class="fa-solid fa-plus"></i></button>&nbsp;';
+              select += '<button class="btn btn-secondary" id="btn_edit_versao" data-toggle="modal" data-target="#modalConfirm" disabled><i class="fa-solid fa-pen-to-square"></i></button>';
+              select += '</div>';            
+              select += '</div>';
+
+              $("#detalhes_musicas").append(select);              
             }
            
             $("#letras_musicas").append('<div id="pagina_texto"></div>');
