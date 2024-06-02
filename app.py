@@ -828,8 +828,19 @@ def enviarDadosNovoHino():
 
         blocks = []
         blocks_2 = []
+        texto = ''
         for item in info['slides']:
-            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+            texto = item['text-slide'].replace('<b>', '').replace('</b>', '').replace('<br>', ' ') # retirando o negrito e os espaços
+
+            # inserindo negrito na numeração
+            if texto[0:22] == '<span class="cdx-num">':
+                texto = '<b>' + texto
+                pos = texto.find('</span>')
+
+                texto = texto[:pos] + '</b>' + texto[pos:]
+
+            blocks.append({'type':'paragraph', 'data':{'text':texto}})
+
 
         destino = request.form.getlist('destino')[0]
         if destino != '0': # significa que é edição e não acréscimo
