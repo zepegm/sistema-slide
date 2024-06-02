@@ -18,7 +18,7 @@ import re
 import datetime
 import random
 from pyppeteer import launch
-from pptx_file import ppt
+from pptx_file import ppt_to_png
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -74,8 +74,11 @@ def home():
         #print(number)
         nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id_harpa)[0]
         tipo = 'Harpa'
-        capa = 'static/images/Harpa.jpg'        
-
+        capa = 'static/images/Harpa.jpg'
+    elif estado == 5: # apresentação PowerPoint
+        titulo = current_presentation['titulo']
+        tipo = 'Apresentação PowerPoint'
+        capa = 'static/images/SlidesPPTX/0.png'
     else:
         titulo = None
         tipo = None
@@ -314,6 +317,8 @@ def controlador():
         titulo_versao = banco.executarConsultaVetor('select titulo_versao from harpa_versionada where id = %s' % current_presentation['id'])[0]
 
         return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config, titulo=titulo, numero=number, autor=nome_autor, titulo_versao=titulo_versao)
+    elif estado == 5: # arquivo pptx
+        return render_template('controlador_pptx.jinja', total=current_presentation['total'], index=index)
 
     return 'erro'
 
@@ -460,6 +465,9 @@ def slide():
         titulo_versao = banco.executarConsultaVetor('select titulo_versao from harpa_versionada where id = %s' % current_presentation['id'])[0]
 
         return render_template('PowerPoint_Harpa.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info, num=numero, titulo_versao=titulo_versao)
+    elif estado == 5: # Arquivo pptx
+
+        return render_template('PowerPoint_Verdadeiro.jinja', index=index, total=current_presentation['total'])
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
@@ -632,6 +640,13 @@ def subtitle():
             lista.append(item['text-legenda'])
 
         tamanho = 20
+    elif (estado == 5): # Arquivo PPTX
+        lista = current_presentation['lista']
+
+        if len(lista[index]) > 199:
+            tamanho = 30
+        else:
+            tamanho = 20 
     else:
         lista = []
         tamanho = 0
@@ -1381,24 +1396,45 @@ def wallpaper():
 @app.route('/abrir_pptx', methods=['GET', 'POST'])
 def abrir_pptx():
 
+    global current_presentation
+    global estado
+    global index    
+
+    status = ''
+
     if request.method == 'POST':
 
         file = request.files.get('file')
 
         path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\uploads\\file.pptx'
+        path_img = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\SlidesPPTX'
 
         file.save(path) # processo de salvamento do arquivo
 
         # agora que salvei o arquivo, preciso acessar e convertê-lo em uma lista de imagens e salvá-las
-        prs = ppt(path)
+        lista_prs_pptx = ppt_to_png(path, path_img)
+
+        if len(lista_prs_pptx) > 0:
+            status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Apresentação Iniciada com sucesso!</strong> Arquivo <strong>' + file.filename + '</strong> do PowerPoint importado e convertido em apresentação com sucesso! <a href="/controlador">Clique aqui para abrir o Controlador</a>.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+            estado = 5 # apresentação de arquivo pptx
+            index = 0
+            current_presentation = {'titulo':file.filename, 'lista':lista_prs_pptx, 'total':len(lista_prs_pptx)} # estrutura pra esse tipo de apresentação se difere dos outros
+
+            socketio.emit('refresh', 1)
+
+            return redirect('/controlador')
+
+        else:
+            status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Arquivo não selecionado ou falha em tentar importar arquivo do PowerPoint.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
         # iniciar comando para exportar os slides
-        result = prs.convertToListJPG()
-        print(result)
+        #result = prs.convertToListJPG()
+        #print(result)
 
 
 
-    return render_template('abrir_pptx.jinja')
+    return render_template('abrir_pptx.jinja', status=status)
 
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])

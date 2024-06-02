@@ -87,19 +87,21 @@
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
           <div class="row"> 
+            <div class="col-sm-12">{{status}}</div>
             <div class="col-sm-12">
               <h2 class="fw-bold text-center">Iniciar Apresentação de Arquivo PPTX</h2>
             </div>
           </div>
 
-          <form action="abrir_pptx" method="POST" enctype="multipart/form-data">
+          <form action="abrir_pptx" method="POST" enctype="multipart/form-data" id="formPrincipal">
           <div class="row">
             <div class="col-sm-6">
               <label for="formFile" class="form-label">Selecionar Arquivo do PowerPoint:</label>
               <input class="form-control" type="file" id="file" name="file" accept=".pptx" required>
             </div>
             <div class="col-sm-6 d-flex align-items-end">
-              <input type="submit" class="btn btn-primary" value="Carregar PPTX">
+              <button class="btn btn-primary" id="btn_enviar_form">Carregar PPTX</button>
+              <!-- <input type="submit" class="btn btn-primary" value="Carregar PPTX" id="btn_enviar_form"> -->
             </div>
           </div>
           </form>
@@ -117,6 +119,12 @@
   <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
   
   <script>
+
+    $("#btn_enviar_form").on('click', function() {
+      $(this).attr('disabled', '');
+      $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Carregando...');
+      $("#formPrincipal").submit();
+    });
 
     $('#txt_filtro').on('keyup', function (e) {
       var value = $(this).val().toLowerCase();
@@ -144,10 +152,6 @@
     $("#preview_wallpaper").append('<br><button class="btn btn-primary" id="btn_confirmar_alteracao">Confirmar Alteração</button>');
 
     
-  });
-
-  $("#preview_wallpaper").on('click', '#btn_confirmar_alteracao', function() {
-    $("#form_principal").submit();
   });
 
   </script>

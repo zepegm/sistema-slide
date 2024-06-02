@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Controlador Principal</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #anterior,
+    #proximo {
+      color: white;
+    }
+
+    #slidePrincipal {
+      width: 640px; /* or whatever width you want. */
+      height: 360px; /* or whatever width you want. */
+      background-image: url("/static/images/SlidesPPTX/{{index}}.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+    }
+
+    #slideProx {
+      width: 426; /* or whatever width you want. */
+      height: 240px; /* or whatever width you want. */
+      background-image: url("/static/images/SlidesPPTX/{{index + 1}}.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+
+      background-color: black;
+      font-weight: bold;
+      font-size: 80px;
+      color: white;
+    }
+
+    .letra {
+      background-color: {{config['fundo']}};
+      background-size: 100% 100%;
+      color:{{config['letra']}};
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: normal; 
+    }
+
+    #card_principal {
+      width: 641px; /* or whatever width you want. */
+    }
+
+    #card_prox {
+      width: 428px; /* or whatever width you want. */
+    }
+
+    .mini-box {
+      height: 140px;
+      font-family: Arial, Helvetica, sans-serif;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+    }
+
+    .big-box {
+      cursor: pointer;
+    }
+
+    .cdx-marker {
+      color:{{config['mark']}};
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
+
+    .arrow {
+      font-size: xx-large;
+      color:black;
+    }
+
+    #loading {
+      background-color: white;
+      height: 100%;
+      left: 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 9999;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      bottom: 0;
+      margin: auto;
+      border: 20px solid #EAF0F6;
+      border-radius: 50%;
+      border-top: 20px solid #FF7A59;
+      width: 200px;
+      height: 200px;
+      animation: spinner 4s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }    
+
+    #pausa_instrumental,
+    #anotacao {
+      font-size: 20px;
+    }
+
+    .coro {
+      color:{{config['mark']}};
+    }
+
+    </style>
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+
+
+    <script>
+      if (window.innerWidth < 1367) {
+        var sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("active");
+      }
+    </script>
+    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="text-center container">
+          <div id="loading"><div class="loader"></div></div>
+          <div class="row">
+            <h1 class="fw-light">Apresentador de Slides</h1>
+              <p class="lead text-muted">Abaixo você vê o slide atual e prévia do próximo.</p>
+              <div class="col-sm-7">
+                <div id="card_principal" class="card shadow-sm">
+                    <div id="slidePrincipal"></div>
+                  <div class="card-body">
+                    <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
+                  </div>
+                </div>        
+              </div>
+            {% if index + 1 < total  %}
+            <div class="col-sm-5">
+              <div id="card_prox" class="card shadow-sm">
+                <div id="slideProx"></div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
+                </div>
+              </div> 
+
+                {% if index == 0 %}
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                {% else %}
+                <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
+                {% endif %}
+
+                <button id="btn_next" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-right"></i></button>
+                <br>
+                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
+                <button id="btn_proxima" class="btn btn-success" disabled><i class="fa-solid fa-forward"></i> Próxima</button>
+            </div> 
+            {% else %}
+            <div class="col-sm-5">
+              <div id="card_prox" class="card shadow-sm">
+                <div id="slideProx" style="background-image: none;">Fim</div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: -</h4>
+                </div>
+              </div> 
+              <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
+              <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+              <br>
+              <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
+              <button id="btn_proxima" class="btn btn-success"><i class="fa-solid fa-forward"></i> Próxima</button>
+            </div>
+            {% endif %}
+
+          </div>
+          <div class="row"><div class="col-sm-12"><hr></div></div>
+
+          <div class="row">
+            {% for n in range(0, total) %}
+              <div class="col-sm-3">
+                {% if n == index %}
+                <div id="box{{n}}" data-index="{{n}}" class="big-box card box-index">
+                {% else %}
+                <div id="box{{n}}" data-index="{{n}}" class="big-box card shadow-sm">
+                {% endif %}
+                  <div class="mini-box" style='background-image: url("/static/images/SlidesPPTX/{{n}}.png");'></div>
+                  <div class="card-body">
+                    <h4 class="card-text text-center" id="proximoSlide">Slide: {{n + 1}}</h4>
+                  </div>
+                </div>
+                <br>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+  
+  <script>
+
+    var index = {{index}};
+    var total = {{total}};
+    var chave = true;
+
+    var socket = io();
+    socket.on('refresh', function(result) {
+        location.reload();
+    });
+
+    window.onload = function() {
+      textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      $("#loading").remove();
+    };
+
+    $(".big-box").on('click', function() {
+      index = parseInt($(this).attr('data-index'));
+
+      changeBox(index);
+
+
+      $("#slidePrincipal").css('background-image', 'url("/static/images/SlidesPPTX/' + index + '.png")');
+      $("#slideAtual").text('Slide Atual: ' + (index + 1))
+
+      if (index + 1 < total) {
+        $("#slideProx").css('background-image', 'url("/static/images/SlidesPPTX/' + (index + 1) + '.png")');
+        $("#proximoSlide").text('Slide Atual: ' + (index + 2))
+        $("#slideProx").empty();
+
+        if (index == 0) {
+          $("#btn_previous").attr('disabled', '');
+        } else {
+          $("#btn_previous").removeAttr('disabled');
+        }
+
+        $("#btn_next").removeAttr('disabled');
+      } else {
+        $("#btn_next").attr('disabled', '');
+        $("#btn_previous").removeAttr('disabled');
+        $("#btn_proxima").removeAttr('disabled');
+        $("#slideProx").css('background-image', 'none');
+        $("#slideProx").text('Fim');
+        $("#proximoSlide").text('Slide Atual: -');
+
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      }      
+
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('updateSlide') }}",
+        contentType: "application/json",
+        data: JSON.stringify(index),
+        dataType: "json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });      
+    });
+
+    function previous() {
+
+      index--;
+
+      changeBox(index);
+
+      $("#slidePrincipal").css('background-image', 'url("/static/images/SlidesPPTX/' + index + '.png")');
+      $("#slideAtual").text('Slide Atual: ' + (index + 1))
+
+      $("#slideProx").css('background-image', 'url("/static/images/SlidesPPTX/' + (index + 1) + '.png")');
+      $("#proximoSlide").text('Slide Atual: ' + (index + 2))
+      $("#slideProx").empty();
+
+      if (index == 0) {
+        $("#btn_previous").attr('disabled', '');
+      }
+
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('updateSlide') }}",
+        contentType: "application/json",
+        data: JSON.stringify(index),
+        dataType: "json",
+        success: function(response) {
+          $("#btn_next").removeAttr('disabled');
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
+    }
+
+    function next() {
+
+      index++;
+
+      changeBox(index);
+
+      $("#slidePrincipal").css('background-image', 'url("/static/images/SlidesPPTX/' + index + '.png")');
+      $("#slideAtual").text('Slide Atual: ' + (index + 1))
+
+      if (index + 1 < total) {
+        $("#slideProx").css('background-image', 'url("/static/images/SlidesPPTX/' + (index + 1) + '.png")');
+        $("#proximoSlide").text('Slide Atual: ' + (index + 2))
+      } else {
+        $("#btn_next").attr('disabled', '');
+        $("#btn_proxima").removeAttr('disabled');
+        $("#slideProx").css('background-image', 'none');
+        $("#slideProx").text('Fim');
+        $("#proximoSlide").text('Slide Atual: -');
+
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      }
+
+
+
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('updateSlide') }}",
+        contentType: "application/json",
+        data: JSON.stringify(index),
+        dataType: "json",
+        success: function(response) {
+          console.log(response);
+          $("#btn_previous").removeAttr('disabled');
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
+    }
+
+    function changeBox(index) {
+      $(".card").removeClass('box-index');
+      $(".card").addClass('shadow-sm')
+      $("#box" + index).addClass('box-index');
+      $("#box" + index).removeClass('shadow-sm');
+    }
+
+    function encerrar() {
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('encerrar_apresentacao') }}",
+        contentType: "application/json",
+        data: JSON.stringify(1),
+        dataType: "json",
+        success: function(response) {
+          if (response) {
+            location.reload();
+          }
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });      
+    }
+
+    $("#btn_next").on('click', function() {
+      next();
+    });
+
+    $("#btn_previous").on('click', function() {
+      previous();
+    });    
+
+    $("#btn_encerrar").on('click', function() {
+      encerrar();
+    });
+
+    document.onkeydown = checkKey;
+
+    function checkKey(e) {
+
+        e = e || window.event;
+
+        if (e.keyCode == '27') {
+            e.preventDefault();
+            encerrar();
+        }
+        else if (e.keyCode == '37'  || e.keyCode == '33') {
+            e.preventDefault();
+            if (index > 0) {
+              previous();
+            }
+        }
+        else if (e.keyCode == '39' || e.keyCode == '34') {
+            e.preventDefault();
+            if (index + 1 < total) {
+              next();
+            } else {
+              proxima_PRS();
+            }
+        }           
+    }
+
+    $("#btn_proxima").on('click', function() {
+      proxima_PRS();
+    });
+
+    function proxima_PRS() {
+      if (chave) {
+
+        chave = false;
+
+        $.ajax({
+          type: "POST",
+          url: "{{ url_for('proxima_prs') }}",
+          contentType: "application/json",
+          data: JSON.stringify(1),
+          dataType: "json",
+          success: function(response) {
+            if (response) {
+              location.reload();
+            }
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });
+      }       
+    }
+
+  </script>
+      
+  </body>
+</html>
