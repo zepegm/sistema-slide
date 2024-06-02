@@ -20,15 +20,20 @@ def ppt_to_png(presentation_path, slides_folder):
             # pegando texto pra transformar em legenda
             texto = ''
 
-            if slide.Shapes(1).HasTextFrame:
-                texto = slide.Shapes(1).TextFrame.TextRange.Text
+            try:
 
-                if texto == '':
-                    if slide.Shapes(2).HasTextFrame:
-                        texto = slide.Shapes(2).TextFrame.TextRange.Text
+                if slide.Shapes(1).HasTextFrame:
+                    texto = slide.Shapes(1).TextFrame.TextRange.Text
 
-            elif slide.Shapes(2).HasTextFrame:
-                texto = slide.Shapes(2).TextFrame.TextRange.Text
+                    if texto == '':
+                        if slide.Shapes(2).HasTextFrame:
+                            texto = slide.Shapes(2).TextFrame.TextRange.Text
+
+                elif slide.Shapes(2).HasTextFrame:
+                    texto = slide.Shapes(2).TextFrame.TextRange.Text
+                    
+            except:
+                text = ''
 
                 
             texto = texto.replace(chr(11), ' ').replace(chr(13), '<br>').replace('  ', ' ')
