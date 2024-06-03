@@ -329,7 +329,7 @@ def insert_log(atividade, tipo, id, cap):
         cur = con.cursor()
 
         # antes de inserir, limpar dados antigos do log
-        cur.execute("DELETE FROM log WHERE atividade > 4 AND date(data_hora) < date('now', '-6 month')")
+        cur.execute("DELETE FROM log WHERE date(data_hora) < date('now', '-6 month')")
 
         cur.execute(sql)
         con.commit()

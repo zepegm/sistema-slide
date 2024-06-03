@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Registro de Log</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='datatable/datatables.min.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      #wallpaper_selecionado {
+        /*position: absolute;*/
+        border: solid 3px black;
+
+        display: block;
+        width: 50vw;
+        max-width: 177.78vh;
+        /* 16/9 = 1.778 */
+        height: 28.12vw;
+        /* height:width ratio = 9/16 = .5625  */
+        max-height: 100vh;
+
+        background-image: url("{{atual}}");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        margin: auto;
+      }
+
+      #file {
+        border: solid;
+        border-color: rgb(0, 0, 0, 0.3);
+      }
+
+      #lista_geral a.toggled { display: none; }
+
+      #preview {
+        width: 25vw;
+        max-width: 177.78vh;
+        /* 16/9 = 1.778 */
+        height: 14.06vw;
+        /* height:width ratio = 9/16 = .5625  */
+        max-height: 100vh;
+        border: 1px solid black;
+
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row"> 
+            <div class="col-sm-12">
+              <h2 class="fw-bold text-center">Registro de Log</h2>
+            </div>
+          </div>
+
+          <div class="row">
+            <table class="table" id="tabela_principal">
+              <thead>
+                <tr>
+                  <th>Data/Hora:</th>
+                  <th>Evento</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in log %}
+                <tr>
+                  <td data-order="{{item['order']}}">{{item['data']}}</td>
+                  <td>{{item['atividade']}} <b>{{item['alvo']}}</b></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+  
+  <script>
+
+    let dataTable = new DataTable("#tabela_principal", {
+            lengthMenu: [
+                [10, 50, 100, 200, 500],
+                [10, 50, 100, 200, 500],
+            ], 
+            "autoWidth": false,
+            "oLanguage": {
+                "sSearch": "Pesquisar:",
+            },
+            "language": {
+                "lengthMenu": "Exibir _MENU_ itens por página",
+                "zeroRecords": "Nada encontrado - Desculpe",
+                "info": "Exibindo _START_ até _END_ de um total de _TOTAL_ registro(s)",
+                "infoEmpty": "Sem registros",
+                "infoFiltered": "(filtrado de um total de _MAX_ registro(s))",
+                "paginate": {
+                    "previous": "Anterior",
+                    "next": "Próximo"
+                }
+            }                    
+        });  
+
+  </script>
+      
+  </body>
+</html>

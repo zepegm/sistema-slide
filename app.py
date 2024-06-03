@@ -1453,6 +1453,28 @@ def abrir_pptx():
 
     return render_template('abrir_pptx.jinja', status=status)
 
+@app.route('/log', methods=['GET', 'POST'])
+def log():
+
+    sql = "SELECT " + \
+          r"strftime('%d/%m/%Y às %H:%M',data_hora) as data, " + \
+          "cat_log.descricao as atividade, " + \
+          r'CASE WHEN tipo = 2 THEN musicas.titulo ELSE PRINTF("%03d", harpa.id) || " - " || harpa.descricao END as alvo ' + \
+          "FROM log " + \
+          "INNER JOIN cat_log ON cat_log.id = log.atividade " + \
+          "LEFT JOIN musicas ON musicas.id = log.id_musica LEFT JOIN harpa ON harpa.id = log.id_harpa order by data_hora desc"
+    
+    log = banco.executarConsulta(sql)
+
+    cont = 1
+
+    for item in log:
+        item['order'] = cont
+        cont += 1
+
+    return render_template('log.jinja', log=log)
+
+
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
 def iniciar_apresentacao():
@@ -1593,8 +1615,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run('0.0.0.0',port=120)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run('0.0.0.0',port=120)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
