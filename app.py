@@ -7,7 +7,7 @@ from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
 #from MySQL import db
 from SQLite_DB import db
-from SQLite_DB import insert_log
+from SQLite_DB import insert_log, get_all_hook, get_photos
 from HTML_U import converHTML_to_List
 import locale
 import math
@@ -374,7 +374,9 @@ def abrir_biblia():
                 current_presentation = {'id':info['livro'], 'tipo':'biblia', 'cap':info['cap'], 'versao':info['versao']}
 
                 socketio.emit('refresh', 1)
-                socketio.emit('update_roteiro', 1)                
+                socketio.emit('update_roteiro', 1)
+
+                insert_log(7, 1, info['livro'], info['cap'])
 
                 return jsonify(True)
 
@@ -537,6 +539,7 @@ def addHarpa_versionada():
         if info['destino'] == '-1': # inserir novo hino versionado
             if banco.inserirNovoHinoVersionado(info):
                 status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Nova Versão do Hino de número <strong>' + info['numero'] + '. ' + info['titulo'] + '</strong> criada com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                insert_log(3, 3, info['numero'], 0)
             else:
                 status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
         else: # editar hino versionado
@@ -1179,6 +1182,7 @@ async def gerar_pdf():
 @app.route('/gerar_pdf_harpa', methods=['GET', 'POST'])
 async def gerar_pdf_harpa():
     pdf_path = 'static/docs/harpa.pdf'
+
     info = request.json
 
     browser = await launch(
@@ -1511,10 +1515,11 @@ def log():
     sql = "SELECT " + \
           r"strftime('%d/%m/%Y às %H:%M',data_hora) as data, " + \
           "cat_log.descricao as atividade, " + \
-          r'CASE WHEN tipo = 2 THEN musicas.titulo ELSE PRINTF("%03d", harpa.id) || " - " || harpa.descricao END as alvo ' + \
+          r'CASE WHEN tipo = 1 THEN livro_biblia.descricao || " - Cap. " || capitulo WHEN tipo = 2 THEN musicas.titulo ELSE PRINTF("%03d", harpa.id) || " - " || harpa.descricao END as alvo, ' + \
+          "log.atividade as num_atividdade " + \
           "FROM log " + \
           "INNER JOIN cat_log ON cat_log.id = log.atividade " + \
-          "LEFT JOIN musicas ON musicas.id = log.id_musica LEFT JOIN harpa ON harpa.id = log.id_harpa order by data_hora desc"
+          "LEFT JOIN musicas ON musicas.id = log.id_musica LEFT JOIN harpa ON harpa.id = log.id_harpa LEFT JOIN livro_biblia ON livro_biblia.id = log.livro_biblia order by data_hora desc"
     
     log = banco.executarConsulta(sql)
 
@@ -1525,6 +1530,23 @@ def log():
         cont += 1
 
     return render_template('log.jinja', log=log)
+
+@app.route('/hook', methods=['GET', 'POST'])
+def hook():
+
+    if request.method == 'POST':
+
+        if request.is_json:
+            info = request.json
+
+            fotos = get_photos(info['id'])
+
+            return jsonify(fotos)
+
+
+    acessos = get_all_hook()
+
+    return render_template('hook.jinja', acessos=acessos)
 
 
 
@@ -1543,10 +1565,13 @@ def iniciar_apresentacao():
 
             if info['tipo'] == 'musicas':
                 estado = 1
+                insert_log(5, 2, info['id'], 0)
             elif info['tipo'] == 'harpa':
                 estado = 3
+                insert_log(5, 3, info['id'], 0)
             elif info['tipo'] == 'harpa_versionada':
                 estado = 4
+                insert_log(5, 3, banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % info['id'])[0], 0)
 
             index = 0
 
@@ -1563,10 +1588,13 @@ def iniciar_apresentacao():
 
                     if (item['tipo'] == 'musicas'):
                         estado = 1
+                        insert_log(5, 2, info['id'], 0)
                     elif (item['tipo'] == 'harpa'):
                         estado = 3
+                        insert_log(5, 3, info['id'], 0)
                     elif item['tipo'] == 'harpa_versionada':
                         estado = 4
+                        insert_log(5, 3, banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % info['id'])[0], 0)
 
                     index = 0
 
@@ -1646,7 +1674,13 @@ def adicionar_roteiro():
         if request.is_json:
             info = request.json
             roteiro.append(info)
-            #print(roteiro)
+
+            if info['tipo'] == 'harpa':
+                insert_log(9, 3, info['id'], 0)
+            elif info['tipo'] == 'musicas':
+                insert_log(6, 2, info['id'], 0)
+            elif info['tipo'] == 'harpa_versionada':
+                insert_log(9, 3, banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % info['id'])[0], 0)
 
             socketio.emit('update_roteiro', 1)
             return jsonify(True) 
@@ -1667,8 +1701,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run('0.0.0.0',port=120)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run('0.0.0.0',port=120)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

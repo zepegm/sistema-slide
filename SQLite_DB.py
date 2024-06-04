@@ -1,8 +1,10 @@
 import os
+import io
 import sqlite3
-
+import base64
 
 caminho = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Sistema-slide.db'
+caminho_hook = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\log\\hook.db'
 
 class db:
     def __init__(self):
@@ -337,3 +339,49 @@ def insert_log(atividade, tipo, id, cap):
         return True
     except:
         return False
+    
+
+def get_all_hook():
+    con = sqlite3.connect(caminho_hook)
+    con.row_factory = sqlite3.Row        
+    cur = con.cursor()
+
+    cur.execute(r"""select id,
+    strftime('%d/%m/%Y', data) as dia,
+    strftime('%Hh%M', data) as hora,
+    CASE strftime('%w', data)
+        WHEN '0' THEN 'Domingo'
+        WHEN '1' THEN 'Segunda'
+        WHEN '2' THEN 'Terça'
+        WHEN '3' THEN 'Quarta'
+        WHEN '4' THEN 'Quinta'
+        WHEN '5' THEN 'Sexta'
+        WHEN '6' THEN 'Sábado'
+    END semana
+    from registro_evento order by data desc""")
+
+    result = [dict(row) for row in cur.fetchall()]
+        
+        #for row in cur.fetchall():
+            #print(row)
+
+    con.close()
+
+    return result
+
+def get_photos(id):
+    con = sqlite3.connect(caminho_hook)
+    con.row_factory = sqlite3.Row        
+    cur = con.cursor()
+
+    cur.execute('select foto from fotos where id_registro = %s' % id)
+
+    fotos = []
+        
+    for row in cur.fetchall():
+        image = base64.b64encode(io.BytesIO(row[0]).getvalue())
+        fotos.append(image.decode())
+
+    con.close()
+
+    return fotos

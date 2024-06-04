@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.88.1">
-    <title>Registro de Log</title>
+    <title>Registro de Acesso ao Notebook da Igreja</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
 
@@ -19,7 +19,6 @@
     <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='datatable/datatables.min.css') }}" rel="stylesheet">
 
     <!-- Simular original -->
     <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
@@ -29,6 +28,10 @@
     <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
 
     <style>
+
+    .picture {
+      padding-top: 3vh;
+    }
 
     #loading {
       background-color: white;
@@ -80,40 +83,21 @@
           <div id="loading"><div class="loader"></div></div>
           <div class="row"> 
             <div class="col-sm-12">
-              <h2 class="fw-bold text-center">Registro de Log</h2>
+              <h2 class="fw-bold text-center">Registro de Acessos ao Notebook da Igreja</h2>
             </div>
           </div>
 
           <div class="row">
-            <table class="table" id="tabela_principal">
-              <thead>
-                <tr>
-                  <th>Data/Hora:</th>
-                  <th>Evento</th>
-                  <th>Tipo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in log %}
-                <tr>
-                  {% if item['num_atividdade'] < 5 %}
-                  <td class="text-danger" data-order="{{item['order']}}">{{item['data']}}</td>
-                  <td class="text-danger">{{item['atividade']}} <b>{{item['alvo']}}</b></td>
-                  <td class="text-danger">Modificação no Banco</td>
-                  {% else %}
-                  <td data-order="{{item['order']}}">{{item['data']}}</td>
-                  <td>{{item['atividade']}} <b>{{item['alvo']}}</b></td>                  
-                  <td>Abertura de Mídia</td>
-                  {% endif %}
-                </tr>
+            <div class="col-sm-3">
+              <div id="lista_geral" class="list-group">
+              <p>Datas dos Registros:</p>
+                {% for item in acessos %}
+                  <a href="#" class="list-group-item list-group-item-action" data-id="{{item['id']}}"><b>{{item['dia']}}</b> ({{item['semana']}}) às <b>{{item['hora']}}</b></a>
                 {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="row">
-            <div clas="col-sm-12">
-              <a href="hook">Clique aqui</a> para acessar o registro de acesso e câmera do notebook da Igreja.
+              </div>              
+            </div>
+            <div id="fotos" class="col-sm-9">
+              <div class="row" id="fotos_content"></div>
             </div>
           </div>
 
@@ -128,7 +112,6 @@
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
   <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
   
   <script>
 
@@ -136,27 +119,28 @@
       $("#loading").remove();
     };
 
-    let dataTable = new DataTable("#tabela_principal", {
-            lengthMenu: [
-                [10, 50, 100, 200, 500],
-                [10, 50, 100, 200, 500],
-            ], 
-            "autoWidth": false,
-            "oLanguage": {
-                "sSearch": "Pesquisar:",
-            },
-            "language": {
-                "lengthMenu": "Exibir _MENU_ itens por página",
-                "zeroRecords": "Nada encontrado - Desculpe",
-                "info": "Exibindo _START_ até _END_ de um total de _TOTAL_ registro(s)",
-                "infoEmpty": "Sem registros",
-                "infoFiltered": "(filtrado de um total de _MAX_ registro(s))",
-                "paginate": {
-                    "previous": "Anterior",
-                    "next": "Próximo"
-                }
-            }                    
-        });  
+    $("#lista_geral").on('click', '.list-group-item', function() {
+      $(".list-group-item").removeClass('active');
+      $(this).addClass('active');      
+
+      $("#fotos_content").empty();
+
+      info = {'id':$(this).attr('data-id')};
+
+      $.ajax({
+          type: "POST",
+          url: "hook",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+              for (item in data) {
+                $("#fotos_content").append('<div class="col-sm-6"><img class="picture" src="data:image/png;base64,' + data[item] + '" alt="Avatar" style="width:100%;"></div>');
+              }
+          },
+      }); 
+
+    });
 
   </script>
       
