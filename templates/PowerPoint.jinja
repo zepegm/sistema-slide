@@ -212,14 +212,19 @@
     <script src="{{ url_for('static', filename='js/vara.min.js') }}"></script>
     <script>
 
-        var slides = {{lista_slides}}
+        const slides = {{lista_slides}}
         //console.log(slides);
 
-        var key = 0;
+        var key1 = 0;
+        var key2 = 1;
+
         var key_final = false;
 
-        const slide1 = document.getElementById("slide1");
-        const slide2 = document.getElementById("slide2");
+        /*const slide1 = document.getElementById("slide1");
+        const slide2 = document.getElementById("slide2");*/
+
+        const vetor_slides = [document.getElementById("slide1"), document.getElementById("slide2")];
+
         const notas = document.getElementById("notas");
         //const source = document.getElementById("myVideo");
 
@@ -275,13 +280,15 @@
             if (key_final == true) {
                 location.reload();
             } else {
-                if (key == 0) {
-                    changeComponent(slide1, slide2, index);
-                    key = 1;
+                changeComponent(vetor_slides[key1], vetor_slides[key2], index);
+
+                if (key1 == 0) {
+                    key1 = 1;
+                    key2 = 0;
                 } else {
-                    changeComponent(slide2, slide1, index);
-                    key = 0;
-                } 
+                    key1 = 0;
+                    key2 = 1;
+                }
             }
         });        
      
