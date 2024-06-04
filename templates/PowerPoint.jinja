@@ -6,6 +6,7 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
         <style>
+        
             body {
                 background-color: {{config['fundo']}};
                 overflow: hidden;
@@ -222,7 +223,7 @@
         const notas = document.getElementById("notas");
         //const source = document.getElementById("myVideo");
 
-       textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});        
+       textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});
 
 
         function changeComponent(slide1, slide2, index) {

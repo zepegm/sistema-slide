@@ -19,6 +19,7 @@ import datetime
 import random
 from pyppeteer import launch
 from pptx_file import ppt_to_png
+from utils_crip import encriptar
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -84,7 +85,7 @@ def home():
         tipo = None
         capa = 'static/images/Background.jpeg'
 
-    return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor)
+    return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor, status='')
 
 @app.route('/render_pdf', methods=['GET', 'POST'])
 def render_pdf():
@@ -1000,10 +1001,10 @@ def get_info_musica():
 @app.route('/verificarSenha', methods=['GET', 'POST'])
 def verificarSenha():
     if request.method == "POST":
-        senha = request.form.getlist('senha')[0]
+        senha = encriptar(request.form.getlist('senha')[0])
         destino = request.form.getlist('destino')[0]
         
-        if senha == '120393':
+        if senha == banco.executarConsultaVetor("select valor from config where id = 'senha_adm'")[0]:
             if destino == '0':
                 return render_template('editor_musica.jinja', lista_texto=[], blocks=[], blocks_s=[], titulo='', destino='0')
             else: # ele vai editar e não salvar um novo
@@ -1031,16 +1032,67 @@ def verificarSenha():
 
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 
+@app.route('/verificarSenhaLog', methods=['GET', 'POST'])
+def verificarSenhaLog():
+    if request.method == "POST":
+        senha = encriptar(request.form.getlist('senha')[0])
+
+        if senha == banco.executarConsultaVetor("select valor from config where id = 'senha_adm'")[0]:
+            return redirect('/log')
+        else:
+            status = status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha Incorreta!</strong> A senha está incorreta, não será possível acessar a página do log.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+            number = None
+            nome_autor = None
+
+            if estado == 1:
+                titulo = banco.executarConsulta('select titulo from %s where id = %s' % (current_presentation['tipo'], current_presentation['id']))[0]['titulo']
+
+                tipo = 'Música'
+
+                ls_capa = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
+                
+                if (len(ls_capa) > 0):
+                    capa = 'static/images/capas/' + ls_capa[0]['filename']
+                else:
+                    capa = 'static/images/Background.jpeg'    
+            
+            elif estado == 2:
+                titulo = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % current_presentation['id'])[0] + ' ' + current_presentation['cap'] + ':' + str(index + 1)
+                tipo = 'Bíblia'
+                capa = 'static/images/Biblia.jpg'
+            elif estado == 3:
+                titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % current_presentation['id'])[0]
+                number = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
+                nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % current_presentation['id'])[0]
+                tipo = 'Harpa'
+                capa = 'static/images/Harpa.jpg'
+            elif estado == 4:
+                id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]
+                titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id_harpa)[0]
+                number = 'HINO %s' % '{0:03}'.format(int(id_harpa))
+                #print(number)
+                nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id_harpa)[0]
+                tipo = 'Harpa'
+                capa = 'static/images/Harpa.jpg'
+            elif estado == 5: # apresentação PowerPoint
+                titulo = current_presentation['titulo']
+                tipo = 'Apresentação PowerPoint'
+                capa = 'static/images/SlidesPPTX/0.png'
+            else:
+                titulo = None
+                tipo = None
+                capa = 'static/images/Background.jpeg'
+
+            return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor, status=status)
 
 @app.route('/verificarSenhaHarpa', methods=['GET', 'POST'])
 def verificarSenhaHarpa():
     if request.method == "POST":
-        senha = request.form.getlist('senha')[0]
+        senha = encriptar(request.form.getlist('senha')[0])
         destino = request.form.getlist('destino')[0]
 
-        print(destino)
-        
-        if senha == '120393':
+        if senha == banco.executarConsultaVetor("select valor from config where id = 'senha_adm'")[0]:
 
             autores = banco.executarConsulta('select id, abreviacao from autor_harpa order by abreviacao')
 

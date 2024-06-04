@@ -38,7 +38,7 @@
         user-select: none;
       }
 
-      .close {
+      .close_list {
         cursor: pointer;
         position: absolute;
         top: 50%;
@@ -47,7 +47,7 @@
         transform: translate(0%, -50%);
       }
       
-      *.close:hover {color: red; font-weight: bold;}
+      *.close_list:hover {color: red; font-weight: bold;}
 
       @media (min-width: 768px) {
         .bd-placeholder-img-lg {
@@ -118,6 +118,11 @@
       height: 40px;      
     }
 
+    #txt_senha {
+      border: solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }      
+
     </style>
     
   </head>
@@ -134,9 +139,35 @@
         {% include 'menu_lateral.html' %}
       {% endblock %}
 
+      <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Confirmar Identidade de Administrador</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>              
+            </div>
+            <form action="verificarSenhaLog" method="post">
+              <div class="modal-body">
+                <label for="txt_senha" class="form-label">Digite a senha do Administrador para prosseguir:</label>
+                <input type="password" name="senha" class="form-control" id="txt_senha" placeholder="Digite a senha">
+                <input type="hidden" name="destino" id="destino" value="0">
+                <input type="hidden" name="id_versao" id="id_versao" value="0">
+              </div>
+              <div class="modal-footer">
+                <input type="submit" class="btn btn-primary" value="Confirmar">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
       <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
+          <div id="status" class="col-sm-12">{{status}}</div>
           <main class="form-signin">
             <div class="text-center"><img class="mb-4" src="{{ url_for('static', filename='images/Logo Colorido.png') }}" alt="" width="200" height="250"></div>
             <h1 class="h3 mb-3 fw-normal text-center"><a style="font-weight: bold;">Slide Master Index II</a><br>Roteiro de slides</h1>
@@ -151,7 +182,7 @@
                   {% else %}
                   <label><input class="form-check-input me-1" type="checkbox" name="checkEL" value="{{ slide['id'] }}">{{slide['titulo']}} <strong>({{slide['tipo_show']}})</strong></label>
                   {% endif %}
-                  <span class="close">x</span>
+                  <span class="close_list">x</span>
                 </li>
                 {% endfor %}
             </ul>
@@ -169,6 +200,8 @@
             <p class="text fw-bold">A lista do Roteiro está vazia!</p>
             <p class="text"><a href="/abrir_musica">Clique aqui</a> para abrir uma <b>Música.</b></p>
             <p class="text"><a href="/abrir_biblia">Clique aqui</a> para abrir a <b>Bíblia.</b></p>
+            <p class="text"><a href="/abrir_harpa">Clique aqui</a> para abrir um hino da <b>Harpa.</b></p>
+            <p class="text"><a href="javascript:open_modal_confirm();">Clique aqui</a> para consultar o <b>Log.</b></p>
             {% endif %}
             <hr>
             {% if estado == 0 %}
@@ -203,6 +236,10 @@
   <script>
   
   key = 0;
+
+  function open_modal_confirm() {
+    $("#modalConfirm").modal('show');
+  }
 
   {% if estado == 3 or estado == 4 %}
   textFit($("#lb_titulo"), {alignVert: true, multiLine: false, minFontSize: 20, maxFontSize: 230});
@@ -267,7 +304,7 @@
     });  
   }
 
-  $(".close").on('click', function() {
+  $(".close_list").on('click', function() {
     $(this).parent().remove();
     recriarRoteiro();
   });
