@@ -6,7 +6,7 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
         <style>
-        
+
             body {
                 background-color: {{config['fundo']}};
                 overflow: hidden;
@@ -231,6 +231,7 @@
             slide1.classList.add("out");
 
             slide2.classList.remove("out");
+            slide2.classList.remove("first-in");
             slide2.classList.add('in');
             
             if (index == 0) {
