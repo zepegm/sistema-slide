@@ -72,7 +72,6 @@ def home():
         id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]
         titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id_harpa)[0]
         number = 'HINO %s' % '{0:03}'.format(int(id_harpa))
-        #print(number)
         nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id_harpa)[0]
         tipo = 'Harpa'
         capa = 'static/images/Harpa.jpg'
@@ -169,7 +168,6 @@ def render_pdf():
 @app.route('/render_pdf_harpa', methods=['GET', 'POST'])
 def render_pdf_harpa():
     tipo = int(request.args.get('tipo'))
-    print(type(tipo))
 
     now = datetime.date.today()
 
@@ -482,7 +480,6 @@ def slide():
 @app.route('/updateSlide', methods=['GET', 'POST'])
 def updateSlide():
     if request.method == 'POST':
-        #print('got a post request!')
 
         if request.is_json: # application/json
             # handle your ajax request here!
@@ -500,7 +497,6 @@ def updateSlide():
 @app.route('/updateBiblia', methods=['GET', 'POST'])
 def updateBiblia():            
     if request.method == 'POST':
-        #print('got a post request!')
 
         if request.is_json: # application/json
             # handle your ajax request here!
@@ -520,7 +516,6 @@ def updateBiblia():
 @app.route('/changeBackground', methods=['GET', 'POST'])
 def changeBackground():
     if request.method == 'POST':
-        #print('got a post request!')
 
         if request.is_json: # application/json
             # handle your ajax request here!
@@ -534,7 +529,6 @@ def changeBackground():
 def addHarpa_versionada():
     if request.method == 'POST':   
         info = json.loads(request.form.getlist('json_send')[0]) 
-        print(info)
         
         if info['destino'] == '-1': # inserir novo hino versionado
             if banco.inserirNovoHinoVersionado(info):
@@ -557,7 +551,6 @@ def addHarpa():
     if request.method == 'POST':   
         info = json.loads(request.form.getlist('json_send')[0]) 
         
-        print(info)
         # inserir harpa
         if banco.insertOrUpdate({'id':info['numero'], 'descricao':"'" + info['titulo'] + "'", 'autor':info['autor']}, 'id', 'harpa'):
             if banco.inserirNovoHino(info):
@@ -585,7 +578,7 @@ def addMusica():
         else:
             result = banco.alterarMusica(info)
             ls_capa = banco.executarConsulta('select filename from capas where id_musica = %s' % result['id'])
-            #print(ls_capa)
+
             if (len(ls_capa) > 0):
                 capa = 'images/capas/' + ls_capa[0]['filename']
 
@@ -626,8 +619,6 @@ def subtitle():
 
         if (index + 1) > len(lista):
             index = len(lista) - 1  
-
-        print(lista[index])
 
         if len(lista[index]) > 199:
             tamanho = 30
@@ -712,7 +703,7 @@ def edit_harpa_versionada():
 
         if 'json_back' in request.form:
             info = json.loads(request.form.getlist('json_back')[0])
-            print(info)
+
             titulo = info['listaGeral']['titulo']
             titulo_versao = info['listaGeral']['titulo_versao']
             desc_versao = info['listaGeral']['desc_versao']
@@ -756,7 +747,7 @@ def edit_harpa():
 
         if 'json_back' in request.form:
             info = json.loads(request.form.getlist('json_back')[0])
-            print(info)
+
             titulo = info['listaGeral']['titulo']
             number = info['listaGeral']['numero']
             autor = info['listaGeral']['autor']
@@ -782,7 +773,7 @@ def edit_harpa():
 def enviarDadosNovaVersaoHino():
     if request.method == "POST":
         info = json.loads(request.form.getlist('json_data_send')[0])
-        #print(info)
+
         cat_slides = banco.executarConsulta('select * from categoria_slide')
         cat_slides_list = []
 
@@ -953,7 +944,6 @@ def get_info_harpa():
             autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id['id'])[0]
             versoes = banco.executarConsulta('select id, titulo_versao, desc_versao from harpa_versionada where id_harpa = %s' % id['id'])
 
-            #print(letras)
 
             return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor, 'versoes':versoes})
         
@@ -1074,7 +1064,6 @@ def verificarSenhaLog():
                 id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]
                 titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id_harpa)[0]
                 number = 'HINO %s' % '{0:03}'.format(int(id_harpa))
-                #print(number)
                 nome_autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id_harpa)[0]
                 tipo = 'Harpa'
                 capa = 'static/images/Harpa.jpg'
@@ -1240,14 +1229,12 @@ def pesquisarBiblia():
                 lista_palavras = pesquisa_original.split(' ')
                 for tb in tabelas:
                     txt_aux = converHTML_to_List(texto[tb])
-                    #print(txt_aux)
                     texto_final = ''
 
                     for element in txt_aux:
                         if len(element['text']) > 0:
                             for txt in element['text']:
                                 aux = txt
-                                print(aux)
                                 for palavra in lista_palavras:
                                     if len(palavra) > 1:
                                         compiled = re.compile(re.escape(palavra), re.IGNORECASE)
@@ -1298,7 +1285,6 @@ def pesquisarLetraHarpa():
                         for element in texto:
                             if len(element['text']) > 0:
                                 aux = element['text'][0]
-                                #print(aux)
                                 for palavra in lista_palavras:
                                     if len(palavra) > 2:
                                         compiled = re.compile(re.escape(palavra), re.IGNORECASE)
@@ -1359,7 +1345,6 @@ def pesquisarLetra():
                         for element in texto:
                             if len(element['text']) > 0:
                                 aux = element['text'][0]
-                                #print(aux)
                                 for palavra in lista_palavras:
                                     if len(palavra) > 2:
                                         compiled = re.compile(re.escape(palavra), re.IGNORECASE)
@@ -1461,8 +1446,6 @@ def wallpaper():
     onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     atual = '/static/images/Wallpaper/' + banco.executarConsultaVetor("select valor from config where id='wallpaper'")[0]
 
-    #print(atual)
-
     return render_template('wallpaper.jinja', lista=onlyfiles, atual=atual)
 
 
@@ -1503,9 +1486,6 @@ def abrir_pptx():
 
         # iniciar comando para exportar os slides
         #result = prs.convertToListJPG()
-        #print(result)
-
-
 
     return render_template('abrir_pptx.jinja', status=status)
 
@@ -1588,10 +1568,10 @@ def iniciar_apresentacao():
 
                     if (item['tipo'] == 'musicas'):
                         estado = 1
-                        insert_log(5, 2, info['id'], 0)
+                        insert_log(5, 2, current_presentation['id'], 0)
                     elif (item['tipo'] == 'harpa'):
                         estado = 3
-                        insert_log(5, 3, info['id'], 0)
+                        insert_log(5, 3, current_presentation['id'], 0)
                     elif item['tipo'] == 'harpa_versionada':
                         estado = 4
                         insert_log(5, 3, banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % info['id'])[0], 0)
@@ -1701,8 +1681,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0',port=120)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run('0.0.0.0',port=120)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
