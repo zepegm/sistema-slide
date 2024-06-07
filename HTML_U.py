@@ -1,5 +1,12 @@
 from bs4 import BeautifulSoup
 
+
+def converHTML_to_PlainText(string):
+    soup = BeautifulSoup(string, 'lxml')
+    tag = soup.body
+
+    return tag.get_text()
+
 def converHTML_to_List(string):
     soup = BeautifulSoup(string, 'lxml')
     tag = soup.body.p

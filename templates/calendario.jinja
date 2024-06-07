@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Cadastro de Calendário</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+
+    #editorseg {
+      color:black;
+    }
+
+    .table>tbody>tr>td, 
+    .table>tbody>tr>th, 
+    .table>tfoot>tr>td, 
+    .table>tfoot>tr>th, 
+    .table>thead>tr>td, 
+    .table>thead>tr>th {
+          vertical-align: middle;
+    }
+
+    .black {
+      color: black;
+    }
+
+    .text-editor {
+      width: 500px;
+      background-color: white;
+    }
+
+    .ce-paragraph {
+        border-bottom: solid;
+    }
+
+    .picture {
+      padding-top: 3vh;
+    }
+
+    .table-aux {
+      border: solid black 3px;
+    }
+
+    #loading {
+      background-color: white;
+      height: 100%;
+      left: 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 9999;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      bottom: 0;
+      margin: auto;
+      border: 20px solid #EAF0F6;
+      border-radius: 50%;
+      border-top: 20px solid #FF7A59;
+      width: 200px;
+      height: 200px;
+      animation: spinner 4s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }  
+
+    #col_calendario_semanal {
+      border-right: solid 1px black;
+    }
+
+    .justify {
+      text-align: justify;
+    }
+
+    /*.dia_calendario_semanal {
+      padding-bottom: 20px;
+    }*/
+
+    /*.codex-editor__loader { height: 38px !important; }
+    .codex-editor__redactor { height: 38px !important; }*/
+
+    </style>
+  </head>
+
+  <body>
+
+    <div class="modal fade" id="modal_cadastro_semanal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cadastro de Eventos Semanais</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <thead>
+                <tr class="table-warning">
+                  <th>Dia</th>
+                  <th>Tipo</th>
+                  <th>Detalhes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in semana %}
+                <tr>
+                  <th>{{item}}</th>
+                  <td>
+                    <select class="form-select" id="cb{{item[:3]|lower}}">
+                      <option value="0">Todos os dias</option>
+                      <option value="1">Dividido Mensalmente</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div id="editor{{item[:3]|lower}}"></div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn_confirmar">Confirmar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div> 
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div id="loading"><div class="loader"></div></div>
+          <div class="row"> 
+            <div class="col-sm-12">{{status}}</div>
+            <div class="col-sm-12">
+              <h2 class="fw-bold text-center display-5">Calendário da Igreja</h2>
+            </div>
+            <div class="col-sm-12"><hr></div>
+            <div class="col-sm-6">
+              <button class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro_semanal">Cadastro de Eventos Semanais Persistentes</button>
+            </div>
+            <div class="col-sm-12"><hr></div>
+            <div class="col-sm-6" id="col_calendario_semanal">
+              <h4 class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4>
+              {% for item in calendario_semanal %}
+              {% if item['eventos']|length > 0 %}
+              <div class="dia_calendario_semanal">
+                <h5><span class="text-dark fw-bold">{{item['dia']}} (</span><span class="fw-bold text-primary">{{item['desc']}}</span><span class="fw-bold text-dark">)</span></h5>
+                <ul>
+                {% for evento in item['eventos']%}
+                  <li class="text-dark justify"><h5><input {{evento['checkbox']}} class="form-check-input me-1" type="checkbox" value="" aria-label="...">&nbsp;{{evento['texto']}}</h5></li>
+                {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+      </div>
+		</div>
+
+    <form id="form_calendario_semanal" action="/calendario" method="POST">
+      <input type="hidden" name="calendario_semanal" id="calendario_semanal">
+    </form>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/marker.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/underline.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/numeracao.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editor-red.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editorjs.umd.js') }}"></script>  
+  
+  <script>
+
+    semana = {{semana}};
+    bloco_semanal = {{blocks_sem}};
+    console.log(bloco_semanal[3])
+    editores = [];
+
+    window.onload = function() {
+      $("#loading").remove();
+
+      $(".codex-editor__redactor").css('padding-bottom', '0px');
+    };
+
+    for (dia in semana) {
+
+      editores.push(new EditorJS({
+        /**
+        * Id of Element that should contain Editor instance
+        */
+        holder: 'editor' + semana[dia].toLowerCase().substring(0, 3),
+
+        inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+        tools: {
+          // ...
+          underline: Underline,
+          red: {
+            class: Red
+          }        
+        },
+        data: {
+          blocks: bloco_semanal[dia]['paragrafos']
+        }
+      }));
+    }
+
+    $("#btn_confirmar").on('click', function() {
+      // primeiro vou percorrer todos os editor e e coletar cada texto para compor um dicionário onde estará tudo
+      calendario = [];
+
+      for (item in editores) {
+        modo =  $("#cb" + semana[item].toLowerCase().substring(0, 3)).val(); // pegar o modo
+
+        pegarDados(editores[item], item, modo, calendario);
+
+        }
+
+    });
+
+    function pegarDados(editor, item, modo, calendario) {
+        editor.save()
+        .then( data => {
+          text_slide = data['blocks'];
+          //console.log(text_slide);
+          
+          for (i = 0; i < text_slide.length; i++) {
+            
+            if (modo == 0) {
+              calendario.push({'text':text_slide[i]['data']['text'], 'mensal':0, 'semana':item});
+            } else {
+              calendario.push({'text':text_slide[i]['data']['text'], 'mensal':i + 1, 'semana':item});
+            }
+            
+          }
+
+          if (item == editores.length - 1) {
+            $("#calendario_semanal").val(JSON.stringify(calendario));
+            $("#form_calendario_semanal").submit();
+          }
+
+        }).catch((error) => {
+          console.error('Saving error', error);
+          //return {'text':'-', 'mensal':0, 'semana':item}
+        });
+    }
+
+  </script>
+      
+  </body>
+</html>

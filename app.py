@@ -7,7 +7,7 @@ from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
 #from MySQL import db
 from SQLite_DB import db
-from SQLite_DB import insert_log, get_all_hook, get_photos
+from SQLite_DB import insert_log, get_all_hook, get_photos, inserir_calendario_semanal, executarConsultaCalendario
 from HTML_U import converHTML_to_List
 import locale
 import math
@@ -407,6 +407,54 @@ def abrir_harpa():
 @app.route('/calendar', methods=['GET', 'POST'])
 def calendar():
     return redirect('/slide')
+
+
+@app.route('/calendario', methods=['GET', 'POST'])
+def calendario():
+
+    status = ''
+
+    if request.method == 'POST':
+        if 'calendario_semanal' in request.form:
+            
+            calendario = json.loads(request.form.getlist('calendario_semanal')[0]) 
+            
+            if inserir_calendario_semanal(calendario):
+                status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Calendário Semanal alterado!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro fatal!</strong> Falha ao tentar inserir dados no banco.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+    semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+    
+    
+    # Obtém a data atual
+    data_atual = datetime.datetime.now()
+
+    # Calcula a segunda-feira anterior
+    segunda_feira_anterior = data_atual - datetime.timedelta(days=data_atual.weekday())
+    
+    # montar calendário da semana
+    calendario_semanal = []
+    blocks_sem = []
+
+    for i in range(0, 7):
+        dia = segunda_feira_anterior + datetime.timedelta(days=i)
+        posicao_mensal = (dia.day - 1) // 7 + 1
+        
+        sql = 'SELECT texto, case when ativo = 1 then "checked" else "" end as checkbox FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) ORDER BY plain_text' % (i, posicao_mensal)
+        lista = executarConsultaCalendario(sql)
+
+        calendario_semanal.append({'dia':dia.strftime('%d'), 'desc':semana[i], 'eventos':lista, 'mes':dia.strftime('%m'), 'ano':dia.strftime('%Y')})
+
+        aux = [] # montar bloco para edição
+        new_list = executarConsultaCalendario('select texto, dia_mensal from calendario_semanal where dia_semana = %s order by dia_semana, dia_mensal, plain_text' % i)
+        for item in new_list:
+            aux.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+        blocks_sem.append({'paragrafos':aux, 'dia_mensal':aux[0]['dia_mensal']})
+
+
+    return render_template('calendario.jinja', semana=semana, status=status, calendario_semanal=calendario_semanal, blocks_sem=blocks_sem)
 
 
 
@@ -1681,8 +1729,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run('0.0.0.0',port=120)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run('0.0.0.0',port=120)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

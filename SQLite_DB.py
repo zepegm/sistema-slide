@@ -2,9 +2,11 @@ import os
 import io
 import sqlite3
 import base64
+from HTML_U import converHTML_to_PlainText
 
 caminho = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Sistema-slide.db'
 caminho_hook = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\log\\hook.db'
+caminho_calendario = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Calendario.db'
 
 class db:
     def __init__(self):
@@ -385,3 +387,40 @@ def get_photos(id):
     con.close()
 
     return fotos
+
+def inserir_calendario_semanal(lista): 
+    con = sqlite3.connect(caminho_calendario)
+    cur = con.cursor()
+    cur.execute("DELETE FROM calendario_semanal") # limpar tabela
+
+    try:
+        cont = 1
+        for item in lista:
+            cur.execute("INSERT INTO calendario_semanal VALUES(%s, %s, %s, '%s', '%s', 1)" % (cont, item['semana'], item['mensal'], item['text'], converHTML_to_PlainText(item['text'])))
+            cont += 1
+
+        con.commit()
+        con.close()
+        return True
+    
+    except Exception as error:
+        print("An exception occurred:", error) # An exception occurred: division by zero
+        return False
+
+
+def executarConsultaCalendario(sql):
+    con = sqlite3.connect(caminho_calendario)
+    con.row_factory = sqlite3.Row        
+    cur = con.cursor()
+
+    cur.execute(sql)
+
+    result = [dict(row) for row in cur.fetchall()]
+    
+    #for row in cur.fetchall():
+        #print(row)
+
+    con.close()
+
+    return result
+
