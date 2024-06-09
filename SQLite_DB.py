@@ -238,7 +238,6 @@ class db:
 
             for item in lista:
                 sql = "UPDATE config SET valor = %s WHERE id = %s" % (item['valor'], item['id'])
-                print(sql)
                 cur.execute(sql)
 
             con.commit()
@@ -266,8 +265,6 @@ class db:
                     update += item + "=" + dados[item] + ", "
 
             sql = "INSERT INTO " + tabela + " (" + keys[:-2] + ") VALUES(" + data[:-2] + ") ON CONFLICT(" + id_name + ") DO UPDATE SET " + update[:-2]
-
-            print(sql)
 
             cur.execute(sql)
 
