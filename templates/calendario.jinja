@@ -55,6 +55,11 @@
         border-bottom: solid;
     }
 
+    .input_geral {
+      border: 1px solid;
+      border-color: rgb(0, 0, 0, 0.3);
+    }
+
     .picture {
       padding-top: 3vh;
     }
@@ -100,6 +105,11 @@
       text-align: justify;
     }
 
+    .disabled {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+
     /*.dia_calendario_semanal {
       padding-bottom: 20px;
     }*/
@@ -137,7 +147,11 @@
                   <td>
                     <select class="form-select" id="cb{{item[:3]|lower}}">
                       <option value="0">Todos os dias</option>
+                      {% if blocks_sem[loop.index - 1]['modo'] == 1 %}
+                      <option value="1" selected>Dividido Mensalmente</option>
+                      {% else %}
                       <option value="1">Dividido Mensalmente</option>
+                      {% endif %}
                     </select>
                   </td>
                   <td>
@@ -156,6 +170,69 @@
         </div>
       </div>
     </div> 
+
+    <div class="modal fade" id="modal_cadastro_mensal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cadastro de Eventos Mensais - <b>{{calendario_semanal[6]['ano']}}</b></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-sm-3 mb-3">
+                <select class="form-select" id="cb_mes">
+                  {% for mes in meses %}
+                    {% if mes['atual'] %}
+                    <option value="{{mes['valor']}}" selected>{{mes['desc']}}</option>
+                    {% else %}
+                    <option value="{{mes['valor']}}">{{mes['desc']}} de {{calendario_semanal[6]['ano']}}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-9"><button class="btn btn-primary" id="btn_add_row"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="col-sm-12">
+                <table class="table table-hover">
+                  <thead>
+                    <tr class="table-warning">
+                      <th>Dias</th>
+                      <th>Tipo</th>
+                      <th>Editor</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody_mes">
+                    <tr id="table_row_1">
+                      <td>
+                        <div class="input-group mb-3">
+                          <span class="input-group-text" id="basic-addon1">De:</span>
+                          <input type="number" class="form-control input_geral" id="dia_de_1" placeholder="00" aria-label="Username" aria-describedby="basic-addon1">
+                          <span class="input-group-text" id="basic-addon1">Até:</span>
+                          <input type="number" class="form-control input_geral" id="dia_ate_1" placeholder="00" aria-label="Username" aria-describedby="basic-addon1">
+                        </div>                        
+                      </td>
+                      <td>
+                        <select class="form-select" id="tipo_mes_1">
+                          <option value="0">Todos os dias</option>
+                          <option value="1">Festa de Departamentos</option>
+                        </select>
+                      </td>
+                      <td><div id="editor_evento_mensal_1"></div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn_confirmar">Confirmar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>     
     
     {% block menu_superior %}
       {% include 'menu_superior.html' %}
@@ -180,6 +257,9 @@
             <div class="col-sm-6">
               <button class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro_semanal">Cadastro de Eventos Semanais Persistentes</button>
             </div>
+            <div class="col-sm-6">
+              <button class="btn btn-success" data-toggle="modal" data-target="#modal_cadastro_mensal">Cadastro de Eventos Mensais</button>
+            </div>            
             <div class="col-sm-12"><hr></div>
             <div class="col-sm-6" id="col_calendario_semanal">
               <h4 class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4>
@@ -189,7 +269,7 @@
                 <h5><span class="text-dark fw-bold">{{item['dia']}} (</span><span class="fw-bold text-primary">{{item['desc']}}</span><span class="fw-bold text-dark">)</span></h5>
                 <ul>
                 {% for evento in item['eventos']%}
-                  <li class="text-dark justify"><h5><input {{evento['checkbox']}} class="form-check-input me-1" type="checkbox" value="" aria-label="...">&nbsp;{{evento['texto']}}</h5></li>
+                  <li class="text-dark justify"><h5 class="{{evento['disabled']}}"><input {{evento['checkbox']}} class="form-check-input me-1 evento_semanal" type="checkbox" value="{{evento['id']}}" aria-label="...">&nbsp;{{evento['texto']}}</h5></li>
                 {% endfor %}
                 </ul>
               </div>
@@ -225,12 +305,34 @@
     bloco_semanal = {{blocks_sem}};
     console.log(bloco_semanal[3])
     editores = [];
+    editores_mes = []
+    var next_row = 2;
 
     window.onload = function() {
       $("#loading").remove();
 
       $(".codex-editor__redactor").css('padding-bottom', '0px');
-    };
+    };    
+
+    editores_mes.push(new EditorJS({
+        /**
+        * Id of Element that should contain Editor instance
+        */
+        holder: 'editor_evento_mensal_1',
+
+        inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+        tools: {
+          // ...
+          underline: Underline,
+          red: {
+            class: Red
+          }        
+        },
+        data: {
+          blocks: []
+        }      
+    }));
 
     for (dia in semana) {
 
@@ -250,7 +352,7 @@
           }        
         },
         data: {
-          blocks: bloco_semanal[dia]['paragrafos']
+          blocks: []
         }
       }));
     }
@@ -294,6 +396,30 @@
           //return {'text':'-', 'mensal':0, 'semana':item}
         });
     }
+
+    $(".evento_semanal").on('change', function() {
+        evento = $(this).val();
+        
+        if ($(this).is(":checked")) {
+          $(this).parent().removeClass('disabled');
+          info = {'id_evento':evento, 'valor':1, 'tipo':0};
+        } else {
+          $(this).parent().addClass('disabled');
+          info = {'id_evento':evento, 'valor':0, 'tipo':0};
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "calendario",
+            contentType: "application/json",
+            data: JSON.stringify(info),
+            dataType: "json",
+            success: function(data) {
+              console.log(data)
+            },
+        });        
+
+    });
 
   </script>
       

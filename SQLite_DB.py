@@ -421,3 +421,18 @@ def executarConsultaCalendario(sql):
 
     return result
 
+
+def alterarEventoAtivo(valor, id):
+    con = sqlite3.connect(caminho_calendario)
+    cur = con.cursor()
+    
+    try:
+        cur.execute('UPDATE calendario_semanal SET ativo = %s WHERE id = %s' % (valor, id))
+
+        con.commit()
+        con.close()
+        return True
+    
+    except Exception as error:
+        print("An exception occurred:", error) # An exception occurred: division by zero
+        return False    
