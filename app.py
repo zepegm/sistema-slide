@@ -457,6 +457,11 @@ def calendario():
     return render_template('calendario.jinja', semana=semana, status=status, calendario_semanal=calendario_semanal, blocks_sem=blocks_sem)
 
 
+@app.route('/licoesebd', methods=['GET', 'POST'])
+def licoesebd():
+
+    return render_template('ebd.jinja')
+
 
 @app.route('/slide', methods=['GET', 'POST'])
 def slide():
