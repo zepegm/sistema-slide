@@ -109,6 +109,7 @@
       opacity: 0.5;
       text-decoration: line-through;
     }
+  
 
     /*.dia_calendario_semanal {
       padding-bottom: 20px;
@@ -116,6 +117,8 @@
 
     /*.codex-editor__loader { height: 38px !important; }
     .codex-editor__redactor { height: 38px !important; }*/
+
+    .codex-editor__redactor { padding-bottom:0px !important }
 
     </style>
   </head>
@@ -188,7 +191,7 @@
                     {% if mes['atual'] %}
                     <option value="{{mes['valor']}}" selected>{{mes['desc']}}</option>
                     {% else %}
-                    <option value="{{mes['valor']}}">{{mes['desc']}} de {{calendario_semanal[6]['ano']}}</option>
+                    <option value="{{mes['valor']}}">{{mes['desc']}}</option>
                     {% endif %}
                   {% endfor %}
                 </select>
@@ -198,36 +201,45 @@
                 <table class="table table-hover">
                   <thead>
                     <tr class="table-warning">
-                      <th>Dias</th>
-                      <th>Tipo</th>
-                      <th>Editor</th>
+                      <th>Período</th>
+                      <th>Descrição</th>
                     </tr>
                   </thead>
                   <tbody id="tbody_mes">
+                    {% if blocks_mem|length > 0 %}
+                      {% for item in blocks_mem %}
+                      <tr id="table_row_{{loop.index}}">
+                        <td>
+                          <div class="input-group mb-3">
+                            <span class="input-group-text">De:</span>
+                            <input type="date" class="form-control input_geral data_de" id="dia_de_{{loop.index}}" data-id="{{loop.index}}" min="{{mes_atual}}" max="{{ultimo_dia}}" value="{{item['inicio']}}">
+                            <span class="input-group-text">Até:</span>
+                            <input type="date" class="form-control input_geral" id="dia_ate_{{loop.index}}" min="{{item['inicio']}}" max="{{ultimo_dia}}" value="{{item['fim']}}">
+                          </div>                        
+                        </td>                      
+                        <td><div id="editor_evento_mensal_{{loop.index}}"></div></td>
+                      </tr>
+                      {% endfor %}
+                    {% else %}
                     <tr id="table_row_1">
                       <td>
                         <div class="input-group mb-3">
-                          <span class="input-group-text" id="basic-addon1">De:</span>
-                          <input type="number" class="form-control input_geral" id="dia_de_1" placeholder="00" aria-label="Username" aria-describedby="basic-addon1">
-                          <span class="input-group-text" id="basic-addon1">Até:</span>
-                          <input type="number" class="form-control input_geral" id="dia_ate_1" placeholder="00" aria-label="Username" aria-describedby="basic-addon1">
+                          <span class="input-group-text">De:</span>
+                          <input type="date" class="form-control input_geral data_de" id="dia_de_1" data-id="1" min="{{mes_atual}}" max="{{ultimo_dia}}" value="{{mes_atual}}">
+                          <span class="input-group-text">Até:</span>
+                          <input type="date" class="form-control input_geral" id="dia_ate_1" min="{{mes_atual}}" max="{{ultimo_dia}}" value="{{mes_atual}}">
                         </div>                        
-                      </td>
-                      <td>
-                        <select class="form-select" id="tipo_mes_1">
-                          <option value="0">Todos os dias</option>
-                          <option value="1">Festa de Departamentos</option>
-                        </select>
                       </td>
                       <td><div id="editor_evento_mensal_1"></div></td>
                     </tr>
+                    {% endif %}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btn_confirmar">Confirmar</button>
+            <button type="button" class="btn btn-primary" id="btn_confirmar_mensal">Confirmar</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
           </div>
         </div>
@@ -262,7 +274,15 @@
             </div>            
             <div class="col-sm-12"><hr></div>
             <div class="col-sm-6" id="col_calendario_semanal">
-              <h4 class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4>
+              <!-- <h4 class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4> -->
+              <div class="input-group mb-3">
+                <span class="input-group-text">Calendário Semanal - </span>
+                <select class="form-select">
+                  {% for item in semanas_disponiveis %}
+                    <option><span class="text-danger">{{item['inicio']}}</span></option>
+                  {% endfor %}
+                </select>
+              </div>
               {% for item in calendario_semanal %}
               {% if item['eventos']|length > 0 %}
               <div class="dia_calendario_semanal">
@@ -276,6 +296,19 @@
               {% endif %}
               {% endfor %}
             </div>
+            <div class="col-sm-6" id="col_calendario_mensal">
+              <h4 class="black fw-bold text-center">Calendário Mensal de <span class="text-danger">{{mes_atual_desc}} de {{calendario_semanal[6]['ano']}}</span></h4>
+              {% for item in calendario_mensal %}
+              <div class="dia_calendario_mensal">
+                <h5>{{item['descricao']}}</h5>
+                <ul>
+                {% for evento in item['eventos']%}
+                  <li class="text-dark justify"><h5>{{evento}}</h5></li>
+                {% endfor %}
+                </ul>
+              </div>
+              {% endfor %}
+            </div>
           </div>
         </section>
       </div>
@@ -284,6 +317,10 @@
     <form id="form_calendario_semanal" action="/calendario" method="POST">
       <input type="hidden" name="calendario_semanal" id="calendario_semanal">
     </form>
+
+    <form id="form_calendario_mensal" action="/calendario" method="POST">
+      <input type="hidden" name="calendario_mensal" id="calendario_mensal">
+    </form>    
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
@@ -303,36 +340,66 @@
 
     semana = {{semana}};
     bloco_semanal = {{blocks_sem}};
-    console.log(bloco_semanal[3])
+    bloco_mensal = {{blocks_mem}};
+    console.log(bloco_mensal)
     editores = [];
     editores_mes = []
     var next_row = 2;
 
     window.onload = function() {
       $("#loading").remove();
-
-      $(".codex-editor__redactor").css('padding-bottom', '0px');
     };    
 
-    editores_mes.push(new EditorJS({
-        /**
-        * Id of Element that should contain Editor instance
-        */
-        holder: 'editor_evento_mensal_1',
+    if (bloco_mensal.length > 0) {
+      for (item in bloco_mensal) {
 
-        inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+        index = parseInt(item) + 1;
 
-        tools: {
-          // ...
-          underline: Underline,
-          red: {
-            class: Red
-          }        
-        },
-        data: {
-          blocks: []
-        }      
-    }));
+        editores_mes.push(new EditorJS({
+            /**
+            * Id of Element that should contain Editor instance
+            */
+            holder: 'editor_evento_mensal_' + index,
+
+            inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+            tools: {
+              // ...
+              underline: Underline,
+              red: {
+                class: Red
+              }        
+            },
+            data: {
+              blocks: bloco_mensal[item]['paragrafos']
+            }      
+        }));
+
+      }
+    } else {
+      editores_mes.push(new EditorJS({
+          /**
+          * Id of Element that should contain Editor instance
+          */
+          holder: 'editor_evento_mensal_1',
+
+          inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+          tools: {
+            // ...
+            underline: Underline,
+            red: {
+              class: Red
+            }        
+          },
+          data: {
+            blocks: []
+          }      
+      }));
+    }
+
+
+
 
     for (dia in semana) {
 
@@ -352,7 +419,7 @@
           }        
         },
         data: {
-          blocks: []
+          blocks: bloco_semanal[dia]['paragrafos']
         }
       }));
     }
@@ -368,6 +435,28 @@
 
         }
 
+    });
+
+    $("#btn_confirmar_mensal").on('click', function() {
+      // montar lista completa com todos os dados
+
+      lista_final = [];
+
+      $("#tbody_mes tr").each(function(index) {
+        //console.log( index + ": " + $( this ).text() );
+
+        id = $(this).find('.data_de').attr('data-id');
+        data_inicial = $("#dia_de_" + id).val();
+        data_final = $("#dia_ate_" + id).val();
+
+        $(this).find('.ce-paragraph').each(function(index) {
+          lista_final.push({'data_inicial':data_inicial, 'data_final':data_final, 'texto':$(this).html()});
+        });
+        
+      });
+
+      $("#calendario_mensal").val(JSON.stringify(lista_final));
+      $("#form_calendario_mensal").submit();
     });
 
     function pegarDados(editor, item, modo, calendario) {
@@ -419,6 +508,51 @@
             },
         });        
 
+    });
+
+    $("#tbody_mes").on('change', '.data_de', function() {
+      id = $(this).attr('data-id');
+
+      $("#dia_ate_" + id).val($(this).val());
+      $("#dia_ate_" + id).attr('min', $(this).val());
+    });
+
+    $("#btn_add_row").on('click', function() {
+      $("#tbody_mes").append('<tr id="table_row_' + next_row + '"></tr>');
+
+      data = '<td>' + 
+                '<div class="input-group mb-3">' + 
+                  '<span class="input-group-text">De:</span>' + 
+                  '<input type="date" class="form-control input_geral data_de" id="dia_de_' + next_row + '" data-id="' + next_row + '" min="{{mes_atual}}" max="{{ultimo_dia}}" value="{{mes_atual}}">' + 
+                  '<span class="input-group-text">Até:</span>' + 
+                  '<input type="date" class="form-control input_geral" id="dia_ate_' + next_row + '" min="{{mes_atual}}" max="{{ultimo_dia}}" value="{{mes_atual}}">' + 
+                '</div>' + 
+              '</td>';
+
+      $("#table_row_" + next_row).append(data);
+      $("#table_row_" + next_row).append('<td><div id="editor_evento_mensal_' + next_row + '"></div></td>');
+      
+      editores_mes.push(new EditorJS({
+          /**
+          * Id of Element that should contain Editor instance
+          */
+          holder: 'editor_evento_mensal_' + next_row,
+
+          inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+          tools: {
+            // ...
+            underline: Underline,
+            red: {
+              class: Red
+            }        
+          },
+          data: {
+            blocks: []
+          }      
+      }));
+
+      next_row++;
     });
 
   </script>

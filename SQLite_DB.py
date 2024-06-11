@@ -403,6 +403,24 @@ def inserir_calendario_semanal(lista):
     except Exception as error:
         print("An exception occurred:", error) # An exception occurred: division by zero
         return False
+    
+def inserir_calendario_mensal(lista, mes):
+    con = sqlite3.connect(caminho_calendario)
+    cur = con.cursor()
+
+    try:
+        cur.execute("DELETE FROM `calendario_mensal` WHERE strftime('%m', inicio) = '%s'" % mes)
+        
+        for item in lista:
+            cur.execute("INSERT INTO calendario_mensal(inicio, fim, texto, plain_text, ativo) VALUES('%s', '%s', '%s', '%s', 1)" % (item['data_inicial'], item['data_final'], item['texto'], converHTML_to_PlainText(item['texto'])))
+
+        con.commit()
+        con.close()
+        return True
+
+    except Exception as error:
+        print("An exception occurred:", error) # An exception occurred: division by zero
+        return False        
 
 
 def executarConsultaCalendario(sql):

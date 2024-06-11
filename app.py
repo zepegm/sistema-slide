@@ -7,7 +7,7 @@ from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
 #from MySQL import db
 from SQLite_DB import db
-from SQLite_DB import insert_log, get_all_hook, get_photos, inserir_calendario_semanal, executarConsultaCalendario, alterarEventoAtivo
+from SQLite_DB import insert_log, get_all_hook, get_photos, inserir_calendario_semanal, executarConsultaCalendario, alterarEventoAtivo, inserir_calendario_mensal
 from HTML_U import converHTML_to_List
 import locale
 import math
@@ -21,6 +21,7 @@ import calendar
 from pyppeteer import launch
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
+from utilitarios import pegarListaSemanas
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -420,6 +421,17 @@ def calendario():
             else:
                 status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro fatal!</strong> Falha ao tentar inserir dados no banco.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
+        elif 'calendario_mensal' in request.form:
+
+            calendario = json.loads(request.form.getlist('calendario_mensal')[0]) 
+
+            mes = calendario[0]['data_inicial'][5:7]
+
+            if inserir_calendario_mensal(calendario, mes):
+                status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Calendário Mensal atualizado com sucesso!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro fatal!</strong> Falha ao tentar inserir dados no banco.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
 
         elif request.is_json:
             info = request.json
@@ -429,19 +441,29 @@ def calendario():
 
 
     semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+    semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
     
     # Obtém a data atual
     data_atual = datetime.datetime.now()
+
+    # primeiro dia do mês
+    mes_atual = data_atual.strftime('%Y-%m-') + '01'
+    ultimo_dia = data_atual.replace(day=calendar.monthrange(data_atual.year, data_atual.month)[1])
 
     # Calcula a segunda-feira anterior
     segunda_feira_anterior = data_atual - datetime.timedelta(days=data_atual.weekday())
 
 
     meses = []
+    mes_atual_desc = ''
 
     index = 1
     for mes in list(calendar.month_name)[1:]:
         meses.append({'desc':mes.title(), 'valor':index, 'atual':int(data_atual.strftime("%m")) == index})
+
+        if int(data_atual.strftime("%m")) == index:
+            mes_atual_desc = mes.title()
+
         index += 1
 
     # montar calendário da semana
@@ -452,7 +474,11 @@ def calendario():
         dia = segunda_feira_anterior + datetime.timedelta(days=i)
         posicao_mensal = (dia.day - 1) // 7 + 1
         
-        sql = 'SELECT id, texto, case when ativo = 1 then "checked" else "" end as checkbox, case when ativo = 0 then "disabled" else "" end as disabled FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) ORDER BY plain_text' % (i, posicao_mensal)
+        sql = 'SELECT id, texto, plain_text, case when ativo = 1 then "checked" else "" end as checkbox, case when ativo = 0 then "disabled" else "" end as disabled FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) ' % (i, posicao_mensal)
+        sql += 'UNION ALL '
+        sql += "select id, texto, plain_text, 'checked disabled' as checkbox, '' as disabled from calendario_mensal where '%s' between inicio and fim " % dia.strftime('%Y-%m-%d')
+        sql += 'ORDER BY plain_text'
+        
         lista = executarConsultaCalendario(sql)
 
         calendario_semanal.append({'dia':dia.strftime('%d'), 'desc':semana[i], 'eventos':lista, 'mes':dia.strftime('%m'), 'ano':dia.strftime('%Y')})
@@ -467,8 +493,51 @@ def calendario():
 
         blocks_sem.append({'paragrafos':aux, 'modo':modo})
 
+    # montar calendário mensal
+    calendario_mensal = []
+    blocks_mem = []
 
-    return render_template('calendario.jinja', semana=semana, status=status, calendario_semanal=calendario_semanal, blocks_sem=blocks_sem, meses=meses)
+    mes = data_atual.strftime('%m')
+
+    ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + r"' ORDER BY inicio, plain_text")
+    dia_aux = ''
+    ls_dias_aux = []
+    paragrafo_aux = []
+
+    # a lista deverá ser percorrida adicionando os eventos do mesmo dia numa lista para que fiquem juntos
+    if len(ls_aux) > 0:
+        dia_aux = {'inicio':ls_aux[0]['inicio'], 'fim':ls_aux[0]['fim'], 'semana':ls_aux[0]['semana'], 'semana_fim':ls_aux[0]['semana_fim']}
+
+    for item in ls_aux:
+        # montar lista para exibição na página inicial
+        if dia_aux['inicio'] == item['inicio']:
+            ls_dias_aux.append(item['texto'])
+            paragrafo_aux.append({'type':'paragraph', 'data':{'text':item['texto']}})
+        else:
+            if dia_aux['inicio'] == dia_aux['fim']:
+                desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+            else:
+                desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
+            
+            calendario_mensal.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
+            blocks_mem.append({'inicio':dia_aux['inicio'], 'fim':dia_aux['fim'], 'paragrafos':paragrafo_aux})
+
+            paragrafo_aux = [{'type':'paragraph', 'data':{'text':item['texto']}}]
+            ls_dias_aux = [item['texto']]
+            dia_aux = {'inicio':item['inicio'], 'fim':item['fim'], 'semana':item['semana'], 'semana_fim':item['semana_fim']}
+
+    if dia_aux['inicio'] == dia_aux['fim']:
+        desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+    else:
+        desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
+
+    calendario_mensal.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
+    blocks_mem.append({'inicio':dia_aux['inicio'], 'fim':dia_aux['fim'], 'paragrafos':paragrafo_aux})
+
+    # pegar as semanas disponíveis
+    semanas_disponiveis = pegarListaSemanas(data_atual.strftime('%Y'), data_atual.strftime("%m"))
+
+    return render_template('calendario.jinja', semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis)
 
 
 @app.route('/licoesebd', methods=['GET', 'POST'])
