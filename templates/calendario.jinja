@@ -274,7 +274,7 @@
             </div>            
             <div class="col-sm-12"><hr></div>
             <div class="col-sm-6" id="col_calendario_semanal">
-              <h4 class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4>
+              <h4 id="head_calendario_semanal" class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4>
               <div class="input-group mb-3">
                 <span class="input-group-text">Calendário Semanal - </span>
                 <select class="form-select" id="cb_semana_view" autocomplete="off">
@@ -349,7 +349,7 @@
     semana = {{semana}};
     bloco_semanal = {{blocks_sem}};
     bloco_mensal = {{blocks_mem}};
-    console.log(bloco_mensal)
+    //console.log(bloco_mensal)
     editores = [];
     editores_mes = []
     var next_row = 2;
@@ -512,7 +512,7 @@
             data: JSON.stringify(info),
             dataType: "json",
             success: function(data) {
-              console.log(data)
+              console.log(data);
             },
         });        
 
@@ -573,7 +573,28 @@
           data: JSON.stringify(info),
           dataType: "json",
           success: function(data) {
-            console.log(data)
+
+            $("#head_calendario_semanal").html('Calendário Semanal - <span class="text-danger">' + data[0]['dia'] + '/' + data[0]['mes'] + '</span> a <span class="text-danger">' + data[data.length - 1]['dia'] + '/' + data[data.length - 1]['mes'] + '/' + data[data.length - 1]['ano']);
+            $(".dia_calendario_semanal").remove();
+
+            for (dia in data) {
+              if (data[dia]['eventos'].length > 0) {
+
+                html = '<div class="dia_calendario_semanal">' +
+                '<h5><span class="text-dark fw-bold">' + data[dia]['dia'] + ' (</span><span class="fw-bold text-primary">' + data[dia]['desc'] + '</span><span class="fw-bold text-dark">)</span></h5>' +
+                '<ul>';
+
+                for (evento in data[dia]['eventos']) {
+                  html += '<li class="text-dark justify"><h5 class="' + data[dia]['eventos'][evento]['disabled'] + '"><input ' + data[dia]['eventos'][evento]['checkbox'] + ' class="form-check-input me-1 evento_semanal" type="checkbox" value="' + data[dia]['eventos'][evento]['id'] + '" aria-label="...">&nbsp;' + data[dia]['eventos'][evento]['texto'] + '</h5></li>';
+                }
+                  
+
+                html += '</ul></div>';
+
+                $("#col_calendario_semanal").append(html);
+
+              }
+            }
           },
       });      
     });
