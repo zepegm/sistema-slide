@@ -274,12 +274,20 @@
             </div>            
             <div class="col-sm-12"><hr></div>
             <div class="col-sm-6" id="col_calendario_semanal">
-              <!-- <h4 class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4> -->
+              <h4 class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4>
               <div class="input-group mb-3">
                 <span class="input-group-text">Calendário Semanal - </span>
-                <select class="form-select">
+                <select class="form-select" id="cb_semana_view" autocomplete="off">
                   {% for item in semanas_disponiveis %}
-                    <option><span class="text-danger">{{item['inicio']}}</span></option>
+                    {% if segunda_dia == item['inicio'] %}
+
+                    <option value="{{calendario_semanal[6]['ano']}}-{{item['inicio'][3:5]}}-{{item['inicio'][:2]}}" selected>{{item['inicio']}} a {{item['fim']}}</option>
+
+                    {% else %}
+
+                    <option value="{{calendario_semanal[6]['ano']}}-{{item['inicio'][3:5]}}-{{item['inicio'][:2]}}">{{item['inicio']}} a {{item['fim']}}</option>
+
+                    {% endif %}
                   {% endfor %}
                 </select>
               </div>
@@ -553,6 +561,21 @@
       }));
 
       next_row++;
+    });
+
+    $("#cb_semana_view").on('change', function() {
+      info = {'tipo':1, 'segunda':$(this).val()};
+
+      $.ajax({
+          type: "POST",
+          url: "calendario",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+            console.log(data)
+          },
+      });      
     });
 
   </script>
