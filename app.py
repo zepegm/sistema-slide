@@ -410,6 +410,8 @@ def abrir_harpa():
 def calendario():
 
     status = ''
+    semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+    semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']    
 
     if request.method == 'POST':
         if 'calendario_semanal' in request.form:
@@ -436,12 +438,39 @@ def calendario():
         elif request.is_json:
             info = request.json
 
-            if info['tipo'] == 0: # evento semanal
+            if info['tipo'] == 0: # alterar atividade de evento semanal
                 return jsonify({'result':alterarEventoAtivo(info['valor'], info['id_evento']), 'valor':info['valor']})
 
+            elif info['tipo'] == 1: # alterar exibição do calendário semanal
 
-    semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
-    semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+                segunda_feira = datetime.datetime.strptime(info['segunda'], '%Y-%m-%d').date()
+                            
+                # montar calendário da semana
+                calendario_semanal = []
+
+                for i in range(0, 7):
+                    dia = segunda_feira + datetime.timedelta(days=i)
+                    posicao_mensal = (dia.day - 1) // 7 + 1
+                    
+                    sql = 'SELECT id, texto, plain_text, case when ativo = 1 then "checked" else "" end as checkbox, case when ativo = 0 then "disabled" else "" end as disabled FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) ' % (i, posicao_mensal)
+                    sql += 'UNION ALL '
+                    sql += "select id, texto, plain_text, 'checked disabled' as checkbox, '' as disabled from calendario_mensal where '%s' between inicio and fim " % dia.strftime('%Y-%m-%d')
+                    sql += 'ORDER BY plain_text'
+                    
+                    lista = executarConsultaCalendario(sql)
+
+                    calendario_semanal.append({'dia':dia.strftime('%d'), 'desc':semana[i], 'eventos':lista, 'mes':dia.strftime('%m'), 'ano':dia.strftime('%Y')})
+
+                    aux = [] # montar bloco para edição
+                    new_list = executarConsultaCalendario('select texto, dia_mensal from calendario_semanal where dia_semana = %s order by dia_semana, dia_mensal, plain_text' % i)
+                    modo = 0
+                    for item in new_list:
+                        aux.append({'type':'paragraph', 'data':{'text':item['texto']}})
+                        if item['dia_mensal'] != 0:
+                            modo = 1
+
+                return jsonify(calendario_semanal)                
+
     
     # Obtém a data atual
     data_atual = datetime.datetime.now()
@@ -537,7 +566,7 @@ def calendario():
     # pegar as semanas disponíveis
     semanas_disponiveis = pegarListaSemanas(data_atual.strftime('%Y'), data_atual.strftime("%m"))
 
-    return render_template('calendario.jinja', semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis)
+    return render_template('calendario.jinja', segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis)
 
 
 @app.route('/licoesebd', methods=['GET', 'POST'])
@@ -1817,8 +1846,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0',port=120)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run('0.0.0.0',port=120)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
