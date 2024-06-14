@@ -409,7 +409,7 @@ def inserir_calendario_mensal(lista, mes):
     cur = con.cursor()
 
     try:
-        cur.execute("DELETE FROM `calendario_mensal` WHERE strftime('%m', inicio) = '%s'" % mes)
+        cur.execute(r"DELETE FROM `calendario_mensal` WHERE strftime('%m', inicio) = '" + mes + "'")
         
         for item in lista:
             cur.execute("INSERT INTO calendario_mensal(inicio, fim, texto, plain_text, ativo) VALUES('%s', '%s', '%s', '%s', 1)" % (item['data_inicial'], item['data_final'], item['texto'], converHTML_to_PlainText(item['texto'])))

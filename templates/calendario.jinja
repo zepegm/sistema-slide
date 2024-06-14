@@ -125,6 +125,81 @@
 
   <body>
 
+    <div class="modal fade" id="modal_festa_departamentos" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cadastro de Eventos da Festa de Departamentos</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="input-group mb-3">
+                  <span class="input-group-text">Congregação:</span>
+                  <select class="form-control input_geral" id="cb_congregacao">
+                    {% for item in congregacoes %}
+                      <option value="{{item['id']}}">{{item['descricao']}}</option>
+                    {% endfor %}
+                  </select>
+                  <span class="input-group-text">De:</span>
+                  <input type="date" class="form-control input_geral" id="inicio_festa_dep">
+                  <span class="input-group-text">Até:</span>
+                  <input type="date" class="form-control input_geral" id="fim_festa_dep">
+                </div>
+              </div>
+              <div class="col-sm-12">
+                
+              </div>
+              <div class="col-sm-12">
+                <div class="input-group mb-3">
+                  <span class="input-group-text">Dia:</span>
+                  <select class="form-control input_geral" id="cb_congregacao">
+                    {% for item in semana %}
+                      <option value="{{loop.index}}">{{item['descricao']}}</option>
+                    {% endfor %}
+                  </select>
+                  <span class="input-group-text">De:</span>
+                  <input type="date" class="form-control input_geral" id="inicio_festa_dep">
+                  <span class="input-group-text">Até:</span>
+                  <input type="date" class="form-control input_geral" id="fim_festa_dep">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn_confirmar_dep" data-dismiss="modal">Confirmar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modal_confirmar_edicao" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Habilitar Modo de Edição</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <label for="txt_senha" class="form-label">Digite a senha do Administrador para prosseguir:</label>
+            <input type="password" name="senha" class="form-control input_geral" id="txt_senha" placeholder="Digite a senha">
+            <input type="hidden" name="destino" id="destino" value="0">
+            <input type="hidden" name="id_versao" id="id_versao" value="0">            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn_confirmar_senha" data-dismiss="modal">Confirmar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade" id="modal_cadastro_semanal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -261,16 +336,16 @@
         <section class="container">
           <div id="loading"><div class="loader"></div></div>
           <div class="row"> 
-            <div class="col-sm-12">{{status}}</div>
+            <div class="col-sm-12" id="status">{{status}}</div>
             <div class="col-sm-12">
               <h2 class="fw-bold text-center display-5">Calendário da Igreja</h2>
             </div>
             <div class="col-sm-12"><hr></div>
-            <div class="col-sm-6">
-              <button class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro_semanal">Cadastro de Eventos Semanais Persistentes</button>
-            </div>
-            <div class="col-sm-6">
-              <button class="btn btn-success" data-toggle="modal" data-target="#modal_cadastro_mensal">Cadastro de Eventos Mensais</button>
+            <div class="col-sm-12">
+              <button id="btn_semanal" class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro_semanal" hidden>Eventos Semanais Persistentes</button>
+              <button id="btn_mensal" class="btn btn-success" data-toggle="modal" data-target="#modal_cadastro_mensal" hidden>Eventos Mensais</button>
+              <button id="btn_dep" class="btn btn-danger" data-toggle="modal" data-target="#modal_festa_departamentos" hidden>Festa de Departamentos</button>
+              <button id="btn_edicao" class="btn btn-secondary" data-toggle="modal" data-target="#modal_confirmar_edicao">Habilitar Modo de Edição</button>
             </div>            
             <div class="col-sm-12"><hr></div>
             <div class="col-sm-6" id="col_calendario_semanal">
@@ -306,6 +381,20 @@
             </div>
             <div class="col-sm-6" id="col_calendario_mensal">
               <h4 class="black fw-bold text-center">Calendário Mensal de <span class="text-danger">{{mes_atual_desc}} de {{calendario_semanal[6]['ano']}}</span></h4>
+
+              <div class="input-group mb-3">
+                <span class="input-group-text">Calendário Mensal - </span>
+                <select class="form-select" id="cb_mes_view">
+                    {% for mes in meses %}
+                      {% if mes['atual'] %}
+                      <option value="{{mes['valor']}}" selected>{{mes['desc']}}</option>
+                      {% else %}
+                      <option value="{{mes['valor']}}">{{mes['desc']}}</option>
+                      {% endif %}
+                    {% endfor %}              
+                </select>
+              </div>
+
               {% for item in calendario_mensal %}
               <div class="dia_calendario_mensal">
                 <h5>{{item['descricao']}}</h5>
@@ -349,10 +438,16 @@
     semana = {{semana}};
     bloco_semanal = {{blocks_sem}};
     bloco_mensal = {{blocks_mem}};
-    //console.log(bloco_mensal)
+    console.log(bloco_mensal)
     editores = [];
     editores_mes = []
-    var next_row = 2;
+
+    if (bloco_mensal.length > 0) {
+      var next_row = bloco_mensal.length + 1;
+    } else {
+      var next_row = 2;
+    }
+    
 
     window.onload = function() {
       $("#loading").remove();
@@ -597,6 +692,133 @@
             }
           },
       });      
+    });
+
+    $("#btn_confirmar_senha").on('click', function() {
+      senha = $('#txt_senha').val();
+      
+      $.ajax({
+          type: "POST",
+          url: "calendario",
+          contentType: "application/json",
+          data: JSON.stringify({'tipo':3, 'senha':senha}),
+          dataType: "json",
+          success: function(data) {
+            if (data) {
+              $("#btn_edicao").attr('hidden', '');
+              $("#btn_semanal").removeAttr('hidden');
+              $("#btn_mensal").removeAttr('hidden');
+              $("#btn_dep").removeAttr('hidden');
+            } else {
+              $("#status").html('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
+          },
+      });       
+    })
+
+    $("#cb_mes").on('change', function() {
+      mes = $(this).val();
+      hoje = '{{hoje}}';
+      ano = hoje.substring(6, 10);
+
+      //console.log(ano);
+      
+      $.ajax({
+          type: "POST",
+          url: "calendario",
+          contentType: "application/json",
+          data: JSON.stringify({'tipo':2, 'mes':mes, 'ano':ano}),
+          dataType: "json",
+          success: function(data) {
+            
+            $("#tbody_mes").empty();
+
+            blocos = data['blocos'];
+
+            if (blocos.length > 0) {
+
+              editores_mes = [];
+
+              for (item in blocos) {
+                id = parseInt(item) + 1;
+                //console.log(blocos[item])
+                
+                $("#tbody_mes").append('<tr id="table_row_' + id + '"></tr>');
+
+                data = '<td>' + 
+                          '<div class="input-group mb-3">' + 
+                            '<span class="input-group-text">De:</span>' + 
+                            '<input type="date" class="form-control input_geral data_de" id="dia_de_' + id + '" data-id="' + id + '" min="' + data['data-min'] + '" max="' + data['data-max'] + '" value="' + blocos[item]['inicio'] + '">' + 
+                            '<span class="input-group-text">Até:</span>' + 
+                            '<input type="date" class="form-control input_geral" id="dia_ate_' + id + '" min="' + data['data-min'] + '" max="' + data['data-max'] + '" value="' + blocos[item]['fim'] + '">' + 
+                          '</div>' + 
+                        '</td>';
+
+              $("#table_row_" + id).append(data);
+              $("#table_row_" + id).append('<td><div id="editor_evento_mensal_' + id + '"></div></td>');
+
+              editores_mes.push(new EditorJS({
+                  /**
+                  * Id of Element that should contain Editor instance
+                  */
+                  holder: 'editor_evento_mensal_' + id,
+
+                  inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+                  tools: {
+                    // ...
+                    underline: Underline,
+                    red: {
+                      class: Red
+                    }        
+                  },
+                  data: {
+                    blocks: blocos[item]['paragrafos']
+                  }      
+              }));               
+
+              }
+            } else {
+              next_row = 2;
+
+              $("#tbody_mes").append('<tr id="table_row_1"></tr>');
+
+              data = '<td>' + 
+                        '<div class="input-group mb-3">' + 
+                          '<span class="input-group-text">De:</span>' + 
+                          '<input type="date" class="form-control input_geral data_de" id="dia_de_1" data-id="1" min="' + data['data-min'] + '" max="' + data['data-max'] + '" value="' + data['data-min'] + '">' + 
+                          '<span class="input-group-text">Até:</span>' + 
+                          '<input type="date" class="form-control input_geral" id="dia_ate_1" min="' + data['data-min'] + '" max="' + data['data-max'] + '" value="' + data['data-min'] + '">' + 
+                        '</div>' + 
+                      '</td>';
+
+              $("#table_row_1").append(data);
+              $("#table_row_1").append('<td><div id="editor_evento_mensal_1"></div></td>');
+
+              editores_mes = [];
+
+              editores_mes.push(new EditorJS({
+                  /**
+                  * Id of Element that should contain Editor instance
+                  */
+                  holder: 'editor_evento_mensal_1',
+
+                  inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+                  tools: {
+                    // ...
+                    underline: Underline,
+                    red: {
+                      class: Red
+                    }        
+                  },
+                  data: {
+                    blocks: []
+                  }      
+              }));              
+            }
+          },
+      });
     });
 
   </script>
