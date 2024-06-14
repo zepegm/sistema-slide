@@ -435,6 +435,11 @@ def calendario():
                 status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro fatal!</strong> Falha ao tentar inserir dados no banco.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
 
+        elif 'festa_dep' in request.form:
+            info = json.loads(request.form.getlist('festa_dep')[0]) 
+
+            print(info)
+
         elif request.is_json:
             info = request.json
 
@@ -620,7 +625,10 @@ def calendario():
     # listar todas as congregações pro cadastro da Festa de Dep.
     congregacoes = executarConsultaCalendario('select * from congregacoes order by descricao')
 
-    return render_template('calendario.jinja', hoje=data_atual.strftime('%d/%m/%Y'), segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis, congregacoes=congregacoes)
+    # listar os nomes dos eventos que ocorrem na Festa de Departamentos
+    eventos = executarConsultaCalendario('select * from eventos order by descricao')
+
+    return render_template('calendario.jinja', hoje=data_atual.strftime('%d/%m/%Y'), segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis, congregacoes=congregacoes, eventos=eventos)
 
 
 @app.route('/licoesebd', methods=['GET', 'POST'])

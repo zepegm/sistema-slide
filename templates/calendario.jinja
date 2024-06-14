@@ -145,32 +145,37 @@
                     {% endfor %}
                   </select>
                   <span class="input-group-text">De:</span>
-                  <input type="date" class="form-control input_geral" id="inicio_festa_dep">
+                  <input type="date" class="form-control input_geral" id="inicio_festa_dep" value="{{mes_atual}}">
                   <span class="input-group-text">Até:</span>
-                  <input type="date" class="form-control input_geral" id="fim_festa_dep">
+                  <input type="date" class="form-control input_geral" id="fim_festa_dep" value="{{mes_atual}}">
                 </div>
               </div>
-              <div class="col-sm-12">
-                
+              <div class="col-sm-12 mb-3">
+                <span class="fw-bold">Lista de Eventos:</span>&nbsp;<button class="btn btn-primary" id="btn_add_row_evento"><i class="fa-solid fa-plus"></i></button>
               </div>
-              <div class="col-sm-12">
-                <div class="input-group mb-3">
+              <div class="col-sm-12" id="painel-evento">
+                <div class="input-group mb-3 row-evento">
                   <span class="input-group-text">Dia:</span>
-                  <select class="form-control input_geral" id="cb_congregacao">
+                  <select class="form-control input_geral cb_dia_evento">
                     {% for item in semana %}
-                      <option value="{{loop.index}}">{{item['descricao']}}</option>
+                      <option value="{{loop.index - 1}}">{{item}}</option>
                     {% endfor %}
                   </select>
-                  <span class="input-group-text">De:</span>
-                  <input type="date" class="form-control input_geral" id="inicio_festa_dep">
-                  <span class="input-group-text">Até:</span>
-                  <input type="date" class="form-control input_geral" id="fim_festa_dep">
+                  <span class="input-group-text">Hora:</span>
+                  <input type="time" class="form-control input_geral txt_hora_evento" value="18:00">
+                  <span class="input-group-text">Evento:</span>
+                  <select class="form-control input_geral cb_evento_opcao" style="width: 50%">
+                    {% for item in eventos %}
+                      <option value="{{item['id']}}">{{item['descricao']}}</option>
+                    {% endfor %}                    
+                  </select>
+                  <button class="btn btn-danger btn-delete-row-evento"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btn_confirmar_dep" data-dismiss="modal">Confirmar</button>
+            <button type="button" class="btn btn-primary" id="btn_confirmar_dep">Confirmar</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
           </div>
         </div>
@@ -419,6 +424,10 @@
       <input type="hidden" name="calendario_mensal" id="calendario_mensal">
     </form>    
 
+    <form id="form_dep" action="/calendario" method="POST">
+      <input type="hidden" name="festa_dep" id="festa_dep">
+    </form>      
+
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
   <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
@@ -438,7 +447,8 @@
     semana = {{semana}};
     bloco_semanal = {{blocks_sem}};
     bloco_mensal = {{blocks_mem}};
-    console.log(bloco_mensal)
+    eventos = {{eventos}};
+    //console.log(bloco_mensal)
     editores = [];
     editores_mes = []
 
@@ -618,6 +628,52 @@
 
       $("#dia_ate_" + id).val($(this).val());
       $("#dia_ate_" + id).attr('min', $(this).val());
+    });
+
+    $("#btn_add_row_evento").on('click', function() {
+      data = '<div class="input-group mb-3 row-evento">' +
+                  '<span class="input-group-text">Dia:</span>' +
+                  '<select class="form-control input_geral cb_dia_evento">';
+                  
+      for (dia in semana) {
+        data += '<option value="' + dia + '">' + semana[dia] + '</option>';
+      }
+
+                      
+      data += '</select><span class="input-group-text">Hora:</span>' +
+              '<input type="time" class="form-control input_geral txt_hora_evento" value="18:00">' +
+              '<span class="input-group-text">Evento:</span>' +
+              '<select class="form-control input_geral cb_evento_opcao" style="width: 50%">';
+      
+      for (item in eventos) {
+        data += '<option value="' + eventos[item]['id'] + '">' + eventos[item]['descricao'] + '</option>';
+      }
+                      
+      data += '</select><button class="btn btn-danger btn-delete-row-evento"><i class="fa-solid fa-trash"></i></button></div>';
+
+      $("#painel-evento").append(data);
+
+
+    });
+
+    $("#painel-evento").on('click', '.btn-delete-row-evento', function() {
+      $(this).parent().remove();
+    });
+
+    $("#btn_confirmar_dep").on('click', function() {
+      lista_final = [];
+
+      $(".row-evento").each(function( index ) {
+        dia = $(this).find('.cb_dia_evento').val();
+        hora = $(this).find('.txt_hora_evento').val();
+        evento = $(this).find('.cb_evento_opcao').val();
+
+        lista_final.push({'dia':dia, 'hora':hora, 'evento':evento});
+      }); 
+
+      info = {'id_cong':$("#cb_congregacao").val(), 'inicio':$("#inicio_festa_dep").val(), 'fim':$("#fim_festa_dep").val(), 'lista_final':lista_final};
+      $("#festa_dep").val(JSON.stringify(info));
+      $("#form_dep").submit();
     });
 
     $("#btn_add_row").on('click', function() {
