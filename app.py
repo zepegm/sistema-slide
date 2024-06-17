@@ -147,6 +147,10 @@ def render_pdf():
                                                'where vinculos_x_musicas.id_vinculo IN (%s) ' % ls[:-1] + \
                                                'group by (titulo) order by titulo')
     
+
+    # ordenar
+    lista_musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
+
     #montar o sumário
     if (len(lista_musicas) > 30):
         page = math.ceil((len(lista_musicas) - 32) / 35) + 4

@@ -266,9 +266,9 @@
             <div id="pag{{item['cont']}}" class="pagina">
                 <div class="paginacao"><a href="#sumario">{{item['pag']}}</a></div>
                 {% if completo == 'true' %}
-                <h3 class="titulo">{{item['cont']}}. {{item['titulo']}}</h3>
+                <p class="titulo">{{item['cont']}}. {{item['titulo']}}</p>
                 {% else %}
-                <h3 class="titulo">{{item['titulo']}}</h3>
+                <p class="titulo">{{item['titulo']}}</p>
                 {% endif %}
                 <div class="content">
                     {% for par in item['letras'] %}
