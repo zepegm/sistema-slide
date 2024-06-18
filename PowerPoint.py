@@ -1,9 +1,13 @@
 from pptx import Presentation
+import win32com.client
+import pythoncom
+import os
 
 def getListText(dir):
     file = open(f'{dir}', 'rb')
 
     prs = Presentation(file)
+
 
     text_runs = []
 
@@ -69,6 +73,21 @@ def getListText(dir):
 
         text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text, 'anotacao':anotacao})
 
+
+    # antes de retornar o texto extrair a capa do slide e converter em jpg
+    
+    path_img = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\SlidesPPTX'
+    image_path = os.path.join(path_img, "temp_capa.jpg")
+    
+    try:
+        Application = win32com.client.Dispatch("PowerPoint.Application", pythoncom.CoInitialize())
+        # Open the presentation without making it visible
+        pptx = Application.Presentations.Open(FileName=dir, WithWindow=False)    
+    
+        pptx.Slides[0].Export(image_path, "JPG")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
     return text_runs
 
