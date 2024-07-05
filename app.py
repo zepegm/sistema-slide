@@ -1685,11 +1685,13 @@ def abrir_pptx():
 
     global current_presentation
     global estado
-    global index    
+    global index
 
     status = ''
 
     if request.method == 'POST':
+
+        socketio.emit('wait_pptx', 1)
 
         file = request.files.get('file')
 
@@ -1759,6 +1761,10 @@ def hook():
 
     return render_template('hook.jinja', acessos=acessos)
 
+@app.route('/wait_pptx', methods=['GET', 'POST'])
+def wait_pptx():
+
+    return render_template('wait_pptx_animation.jinja')
 
 
 @app.route('/iniciar_apresentacao', methods=['GET', 'POST'])
@@ -1912,8 +1918,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0',port=120)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run('0.0.0.0',port=120)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

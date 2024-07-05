@@ -300,6 +300,10 @@
             window.location.replace("/slide_pix");
         });
 
+        socket.on('wait_pptx', function(result) {
+            window.location.replace("/wait_pptx");
+        });        
+
         socket.on('change_wallpaper', function(result) {
             if (slides.length == 0) {
                 location.reload();

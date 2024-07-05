@@ -403,6 +403,10 @@
             window.location.replace("/slide_pix");
         });
 
+        socket.on('wait_pptx', function(result) {
+            window.location.replace("/wait_pptx");
+        });
+
         var idealFontSize = 300, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
         fontSize = (screen.width / idealScreenSize) * idealFontSize;
 

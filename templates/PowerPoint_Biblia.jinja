@@ -254,6 +254,10 @@
             window.location.replace("/slide_pix");
         });
 
+        socket.on('wait_pptx', function(result) {
+            window.location.replace("/wait_pptx");
+        });        
+
         socket.on('scroll_biblia', function(direcao) {
 
             console.log('scroll!');
