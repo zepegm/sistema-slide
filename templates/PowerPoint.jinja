@@ -228,7 +228,7 @@
         const notas = document.getElementById("notas");
         //const source = document.getElementById("myVideo");
 
-       textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});
+       textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});
 
 
         function changeComponent(slide1, slide2, index) {
@@ -258,7 +258,7 @@
                 slide2.classList.remove('coro');
                 slide2.classList.add('letra');                    
                 slide2.innerHTML = slides[index - 1]['text-slide'];
-                textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});   
+                textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});   
 
                 if (slides[index -1]['categoria'] == 3 || slides[index -1]['categoria'] == 4) {
                     notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
