@@ -58,7 +58,7 @@ def home():
         if (len(ls_capa) > 0):
             capa = 'static/images/capas/' + ls_capa[0]['filename']
         else:
-            capa = 'static/images/Background.jpeg'    
+            capa = 'static/images/Wallpaper/' + banco.executarConsulta("select valor from config where id = 'wallpaper'")[0]['valor']
     
     elif estado == 2:
         titulo = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % current_presentation['id'])[0] + ' ' + current_presentation['cap'] + ':' + str(index + 1)
@@ -84,7 +84,7 @@ def home():
     else:
         titulo = None
         tipo = None
-        capa = 'static/images/Background.jpeg'
+        capa = 'static/images/Wallpaper/' + banco.executarConsulta("select valor from config where id = 'wallpaper'")[0]['valor']
 
     return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor, status='')
 
