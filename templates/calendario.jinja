@@ -230,11 +230,43 @@
                   <td>
                     <select class="form-select" id="cb{{item[:3]|lower}}">
                       <option value="0">Todos os dias</option>
-                      {% if blocks_sem[loop.index - 1]['modo'] == 1 %}
-                      <option value="1" selected>Dividido Mensalmente</option>
+                      
+                      {% if blocks_sem[loop.index - 1]['modo'] == 6 %}
+                      <option value="6" selected>Dividido Mensalmente</option>
                       {% else %}
-                      <option value="1">Dividido Mensalmente</option>
+                      <option value="6">Dividido Mensalmente</option>
                       {% endif %}
+
+                      {% if blocks_sem[loop.index - 1]['modo'] == 1 %}
+                      <option value="1" selected>1ª Dia do Mês</option>
+                      {% else %}
+                      <option value="1">1ª Dia do Mês</option>
+                      {% endif %}
+
+                      {% if blocks_sem[loop.index - 1]['modo'] == 2 %}
+                      <option value="2" selected>2ª Dia do Mês</option>
+                      {% else %}
+                      <option value="2">2ª Dia do Mês</option>
+                      {% endif %}
+
+                      {% if blocks_sem[loop.index - 1]['modo'] == 3 %}
+                      <option value="3" selected>3ª Dia do Mês</option>
+                      {% else %}
+                      <option value="3">3ª Dia do Mês</option>
+                      {% endif %}
+
+                      {% if blocks_sem[loop.index - 1]['modo'] == 4 %}
+                      <option value="3" selected>4ª Dia do Mês</option>
+                      {% else %}
+                      <option value="3">4ª Dia do Mês</option>
+                      {% endif %}
+
+                      {% if blocks_sem[loop.index - 1]['modo'] == 5 %}
+                      <option value="3" selected>5ª Dia do Mês</option>
+                      {% else %}
+                      <option value="3">5ª Dia do Mês</option>
+                      {% endif %}                         
+
                     </select>
                   </td>
                   <td>
@@ -582,8 +614,10 @@
             
             if (modo == 0) {
               calendario.push({'text':text_slide[i]['data']['text'], 'mensal':0, 'semana':item});
-            } else {
+            } else if(modo == 6) {
               calendario.push({'text':text_slide[i]['data']['text'], 'mensal':i + 1, 'semana':item});
+            } else {
+              calendario.push({'text':text_slide[i]['data']['text'], 'mensal':modo, 'semana':item});
             }
             
           }
