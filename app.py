@@ -572,11 +572,13 @@ def calendario():
 
         aux = [] # montar bloco para edição
         new_list = executarConsultaCalendario('select texto, dia_mensal from calendario_semanal where dia_semana = %s order by dia_semana, dia_mensal, plain_text' % i)
-        modo = 0
+        modo = new_list[0]['dia_mensal']
         for item in new_list:
             aux.append({'type':'paragraph', 'data':{'text':item['texto']}})
-            if item['dia_mensal'] != 0:
-                modo = 1
+            
+            if modo != item['dia_mensal']:
+                modo = 6
+
 
         blocks_sem.append({'paragrafos':aux, 'modo':modo})
 
