@@ -103,6 +103,9 @@
 
     .justify {
       text-align: justify;
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
     }
 
     .disabled {
@@ -145,15 +148,52 @@
                     {% endfor %}
                   </select>
                   <span class="input-group-text">De:</span>
+                  {% if detalhes_evento_primeira_cong['info']|length > 0 %}
+                  <input type="date" class="form-control input_geral" id="inicio_festa_dep" value="{{detalhes_evento_primeira_cong['info'][0]['inicio']}}">
+                  <span class="input-group-text">Até:</span>
+                  <input type="date" class="form-control input_geral" id="fim_festa_dep" value="{{detalhes_evento_primeira_cong['info'][0]['fim']}}">
+                  {% else %}
                   <input type="date" class="form-control input_geral" id="inicio_festa_dep" value="{{mes_atual}}">
                   <span class="input-group-text">Até:</span>
                   <input type="date" class="form-control input_geral" id="fim_festa_dep" value="{{mes_atual}}">
+                  {% endif %}
                 </div>
               </div>
               <div class="col-sm-12 mb-3">
                 <span class="fw-bold">Lista de Eventos:</span>&nbsp;<button class="btn btn-primary" id="btn_add_row_evento"><i class="fa-solid fa-plus"></i></button>
               </div>
               <div class="col-sm-12" id="painel-evento">
+
+                {% if detalhes_evento_primeira_cong['detalhes_cong']|length > 0 %}
+                {% for evt in detalhes_evento_primeira_cong['detalhes_cong'] %}
+                <div class="input-group mb-3 row-evento">
+                  <span class="input-group-text">Dia:</span>
+                  <select class="form-control input_geral cb_dia_evento">
+                    {% for item in semana %}
+                      {% if loop.index - 1 == evt['dia_semana'] %}
+                      <option selected value="{{loop.index - 1}}">{{item}}</option>
+                      {% else %}
+                      <option value="{{loop.index - 1}}">{{item}}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <span class="input-group-text">Hora:</span>
+                  <input type="time" class="form-control input_geral txt_hora_evento" value="{{evt['horario']}}">
+                  <span class="input-group-text">Evento:</span>
+                  <select class="form-control input_geral cb_evento_opcao" style="width: 50%">
+                    {% for item in eventos %}
+                      {% if item['id'] == evt['id_evento'] %}
+                      <option selected value="{{item['id']}}">{{item['descricao']}}</option>
+                      {% else %}
+                      <option value="{{item['id']}}">{{item['descricao']}}</option>
+                      {% endif %}
+                    {% endfor %}                    
+                  </select>
+                  <button class="btn btn-danger btn-delete-row-evento"><i class="fa-solid fa-trash"></i></button>                  
+                </div>
+                {% endfor %}
+                {% else %}
+
                 <div class="input-group mb-3 row-evento">
                   <span class="input-group-text">Dia:</span>
                   <select class="form-control input_geral cb_dia_evento">
@@ -171,6 +211,8 @@
                   </select>
                   <button class="btn btn-danger btn-delete-row-evento"><i class="fa-solid fa-trash"></i></button>
                 </div>
+
+                {% endif %}
               </div>
             </div>
           </div>
@@ -385,6 +427,7 @@
               <button id="btn_mensal" class="btn btn-success" data-toggle="modal" data-target="#modal_cadastro_mensal" hidden>Eventos Mensais</button>
               <button id="btn_dep" class="btn btn-danger" data-toggle="modal" data-target="#modal_festa_departamentos" hidden>Festa de Departamentos</button>
               <button id="btn_edicao" class="btn btn-secondary" data-toggle="modal" data-target="#modal_confirmar_edicao">Habilitar Modo de Edição</button>
+              <button id="btn_iniciar_apresentacao" class="btn btn-primary">Iniciar Apresentação</button>
             </div>            
             <div class="col-sm-12"><hr></div>
             <div class="col-sm-6" id="col_calendario_semanal">
@@ -436,6 +479,9 @@
 
               <div id="content_eventos_mensais">
                 {% for item in calendario_mensal %}
+                {% if item['descricao'][32:51] == 'RESUMO FESTA DE DEP' %}
+                <hr>
+                {% endif %}
                 <div class="dia_calendario_mensal">
                   <h5>{{item['descricao']}}</h5>
                   <ul>
@@ -444,7 +490,11 @@
                   {% endfor %}
                   </ul>
                 </div>
+                {% if item['descricao'][32:51] == 'RESUMO FESTA DE DEP' %}
+                <hr>
+                {% endif %}                   
                 {% endfor %}
+             
               </div>
 
             </div>
@@ -819,6 +869,13 @@
       });       
     })
 
+    $("#inicio_festa_dep").on('change', function() {
+      let new_data = $(this).val();
+      console.log(new_data);
+      $("#fim_festa_dep").val(new_data);
+      $("#fim_festa_dep").attr('min', new_data);
+    });
+
     $("#cb_congregacao").on('change', function() {
 
       let cong = $(this).val();
@@ -832,15 +889,21 @@
           success: function(data) {
             console.log(data);
             $("#painel-evento").empty();
-            if (data.length > 0) {
 
-              for (item in data) {
+            if (data['info'].length > 0) {
+              $("#inicio_festa_dep").val(data['info'][0]['inicio']);
+              $("#fim_festa_dep").val(data['info'][0]['fim']);
+            }
+
+            if (data['detalhes_cong'].length > 0) {
+
+              for (item in data['detalhes_cong']) {
                 let element = '<div class="input-group mb-3 row-evento">' +
                             '<span class="input-group-text">Dia:</span>' +
                             '<select class="form-control input_geral cb_dia_evento">';
 
                 for (dia in semana) {
-                  if (data[item]['dia_semana'] == dia) {
+                  if (data['detalhes_cong'][item]['dia_semana'] == dia) {
                     element += '<option selected value="' + dia + '">' + semana[dia] + '</option>';   
                   } else {
                     element += '<option value="' + dia + '">' + semana[dia] + '</option>';
@@ -848,12 +911,12 @@
                 }  
 
               element += '</select><span class="input-group-text">Hora:</span>' +
-                      '<input type="time" class="form-control input_geral txt_hora_evento" value="' + data[item]['horario'] + '">' +
+                      '<input type="time" class="form-control input_geral txt_hora_evento" value="' + data['detalhes_cong'][item]['horario'] + '">' +
                       '<span class="input-group-text">Evento:</span>' +
                       '<select class="form-control input_geral cb_evento_opcao" style="width: 50%">';  
 
               for (id_evt in eventos) {
-                if (data[item]['id_evento'] == eventos[id_evt]['id']) {
+                if (data['detalhes_cong'][item]['id_evento'] == eventos[id_evt]['id']) {
                   element += '<option selected value="' + eventos[id_evt]['id'] + '">' + eventos[id_evt]['descricao'] + '</option>';
                 } else {
                   element += '<option value="' + eventos[id_evt]['id'] + '">' + eventos[id_evt]['descricao'] + '</option>';
@@ -867,27 +930,27 @@
               }
 
             } else {
-              let data = '<div class="input-group mb-3 row-evento">' +
+              let element = '<div class="input-group mb-3 row-evento">' +
                           '<span class="input-group-text">Dia:</span>' +
                           '<select class="form-control input_geral cb_dia_evento">';
                           
               for (dia in semana) {
-                data += '<option value="' + dia + '">' + semana[dia] + '</option>';
+                element += '<option value="' + dia + '">' + semana[dia] + '</option>';
               }
 
                               
-              data += '</select><span class="input-group-text">Hora:</span>' +
+              element += '</select><span class="input-group-text">Hora:</span>' +
                       '<input type="time" class="form-control input_geral txt_hora_evento" value="18:00">' +
                       '<span class="input-group-text">Evento:</span>' +
                       '<select class="form-control input_geral cb_evento_opcao" style="width: 50%">';
               
               for (item in eventos) {
-                data += '<option value="' + eventos[item]['id'] + '">' + eventos[item]['descricao'] + '</option>';
+                element += '<option value="' + eventos[item]['id'] + '">' + eventos[item]['descricao'] + '</option>';
               }
                               
-              data += '</select><button class="btn btn-danger btn-delete-row-evento"><i class="fa-solid fa-trash"></i></button></div>';
+              element += '</select><button class="btn btn-danger btn-delete-row-evento"><i class="fa-solid fa-trash"></i></button></div>';
 
-              $("#painel-evento").append(data);
+              $("#painel-evento").append(element);
             }
           }      
       });      
@@ -907,7 +970,12 @@
             $("#content_eventos_mensais").empty();
             $("#head_calendario_mensal").text($("#cb_mes_view option:selected").text() + " de {{calendario_semanal[6]['ano']}}");
             for (item in data) {
-              let dia = '<div class="dia_calendario_mensal">';
+              if (data[item]['descricao'].slice(32, 51) == 'RESUMO FESTA DE DEP') {
+                let dia = '<hr><div class="dia_calendario_mensal">';  
+              } else {
+                let dia = '<div class="dia_calendario_mensal">';
+              }
+              
               dia = "<h5>" + data[item]['descricao'] + "</h5>";
               dia += '<ul>';
 
@@ -917,6 +985,9 @@
 
               dia += '</ul>';
               dia += '</div>';
+              if (data[item]['descricao'].slice(32, 51) == 'RESUMO FESTA DE DEP') {
+                dia += '<hr>';  
+              }              
               $("#content_eventos_mensais").append(dia);
             }
           }      

@@ -532,7 +532,14 @@ def calendario():
                     return jsonify(False)
                 
             elif info['tipo'] == 4: # alterar exibição do calendário mensal
-                ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + r"' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio, plain_text")
+                #ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + r"' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio, plain_text")
+
+                big_sql = r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, 'isolado' as tipo FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' "
+                big_sql += "UNION ALL SELECT id_congregacao as id, inicio, fim, "
+                big_sql += "(select '[' || GROUP_CONCAT('{" + '"' + "dia_semana" + '"' + ":' || dia_semana || ', " + '"' + "horario" + '"' + ":" + '"' + "' || horario || '" + '"' + ", " + '"' + "evento" + '"' + ":" + '"' + "' || eventos.descricao_curta || '" + '"' + "}') || ']' as json from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = calendario_festa_dep.id_congregacao order by dia_semana, horario) as text, "
+                big_sql += "strftime('%w', inicio) as semana,  strftime('%w', fim) as semana_fim, 'festa_dep' as tipo from calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio, texto"
+                ls_aux = executarConsultaCalendario(big_sql)
+
                 dia_aux = ''
                 ls_dias_aux = []
                 ls_final = []
@@ -542,6 +549,23 @@ def calendario():
                     dia_aux = {'inicio':ls_aux[0]['inicio'], 'fim':ls_aux[0]['fim'], 'semana':ls_aux[0]['semana'], 'semana_fim':ls_aux[0]['semana_fim']}
 
                 for item in ls_aux:
+                    # fará diferente caso seja uma festa de departamento
+                    if item['tipo'] == 'festa_dep':
+                        cong = executarConsultaCalendario('select descricao from congregacoes where id = %s' % item['id'])[0]['descricao']
+                        descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % cong.upper()
+
+                        eventos = json.loads(item['texto'])
+                        lst_final = []
+                        temp_segunda = datetime.datetime.strptime(item['inicio'], r"%Y-%m-%d").date()
+                        temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
+                        print(temp_segunda)
+                        for evt in eventos:
+                            txt = "<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + evt['dia_semana'], semana[int(evt['dia_semana'])].replace('-feira', ''), evt['horario'], evt['evento'])
+                            lst_final.append(txt)
+
+                        ls_final.append({'descricao':descricao, 'eventos':lst_final})
+                        break
+
                     # montar lista para exibição na página inicial
                     if dia_aux['inicio'] == item['inicio']:
                         ls_dias_aux.append(item['texto'])
@@ -566,11 +590,13 @@ def calendario():
                 
                 return jsonify(ls_final)
             
-            elif info['tipo'] == 5:
+            elif info['tipo'] == 5: # alterar exibição da tela de cadastro dos eventos de departamento
 
                 detalhes_cong = executarConsultaCalendario('SELECT dia_semana, horario, id_evento FROM eventos_festa_dep WHERE id_congregacao = %s ORDER BY dia_semana, horario' % info['cong'])
+                detalhes = executarConsultaCalendario('SELECT inicio, fim FROM calendario_festa_dep WHERE id_congregacao = %s' % info['cong'])
 
-                return jsonify(detalhes_cong)
+
+                return jsonify({'info':detalhes, 'detalhes_cong':detalhes_cong})
 
 
     
@@ -632,7 +658,16 @@ def calendario():
 
     mes = data_atual.strftime('%m')
 
-    ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + r"' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio, plain_text")
+    #ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + r"' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio, plain_text")
+    
+    big_sql = r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, 'isolado' as tipo FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' "
+    big_sql += "UNION ALL SELECT id_congregacao as id, inicio, fim, "
+    big_sql += "(select '[' || GROUP_CONCAT('{" + '"' + "dia_semana" + '"' + ":' || dia_semana || ', " + '"' + "horario" + '"' + ":" + '"' + "' || horario || '" + '"' + ", " + '"' + "evento" + '"' + ":" + '"' + "' || eventos.descricao_curta || '" + '"' + "}') || ']' as json from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = calendario_festa_dep.id_congregacao order by dia_semana, horario) as text, "
+    big_sql += "strftime('%w', inicio) as semana,  strftime('%w', fim) as semana_fim, 'festa_dep' as tipo from calendario_festa_dep WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio, texto"
+    print(big_sql)
+    ls_aux = executarConsultaCalendario(big_sql)
+    print(ls_aux)
+
     dia_aux = ''
     ls_dias_aux = []
     paragrafo_aux = []
@@ -642,6 +677,23 @@ def calendario():
         dia_aux = {'inicio':ls_aux[0]['inicio'], 'fim':ls_aux[0]['fim'], 'semana':ls_aux[0]['semana'], 'semana_fim':ls_aux[0]['semana_fim']}
 
     for item in ls_aux:
+        # fará diferente caso seja uma festa de departamento
+        if item['tipo'] == 'festa_dep':
+            cong = executarConsultaCalendario('select descricao from congregacoes where id = %s' % item['id'])[0]['descricao']
+            descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % cong.upper()
+
+            eventos = json.loads(item['texto'])
+            lst_final = []
+            temp_segunda = datetime.datetime.strptime(item['inicio'], r"%Y-%m-%d").date()
+            temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
+            print(temp_segunda)
+            for evt in eventos:
+                txt = "<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + evt['dia_semana'], semana[int(evt['dia_semana'])].replace('-feira', ''), evt['horario'], evt['evento'])
+                lst_final.append(txt)
+
+            calendario_mensal.append({'descricao':descricao, 'eventos':lst_final})
+            break
+
         # montar lista para exibição na página inicial
         if dia_aux['inicio'] == item['inicio']:
             ls_dias_aux.append(item['texto'])
@@ -678,7 +730,12 @@ def calendario():
     # listar os nomes dos eventos que ocorrem na Festa de Departamentos
     eventos = executarConsultaCalendario('select * from eventos order by descricao')
 
-    return render_template('calendario.jinja', hoje=data_atual.strftime('%d/%m/%Y'), segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis, congregacoes=congregacoes, eventos=eventos)
+    # pegar lista completa do evento do primeiro registro (caso exista)
+    detalhes_evento_primeira_cong = {}
+    detalhes_evento_primeira_cong['info'] = executarConsultaCalendario('SELECT inicio, fim FROM calendario_festa_dep WHERE id_congregacao = %s' % congregacoes[0]['id'])
+    detalhes_evento_primeira_cong['detalhes_cong'] = executarConsultaCalendario('SELECT dia_semana, horario, id_evento FROM eventos_festa_dep WHERE id_congregacao = %s ORDER BY dia_semana, horario' % congregacoes[0]['id'])
+
+    return render_template('calendario.jinja', hoje=data_atual.strftime('%d/%m/%Y'), segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis, congregacoes=congregacoes, eventos=eventos, detalhes_evento_primeira_cong=detalhes_evento_primeira_cong)
 
 
 @app.route('/licoesebd', methods=['GET', 'POST'])
