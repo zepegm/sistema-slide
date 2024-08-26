@@ -7,7 +7,7 @@ from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
 #from MySQL import db
 from SQLite_DB import db
-from SQLite_DB import insert_log, get_all_hook, get_photos, inserir_calendario_semanal, executarConsultaCalendario, alterarEventoAtivo, inserir_calendario_mensal
+from SQLite_DB import insert_log, get_all_hook, get_photos, inserir_calendario_semanal, executarConsultaCalendario, alterarEventoAtivo, inserir_calendario_mensal, inserirFestaDepCalendario
 from HTML_U import converHTML_to_List
 import locale
 import math
@@ -442,7 +442,10 @@ def calendario():
         elif 'festa_dep' in request.form:
             info = json.loads(request.form.getlist('festa_dep')[0]) 
 
-            print(info)
+            if inserirFestaDepCalendario(info):
+                status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Calendário da Festa de Dep. da Congregação atualizado com sucesso!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro fatal!</strong> Falha ao tentar inserir dados no banco.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'                
 
         elif request.is_json:
             info = request.json
@@ -527,6 +530,47 @@ def calendario():
                     return jsonify(True)
                 else:
                     return jsonify(False)
+                
+            elif info['tipo'] == 4: # alterar exibição do calendário mensal
+                ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + r"' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio, plain_text")
+                dia_aux = ''
+                ls_dias_aux = []
+                ls_final = []
+
+                # a lista deverá ser percorrida adicionando os eventos do mesmo dia numa lista para que fiquem juntos
+                if len(ls_aux) > 0:
+                    dia_aux = {'inicio':ls_aux[0]['inicio'], 'fim':ls_aux[0]['fim'], 'semana':ls_aux[0]['semana'], 'semana_fim':ls_aux[0]['semana_fim']}
+
+                for item in ls_aux:
+                    # montar lista para exibição na página inicial
+                    if dia_aux['inicio'] == item['inicio']:
+                        ls_dias_aux.append(item['texto'])
+                    else:
+                        if dia_aux['inicio'] == dia_aux['fim']:
+                            desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+                        else:
+                            desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
+                        
+                        ls_final.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
+
+                        ls_dias_aux = [item['texto']]
+                        dia_aux = {'inicio':item['inicio'], 'fim':item['fim'], 'semana':item['semana'], 'semana_fim':item['semana_fim']}
+
+                if len(ls_aux) > 0:
+                    if dia_aux['inicio'] == dia_aux['fim']:
+                        desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+                    else:
+                        desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
+
+                    ls_final.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
+                
+                return jsonify(ls_final)
+            
+            elif info['tipo'] == 5:
+
+                detalhes_cong = executarConsultaCalendario('SELECT dia_semana, horario, id_evento FROM eventos_festa_dep WHERE id_congregacao = %s ORDER BY dia_semana, horario' % info['cong'])
+
+                return jsonify(detalhes_cong)
 
 
     

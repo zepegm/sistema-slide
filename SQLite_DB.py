@@ -454,3 +454,25 @@ def alterarEventoAtivo(valor, id):
     except Exception as error:
         print("An exception occurred:", error) # An exception occurred: division by zero
         return False    
+
+def inserirFestaDepCalendario(lista):
+    con = sqlite3.connect(caminho_calendario)
+    cur = con.cursor()
+
+    try:
+        # inserir info básica sobre a data da festa na congregação
+        sql = "INSERT INTO calendario_festa_dep (id_congregacao, inicio, fim) VALUES(%s, '%s', '%s') ON CONFLICT(id_congregacao) DO UPDATE SET inicio = '%s', fim = '%s'"  % (lista['id_cong'], lista['inicio'], lista['fim'], lista['inicio'], lista['fim'])
+        cur.execute(sql)
+        
+        cur.execute('DELETE FROM eventos_festa_dep WHERE id_congregacao = %s' % lista['id_cong'])
+
+        for evento in lista['lista_final']:
+            cur.execute("INSERT INTO eventos_festa_dep VALUES(%s, %s, '%s', %s)" % (lista['id_cong'], evento['dia'], evento['hora'], evento['evento']))
+
+        con.commit()
+        con.close()
+        return True
+    except Exception as error:
+        con.close()
+        print("An exception occurred:", error) # An exception occurred: division by zero
+        return False  
