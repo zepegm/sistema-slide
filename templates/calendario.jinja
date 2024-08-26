@@ -624,6 +624,23 @@
       }));
     }
 
+    $("#btn_iniciar_apresentacao").on('click', function() {
+      info = {'id':{{calendario_semanal[6]['ano']}}, 'semana':$("#cb_semana_view").val(), 'mes':$("#cb_mes_view").val(), 'tipo':'calendario'}
+
+      $.ajax({
+          type: "POST",
+          url: "iniciar_apresentacao",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+              if (data) {
+                $("#status").append('<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Projeção do Calendário Iniciada! <a href="/controlador">Clique aqui para abrir o controlador.</a><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+              }
+          },
+      });
+    });
+
     $("#btn_confirmar").on('click', function() {
       // primeiro vou percorrer todos os editor e e coletar cada texto para compor um dicionário onde estará tudo
       calendario = [];

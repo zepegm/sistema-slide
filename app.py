@@ -81,6 +81,10 @@ def home():
         titulo = current_presentation['titulo']
         tipo = 'Apresentação PowerPoint'
         capa = 'static/images/SlidesPPTX/0.png'
+    elif estado == 6: # calendário
+        titulo = 'Calendário Semanal e Mensal'
+        tipo = "Apresentação do Calendário"
+        capa = 'static/images/Calendar.png'
     else:
         titulo = None
         tipo = None
@@ -533,60 +537,33 @@ def calendario():
                 
             elif info['tipo'] == 4: # alterar exibição do calendário mensal
                 #ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + r"' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio, plain_text")
+                eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio")
 
-                big_sql = r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, 'isolado' as tipo FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' "
-                big_sql += "UNION ALL SELECT id_congregacao as id, inicio, fim, "
-                big_sql += "(select '[' || GROUP_CONCAT('{" + '"' + "dia_semana" + '"' + ":' || dia_semana || ', " + '"' + "horario" + '"' + ":" + '"' + "' || horario || '" + '"' + ", " + '"' + "evento" + '"' + ":" + '"' + "' || eventos.descricao_curta || '" + '"' + "}') || ']' as json from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = calendario_festa_dep.id_congregacao order by dia_semana, horario) as text, "
-                big_sql += "strftime('%w', inicio) as semana,  strftime('%w', fim) as semana_fim, 'festa_dep' as tipo from calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio, texto"
-                ls_aux = executarConsultaCalendario(big_sql)
-
-                dia_aux = ''
-                ls_dias_aux = []
                 ls_final = []
 
-                # a lista deverá ser percorrida adicionando os eventos do mesmo dia numa lista para que fiquem juntos
-                if len(ls_aux) > 0:
-                    dia_aux = {'inicio':ls_aux[0]['inicio'], 'fim':ls_aux[0]['fim'], 'semana':ls_aux[0]['semana'], 'semana_fim':ls_aux[0]['semana_fim']}
-
-                for item in ls_aux:
-                    # fará diferente caso seja uma festa de departamento
-                    if item['tipo'] == 'festa_dep':
-                        cong = executarConsultaCalendario('select descricao from congregacoes where id = %s' % item['id'])[0]['descricao']
-                        descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % cong.upper()
-
-                        eventos = json.loads(item['texto'])
-                        lst_final = []
-                        temp_segunda = datetime.datetime.strptime(item['inicio'], r"%Y-%m-%d").date()
-                        temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
-                        print(temp_segunda)
-                        for evt in eventos:
-                            txt = "<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + evt['dia_semana'], semana[int(evt['dia_semana'])].replace('-feira', ''), evt['horario'], evt['evento'])
-                            lst_final.append(txt)
-
-                        ls_final.append({'descricao':descricao, 'eventos':lst_final})
-                        break
-
-                    # montar lista para exibição na página inicial
-                    if dia_aux['inicio'] == item['inicio']:
-                        ls_dias_aux.append(item['texto'])
-                    else:
-                        if dia_aux['inicio'] == dia_aux['fim']:
-                            desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+                for evento in eventos_mensais:
+                    if evento['tipo'] == 'isolado':
+                        if evento['inicio'] == evento['fim']:
+                            desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], semana_sqlite[int(evento['semana'])])
                         else:
-                            desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
-                        
-                        ls_final.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
+                            desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], evento['fim'][8:], semana_sqlite[int(evento['semana'])].replace('-feira', ''), semana_sqlite[int(evento['semana_fim'])].replace('-feira', ''))
 
-                        ls_dias_aux = [item['texto']]
-                        dia_aux = {'inicio':item['inicio'], 'fim':item['fim'], 'semana':item['semana'], 'semana_fim':item['semana_fim']}
+                        ls_aux = []
+                        for item in executarConsultaCalendario("SELECT texto FROM calendario_mensal where inicio = '%s' ORDER BY plain_text" % evento['inicio']):
+                            ls_aux.append(item['texto'])
 
-                if len(ls_aux) > 0:
-                    if dia_aux['inicio'] == dia_aux['fim']:
-                        desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+                        ls_final.append({'descricao':desc_dia, 'eventos':ls_aux})
+
                     else:
-                        desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
+                        descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
 
-                    ls_final.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
+                        ls_aux = []
+                        temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
+                        temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
+                        for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
+                            ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
+
+                        ls_final.append({'descricao':descricao, 'eventos':ls_aux})
                 
                 return jsonify(ls_final)
             
@@ -658,67 +635,34 @@ def calendario():
 
     mes = data_atual.strftime('%m')
 
-    #ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + r"' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio, plain_text")
-    
-    big_sql = r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, 'isolado' as tipo FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' "
-    big_sql += "UNION ALL SELECT id_congregacao as id, inicio, fim, "
-    big_sql += "(select '[' || GROUP_CONCAT('{" + '"' + "dia_semana" + '"' + ":' || dia_semana || ', " + '"' + "horario" + '"' + ":" + '"' + "' || horario || '" + '"' + ", " + '"' + "evento" + '"' + ":" + '"' + "' || eventos.descricao_curta || '" + '"' + "}') || ']' as json from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = calendario_festa_dep.id_congregacao order by dia_semana, horario) as text, "
-    big_sql += "strftime('%w', inicio) as semana,  strftime('%w', fim) as semana_fim, 'festa_dep' as tipo from calendario_festa_dep WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio, texto"
-    print(big_sql)
-    ls_aux = executarConsultaCalendario(big_sql)
-    print(ls_aux)
+    # pegar todos os dias de eventos do calendário mensal
+    eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio")
 
-    dia_aux = ''
-    ls_dias_aux = []
-    paragrafo_aux = []
-
-    # a lista deverá ser percorrida adicionando os eventos do mesmo dia numa lista para que fiquem juntos
-    if len(ls_aux) > 0:
-        dia_aux = {'inicio':ls_aux[0]['inicio'], 'fim':ls_aux[0]['fim'], 'semana':ls_aux[0]['semana'], 'semana_fim':ls_aux[0]['semana_fim']}
-
-    for item in ls_aux:
-        # fará diferente caso seja uma festa de departamento
-        if item['tipo'] == 'festa_dep':
-            cong = executarConsultaCalendario('select descricao from congregacoes where id = %s' % item['id'])[0]['descricao']
-            descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % cong.upper()
-
-            eventos = json.loads(item['texto'])
-            lst_final = []
-            temp_segunda = datetime.datetime.strptime(item['inicio'], r"%Y-%m-%d").date()
-            temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
-            print(temp_segunda)
-            for evt in eventos:
-                txt = "<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + evt['dia_semana'], semana[int(evt['dia_semana'])].replace('-feira', ''), evt['horario'], evt['evento'])
-                lst_final.append(txt)
-
-            calendario_mensal.append({'descricao':descricao, 'eventos':lst_final})
-            break
-
-        # montar lista para exibição na página inicial
-        if dia_aux['inicio'] == item['inicio']:
-            ls_dias_aux.append(item['texto'])
-            paragrafo_aux.append({'type':'paragraph', 'data':{'text':item['texto']}})
-        else:
-            if dia_aux['inicio'] == dia_aux['fim']:
-                desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+    for evento in eventos_mensais:
+        if evento['tipo'] == 'isolado':
+            paragrafo_aux = []
+            if evento['inicio'] == evento['fim']:
+                desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], semana_sqlite[int(evento['semana'])])
             else:
-                desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
-            
-            calendario_mensal.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
-            blocks_mem.append({'inicio':dia_aux['inicio'], 'fim':dia_aux['fim'], 'paragrafos':paragrafo_aux})
+                desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], evento['fim'][8:], semana_sqlite[int(evento['semana'])].replace('-feira', ''), semana_sqlite[int(evento['semana_fim'])].replace('-feira', ''))
 
-            paragrafo_aux = [{'type':'paragraph', 'data':{'text':item['texto']}}]
-            ls_dias_aux = [item['texto']]
-            dia_aux = {'inicio':item['inicio'], 'fim':item['fim'], 'semana':item['semana'], 'semana_fim':item['semana_fim']}
+            ls_aux = []
+            for item in executarConsultaCalendario("SELECT texto FROM calendario_mensal where inicio = '%s' ORDER BY plain_text" % evento['inicio']):
+                ls_aux.append(item['texto'])
+                paragrafo_aux.append({'type':'paragraph', 'data':{'text':item['texto']}})
 
-    if len(ls_aux) > 0:
-        if dia_aux['inicio'] == dia_aux['fim']:
-            desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], semana_sqlite[int(dia_aux['semana'])])
+            calendario_mensal.append({'descricao':desc_dia, 'eventos':ls_aux})
+            blocks_mem.append({'inicio':evento['inicio'], 'fim':evento['fim'], 'paragrafos':paragrafo_aux})
         else:
-            desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (dia_aux['inicio'][8:], dia_aux['fim'][8:], semana_sqlite[int(dia_aux['semana'])].replace('-feira', ''), semana_sqlite[int(dia_aux['semana_fim'])].replace('-feira', ''))
+            descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
 
-        calendario_mensal.append({'descricao':desc_dia, 'eventos':ls_dias_aux})
-        blocks_mem.append({'inicio':dia_aux['inicio'], 'fim':dia_aux['fim'], 'paragrafos':paragrafo_aux})
+            ls_aux = []
+            temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
+            temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)            
+            for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
+                ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
+
+            calendario_mensal.append({'descricao':descricao, 'eventos':ls_aux})
 
     # pegar as semanas disponíveis
     semanas_disponiveis = pegarListaSemanas(data_atual.strftime('%Y'), data_atual.strftime("%m"))
@@ -809,6 +753,36 @@ def slide():
     elif estado == 5: # Arquivo pptx
 
         return render_template('PowerPoint_Verdadeiro.jinja', index=index, total=current_presentation['total'])
+    
+    elif estado == 6: # Calendário
+
+        slides = []
+        semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+
+        # começar a criar o vetor com as informações
+        segunda = datetime.datetime.strptime(current_presentation['semana'], r"%Y-%m-%d").date()
+        
+        for i in range(7):
+            info = {}
+
+            dia = segunda + datetime.timedelta(days=i)
+            posicao_mensal = (dia.day - 1) // 7 + 1
+            
+            sql = 'SELECT id, texto, plain_text, case when ativo = 1 then "checked" else "" end as checkbox, case when ativo = 0 then "disabled" else "" end as disabled FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) ' % (i, posicao_mensal)
+            sql += 'UNION ALL '
+            sql += "select id, texto, plain_text, 'checked disabled' as checkbox, '' as disabled from calendario_mensal where '%s' between inicio and fim " % dia.strftime('%Y-%m-%d')
+            sql += 'ORDER BY plain_text'
+
+            print(sql)
+
+            info['dia'] = dia.strftime('%d')
+            info['semana'] = semana[i]
+            info['eventos'] = ''
+
+            slides.append(info)
+
+        #return render_template('PowerPoint_Calendario.jinja')
+        return slides
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
@@ -1892,6 +1866,10 @@ def iniciar_apresentacao():
             elif info['tipo'] == 'harpa_versionada':
                 estado = 4
                 insert_log(5, 3, banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % info['id'])[0], 0)
+            elif info['tipo'] == 'calendario':
+                estado = 6
+                current_presentation['mes'] = info['mes']
+                current_presentation['semana'] = info['semana']
 
             index = 0
 
