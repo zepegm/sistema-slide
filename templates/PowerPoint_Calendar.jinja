@@ -1,0 +1,107 @@
+<html lang="pt-BR">
+    <head>
+        <title>SlideShow</title>
+
+        <style>
+            .slide {
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                top:0%;    
+                left:0%;
+                font-family: Arial, Helvetica, sans-serif;
+            } 
+
+            .titulo {
+                color:red;
+                font-size: 10vw;
+                text-align: center;
+                padding: 0%;
+                margin-top: 4vh;
+            }
+
+            #logo_1 {
+                width: 60%;
+                height: auto;
+                margin-top: -20vh;
+                margin-left: -5vw;
+            }
+
+            #img-calendar {
+                width: 45%;
+                height: auto;
+                margin-top: -35%;
+                margin-left: 52vw;
+            }
+
+            .hide {
+                opacity: 0;
+            }
+
+            .logo_padrao {
+                width: 12vw;
+                height: auto;
+                margin-left: 1vw;
+                margin-top: 2vh;
+            }
+
+            .titulo_oracao {
+                color:mediumseagreen;
+                font-size: 6.5vw;
+                position: absolute;
+                top: -3vh;
+                font-weight: bold;
+                left: 13vw;
+                text-decoration: underline;
+            }
+
+            .blue {
+                color:#0070C0;
+            }
+
+            .red {
+                color:red;
+            }
+
+            .text {
+                font-size: 5.4vw;
+                margin-left: 3vw;
+                text-align: justify;
+                line-height: 1.31;
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;
+                margin-right: 2vw;
+            }
+
+            .paragrafo {
+                margin-bottom: 5vh;
+            }
+        </style>
+
+    </head>
+    <body>
+
+        <!-- Primeiro slide de apresentação -->
+        <div class="slide {{'hide' if index != 0 else '' }}" id="sld0">
+            <p class="titulo">CALENDÁRIO 2024</p>
+            <img id="logo_1" src="{{ url_for('static', filename='images/Logo Legenda.png') }}">
+            <img id="img-calendar" src="{{ url_for('static', filename='images/Calendar_show.png') }}">
+        </div>
+
+        <!-- Slide da Oração -->
+        <div class="slide {{'hide' if index != 1 else '' }}" id="sld1">
+            <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+            <p class="titulo_oracao">CALENDÁRIO DE ORAÇÃO</p>
+            <ul class="text">
+                <li class="paragrafo">Todas as <b class="blue">Terças</b>, <b class="blue">Quintas</b> e <b class="blue">Sábados</b> às <b class="red">7h.</b></li>
+                <li><b class="blue">Quarta-feira</b> às <b class="red">15h</b>, com participação do Dep. Feminino.</li>
+            </ul>
+        </div>
+
+        <!-- Slide Semanal -->
+        {% for sld in slides %} 
+
+        {% endfor %}
+    </body>
+</html>

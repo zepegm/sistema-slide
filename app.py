@@ -328,6 +328,11 @@ def controlador():
         return render_template('controlador_harpa.jinja', lista_slides=lista_slides, index=index, config=config, titulo=titulo, numero=number, autor=nome_autor, titulo_versao=titulo_versao)
     elif estado == 5: # arquivo pptx
         return render_template('controlador_pptx.jinja', total=current_presentation['total'], index=index)
+    
+    elif estado == 6: # calendario
+        index = 1
+
+        return redirect('/calendario')
 
     return 'erro'
 
@@ -840,8 +845,7 @@ def slide():
 
         
 
-        #return render_template('PowerPoint_Calendario.jinja')
-        return slides
+        return render_template('PowerPoint_Calendar.jinja', slides=slides, index=index)
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
