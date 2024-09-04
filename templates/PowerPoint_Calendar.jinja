@@ -71,12 +71,18 @@
                 font-family:'BebasKai', sans-serif;
             }             
 
+            .text-primary,
             .blue {
                 color:#0070C0;
             }
 
+            .fw-bold {
+                font-weight: bold;
+            }
+
+            .text-danger,
             .red {
-                color:red;
+                color:#DA2536;
             }
 
             .text {
@@ -162,16 +168,39 @@
 
         <!-- Slide Semanal -->
         {% for sld in slides %} 
-        <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
-            <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-            <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
-            <p class="titulo_dia_semanal"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>
-            <ul class="text text-item-semanal">
-                {% for evento in sld['eventos'] %}
-                <li class="paragrafo">{{evento['texto']}}</li>
-                {% endfor %}
-            </ul>            
-        </div>
+            {% if sld['tipo'] == 'semanal' %}
+            <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
+                <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
+                <p class="titulo_dia_semanal"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>
+                <ul class="text text-item-semanal">
+                    {% for evento in sld['eventos'] %}
+                    <li class="paragrafo">{{evento['texto']}}</li>
+                    {% endfor %}
+                </ul>            
+            </div>
+            {% elif sld['tipo'] == 'isolado' %}
+            <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
+                <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                <p class="titulo_semanal">CALENDÁRIO MENSAL - </span></p>
+                <p class="titulo_dia_semanal">{{sld['desc_dia']}}</p>
+                <ul class="text text-item-semanal">
+                    {% for evento in sld['eventos'] %}
+                    <li class="paragrafo">{{evento}}</li>
+                    {% endfor %}
+                </ul>            
+            </div>
+            {% else %}
+            <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
+                <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                <p class="titulo_semanal">FESTA DE DEP.</span></p>
+                <p class="titulo_dia_semanal"></p>
+                <ul class="text text-item-semanal">
+  
+                </ul>            
+            </div>            
+            {% endif %}
+
         {% endfor %}
 
         <div id="loading">
