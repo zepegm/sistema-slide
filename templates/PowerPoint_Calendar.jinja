@@ -3,6 +3,15 @@
         <title>SlideShow</title>
 
         <style>
+
+            @font-face {
+                font-family:bebaskai;
+                font-style:normal;
+                font-weight:400;
+                src:local('BebasKai'),
+                url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+            }
+
             .slide {
                 position: fixed;
                 min-width: 100%;               
@@ -34,7 +43,7 @@
                 margin-left: 52vw;
             }
 
-            .hide {
+            .hide {                
                 opacity: 0;
             }
 
@@ -46,14 +55,21 @@
             }
 
             .titulo_oracao {
-                color:mediumseagreen;
-                font-size: 6.5vw;
+                color:green;
+                font-size: 11vw;
                 position: absolute;
-                top: -3vh;
-                font-weight: bold;
+                top: -15vh;
                 left: 13vw;
-                text-decoration: underline;
+                font-family:'BebasKai', sans-serif;
             }
+
+            .titulo_semanal {
+                font-size: 5.8vw;
+                position: absolute;
+                top: -2vh;
+                left: 14vw;
+                font-family:'BebasKai', sans-serif;
+            }             
 
             .blue {
                 color:#0070C0;
@@ -74,23 +90,68 @@
                 margin-right: 2vw;
             }
 
+            .titulo_dia_semanal {
+                font-size: 7vw;
+                margin-left: 3vw;
+                margin-top: 0vh;
+            }
+
             .paragrafo {
                 margin-bottom: 5vh;
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;                
             }
+
+            .text-item-semanal {
+                margin-top: -10vh;
+            }
+
+            #loading {
+                background-color:black;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top:0%;
+                left:0%;
+                z-index: 0;
+            } 
+
+            .in {
+                animation-name: fade-in;
+                animation-duration: 0.5s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 0.5s;
+                opacity: 0;
+            }  
+
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            }             
+
         </style>
 
     </head>
     <body>
 
         <!-- Primeiro slide de apresentação -->
-        <div class="slide {{'hide' if index != 0 else '' }}" id="sld0">
-            <p class="titulo">CALENDÁRIO 2024</p>
+        <div class="slide {{'hide' if index != 0 else 'in' }}" id="sld0">
+            <p class="titulo">CALENDÁRIO {{ano}}</p>
             <img id="logo_1" src="{{ url_for('static', filename='images/Logo Legenda.png') }}">
             <img id="img-calendar" src="{{ url_for('static', filename='images/Calendar_show.png') }}">
         </div>
 
         <!-- Slide da Oração -->
-        <div class="slide {{'hide' if index != 1 else '' }}" id="sld1">
+        <div class="slide {{'hide' if index != 1 else 'in' }}" id="sld1">
             <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
             <p class="titulo_oracao">CALENDÁRIO DE ORAÇÃO</p>
             <ul class="text">
@@ -101,9 +162,77 @@
 
         <!-- Slide Semanal -->
         {% for sld in slides %} 
-        <div class="slide {{'hide' if index != 1 else '' }}">
-        
+        <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
+            <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+            <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
+            <p class="titulo_dia_semanal"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>
+            <ul class="text text-item-semanal">
+                {% for evento in sld['eventos'] %}
+                <li class="paragrafo">{{evento['texto']}}</li>
+                {% endfor %}
+            </ul>            
         </div>
         {% endfor %}
+
+        <div id="loading">
+            <div class="d-flex justify-content-center vertical-center">
+              <div class="spinner-border" role="status" style="width: 30rem; height: 30rem; border-width: 5rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+        </div>        
+
+        <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+
+        <script>
+            window.addEventListener("load", (event) => {
+            const element = document.getElementById("loading");
+            element.classList.add("out");
+            });
+
+            function changeComponent(index) {
+                sld_previous = document.getElementsByClassName('in')[0];
+                sld_next = document.getElementById('sld' + index)
+
+                sld_previous.classList.add('out');
+                sld_previous.classList.remove('in');
+                
+                sld_next.classList.add('in');
+                sld_next.classList.remove('hide');
+                sld_next.classList.remove('out');
+            }
+
+            var socket = io();
+            socket.on('update', function(index) {
+                changeComponent(index);
+            });        
+        
+            socket.on('refresh', function(result) {
+                location.reload();
+            });
+
+            socket.on('pix', function(result) {
+                window.location.replace("/slide_pix");
+            });
+
+            socket.on('wait_pptx', function(result) {
+                window.location.replace("/wait_pptx");
+            });        
+
+            socket.on('scroll_biblia', function(direcao) {
+
+                console.log('scroll!');
+
+                if (direcao == 'down' && !scrolling) {
+                    scroll_down();    
+                } else if(direcao == 'up' && !scrolling) {
+                    scroll_up();
+                }
+            }); 
+
+
+
+        </script>
+
     </body>
 </html>

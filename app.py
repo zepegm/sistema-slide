@@ -330,9 +330,99 @@ def controlador():
         return render_template('controlador_pptx.jinja', total=current_presentation['total'], index=index)
     
     elif estado == 6: # calendario
-        index = 1
 
-        return redirect('/calendario')
+        slides = []
+        semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+        semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+
+        # começar a criar o vetor com as informações
+        segunda = datetime.datetime.strptime(current_presentation['semana'], r"%Y-%m-%d").date()
+        domingo = segunda + datetime.timedelta(days=6)
+        
+        cont = 0
+
+        for i in range(7):
+            info = {}
+
+            dia = segunda + datetime.timedelta(days=i)
+            posicao_mensal = (dia.day - 1) // 7 + 1
+            
+            sql = 'SELECT id, texto, plain_text FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) and ativo = 1 UNION ALL ' % (i, posicao_mensal)
+            sql += "select id, texto, plain_text from calendario_mensal where '%s' between inicio and fim UNION ALL " % dia.strftime(r"%Y-%m-%d")
+            sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
+                  "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
+                  r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "') "
+            sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
+
+            info['dia'] = dia.strftime('%d')
+            info['semana'] = semana[i]
+            info['eventos'] = executarConsultaCalendario(sql)
+            info['tipo'] = 'semanal'
+            info['pos'] = cont + 2
+
+            if len(info['eventos']) > 0:
+                slides.append(info)
+                cont += 1
+
+
+        # pegar agora os eventos mensais
+        mes = current_presentation['mes']
+        ano = current_presentation['id']
+
+        eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' ORDER BY inicio")
+
+        for evento in eventos_mensais:
+            info = {}
+
+            if evento['tipo'] == 'isolado':
+                if evento['inicio'] == evento['fim']:
+                    desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], semana_sqlite[int(evento['semana'])])
+                else:
+                    desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], evento['fim'][8:], semana_sqlite[int(evento['semana'])].replace('-feira', ''), semana_sqlite[int(evento['semana_fim'])].replace('-feira', ''))
+
+                ls_aux = []
+                for item in executarConsultaCalendario("SELECT texto FROM calendario_mensal where inicio = '%s' ORDER BY plain_text" % evento['inicio']):
+                    ls_aux.append(item['texto'])
+
+                cont += 1
+
+                info['tipo'] = evento['tipo']
+                info['desc_dia'] = desc_dia
+                info['eventos'] = ls_aux
+                info['pos'] = cont + 2
+                slides.append(info)
+
+            else:
+                descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
+
+                ls_aux = []
+                temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
+                temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
+                for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
+                    ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
+
+                cont += 1
+                
+                info['tipo'] = evento['tipo']
+                info['desc_dia'] = descricao
+                info['eventos'] = ls_aux
+                info['pos'] = cont + 2
+                slides.append(info)
+
+        # após tudo isso criar uma lista tbm com as imagens presentes na tela de wallpaper para serem visualizadas
+        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+
+        onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+        for file in onlyfiles:
+            cont += 1
+            slides.append({'url':file, 'tipo':'wallpaper', 'pos':cont + 2})        
+
+        
+        for sld in slides:
+            print(sld)
+
+        return render_template('controlador_calendario.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano)
 
     return 'erro'
 
@@ -767,7 +857,10 @@ def slide():
 
         # começar a criar o vetor com as informações
         segunda = datetime.datetime.strptime(current_presentation['semana'], r"%Y-%m-%d").date()
+        domingo = segunda + datetime.timedelta(days=6)
         
+        cont = 0
+
         for i in range(7):
             info = {}
 
@@ -785,9 +878,11 @@ def slide():
             info['semana'] = semana[i]
             info['eventos'] = executarConsultaCalendario(sql)
             info['tipo'] = 'semanal'
-            info['pos'] = i + 2
+            info['pos'] = cont + 2
 
-            slides.append(info)
+            if len(info['eventos']) > 0:
+                slides.append(info)
+                cont += 1
 
 
         # pegar agora os eventos mensais
@@ -809,12 +904,12 @@ def slide():
                 for item in executarConsultaCalendario("SELECT texto FROM calendario_mensal where inicio = '%s' ORDER BY plain_text" % evento['inicio']):
                     ls_aux.append(item['texto'])
 
-                i += 1
+                cont += 1
 
                 info['tipo'] = evento['tipo']
                 info['desc_dia'] = desc_dia
                 info['eventos'] = ls_aux
-                info['pos'] = i + 2
+                info['pos'] = cont + 2
                 slides.append(info)
 
             else:
@@ -826,12 +921,12 @@ def slide():
                 for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
                     ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
 
-                i += 1
+                cont += 1
                 
                 info['tipo'] = evento['tipo']
                 info['desc_dia'] = descricao
                 info['eventos'] = ls_aux
-                info['pos'] = i + 2
+                info['pos'] = cont + 2
                 slides.append(info)
 
         # após tudo isso criar uma lista tbm com as imagens presentes na tela de wallpaper para serem visualizadas
@@ -840,12 +935,11 @@ def slide():
         onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
         for file in onlyfiles:
-            i += 1
-            slides.append({'url':file, 'tipo':'wallpaper', 'pos':i + 2})
+            cont += 1
+            slides.append({'url':file, 'tipo':'wallpaper', 'pos':cont + 2})
 
         
-
-        return render_template('PowerPoint_Calendar.jinja', slides=slides, index=index)
+        return render_template('PowerPoint_Calendar.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano)
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])

@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Controlador</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+
+    .nd {
+      font-variant: small-caps;
+    }
+
+    .add {
+      font-style: italic;
+    }
+
+    .sc {
+      font-variant: small-caps;
+    }
+
+    .heading {
+      font-weight: bold;
+    }
+
+    .red {
+      color: red;
+    }    
+
+    .t_vers {
+      font-size: 35px;
+    }
+
+    .auto_hifen {
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
+    }
+
+    .cel_vers {
+      cursor: pointer;
+    }
+
+    .arrow {
+      font-size: xx-large;
+      color:black;
+    }
+
+    .line-ver {
+      cursor: pointer;
+    }
+
+    #container {
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    #painel_versiculos {
+      overflow: scroll;
+      height: 40vh;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    #btn_encerrar {
+      margin-bottom: 1vh;
+    }
+
+    .text {
+      font-size: 20px;
+    }
+
+    .titulo_calendario_oracao,
+    .titulo_calendario {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    </style>
+    
+  </head>
+
+  <body>
+
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row" id="head_principal">
+            <div class="col-sm-12">
+              <h1 class="fw-light">Apresentador de Slides</h1>
+              <p class="lead text-muted">Abaixo você a lista dos eventos do calendário.</p>
+            </div>
+
+            <div class="col-sm-12">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th colspan="2" class="table-info text-center">Controlador</th></th><th colspan="2" class="table-warning text-center">Scroll</th>
+                    <th>Teclado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-center table-info">
+                      <button id="btn_previous" class="btn btn-info arrow" {{ 'disabled' if index == 0 else '' }}><i class="fa-solid fa-circle-arrow-left"></i></button>
+                    </td>
+                    <td class="text-center table-info">
+                      <button id="btn_next" class="btn btn-info arrow" {{ 'disabled' if index == (slides|length + 2) else '' }}><i class="fa-solid fa-circle-arrow-right"></i></button>
+                    </td>
+
+                    <td class="text-center table-warning"><button id="btn_up" class="btn btn-warning arrow"><i class="fa-solid fa-circle-arrow-up"></i></button></td>
+                    <td class="text-center table-warning"><button id="btn_down" class="btn btn-warning arrow"><i class="fa-solid fa-circle-arrow-down"></i></button></td>
+                    <td>Utilize as setas <b>direita/esquerda</b> do teclado pra <b>avançar/recuar</b> o slide ou utilize as setas <b>baixo/cima</b> para controlar o <b>scroll.</b></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="col-sm-10 text-dark">
+              <h5>CALENDÁRIO SEMANAL - <span class="text-danger fw-bold">{{inicio}}</span> A <span class="text-danger fw-bold">{{fim}}</span></h5>
+            </div>
+            <div class="col-sm-2 text-end">
+              <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
+            </div>
+            
+
+          </div>
+
+          <div class="row" id="painel_versiculos">
+            <table class="table">
+              <tbody>
+
+              <tr id="sld0" class="{{'table-warning' if index == 0 else ''}} ver-1 line-ver">
+                <th class="align-middle t_vers">1</th>
+                <td class="align-middle titulo_calendario">CALENDÁRIO {{ano}}</td>
+              </tr>
+
+              <tr id="sld1" class="{{'table-warning' if index == 1 else ''}} ver-1 line-ver">
+                <th class="align-middle t_vers">2</th>
+                <td class="align-middle titulo_calendario_oracao"><span class="text-success">CALENDÁRIO DE ORAÇÃO</span></td>
+              </tr>              
+
+              {% for item in slides %}
+
+              <tr id="sld{{item['pos']}}" class="{{'table-warning' if index == item['pos'] else ''}} ver-1 line-ver">
+                <th class="align-middle t_vers">{{item['pos'] + 1}}</th>
+                <td class="align-middle text">
+                  <p class="fw-bold">{{item['dia']}} (<span class="text-primary">{{item['semana']}}</span>)</p>
+                  <ul>
+                    {% for evento in item['eventos'] %}
+                    <li>{{evento['texto']}}</li>
+                    {% endfor %}                    
+                  </ul>
+                </td>
+              </tr>
+
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='datatable/FixedHeader-4.0.0/js/fixedHeader.bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>  
+
+
+  
+<script>
+
+  history.scrollRestoration = "manual";
+
+  $( document ).ready(function() {
+      headH = $("#head_principal").height();
+      screenH = window.innerHeight - headH - 150;
+
+      $("#painel_versiculos").height(screenH);
+
+  });
+
+
+  $(window).on('load', function(){
+    $(window).scrollTop(0);
+  });  
+
+  var index = {{index}};
+  var total = {{slides|length}};
+
+
+  function encerrar() {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('encerrar_apresentacao') }}",
+      contentType: "application/json",
+      data: JSON.stringify(1),
+      dataType: "json",
+      success: function(response) {
+        if (response) {
+          location.reload();
+        }
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });      
+  }
+
+  function scroll(direcao) {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('updateBiblia') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'destino':'scroll', 'direcao':direcao}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });     
+  }
+
+  function mudarSlide(index) {
+    $(".line-ver").removeClass('table-warning');
+    $("#sld" + index).addClass('table-warning');
+
+    $("#sld" + index)[0].scrollIntoView({ behavior: "smooth", block: "center"});
+
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('updateBiblia') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'destino':'change', 'index':(index)}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });      
+  
+  }
+
+  $("#btn_encerrar").on('click', function() {
+    encerrar();
+  });
+
+  $("#btn_down").on('click', function() {
+    scroll('down');
+  });
+
+  $("#btn_up").on('click', function() {
+    scroll('up');
+  }); 
+
+  $("#btn_next").on('click', function() {
+    index++;
+    mudarSlide(index);
+
+    if (index == total) {
+      $("#btn_next").attr('disabled', '');
+    }
+
+    $("#btn_previous").removeAttr('disabled');
+  });
+
+  $("#btn_previous").on('click', function() {
+    index--;
+    mudarSlide(index);
+
+    if (index == 0) {
+      $("#btn_previous").attr('disabled', '');
+    }
+
+    $("#btn_next").removeAttr('disabled');
+  });
+
+  $(".line-ver").on('click', function() {
+    $(".line-ver").removeClass('table-warning');
+    $(this).addClass('table-warning');
+
+    index = parseInt($(this).find('th').text()) - 1;
+
+    mudarSlide(index);
+
+    if (index == 0) {
+      $("#btn_previous").attr('disabled', '');
+    } else {
+      $("#btn_previous").removeAttr('disabled');
+    }
+
+    if (index == total) {
+      $("#btn_next").attr('disabled', '');
+    } else {
+      $("#btn_next").removeAttr('disabled');
+    }
+
+  });
+
+  document.onkeydown = checkKey;
+
+  function checkKey(e) {
+
+      e = e || window.event;
+      
+      if (e.keyCode == '27') {
+          e.preventDefault();
+          encerrar();
+      }
+      if (e.keyCode == '38') { // up
+          e.preventDefault();
+          scroll('up')
+      }
+      else if (e.keyCode == '40') {
+          e.preventDefault();
+          scroll('down')        
+      }
+      else if (e.keyCode == '37'  || e.keyCode == '33') {
+          e.preventDefault(); 
+          if (!$("#btn_previous").prop('disabled')) {
+            index--;
+            mudarSlide(index);
+
+            if (index == 0) {
+              $("#btn_previous").attr('disabled', '');
+            }
+
+            $("#btn_next").removeAttr('disabled');
+          }
+      }
+      else if (e.keyCode == '39' || e.keyCode == '34') {
+          e.preventDefault(); 
+          if (!$("#btn_next").prop('disabled')) {
+            index++;
+            mudarSlide(index);
+
+            if (index == total) {
+              $("#btn_next").attr('disabled', '');
+            }
+
+            $("#btn_previous").removeAttr('disabled');
+          }
+      }           
+  }
+
+  var socket = io();
+  socket.on('refresh', function(result) {
+      location.reload();
+  });
+
+
+</script>
+      
+  </body>
+</html>
