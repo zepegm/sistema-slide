@@ -4,6 +4,10 @@
 
         <style>
 
+            body {
+                overflow: hidden;
+            }
+
             @font-face {
                 font-family:bebaskai;
                 font-style:normal;
@@ -85,6 +89,15 @@
                 color:#DA2536;
             }
 
+            .text-success,
+            .green {
+                color:green;
+            }
+
+            .text-dark {
+                color:black;
+            }
+
             .text {
                 font-size: 5.4vw;
                 margin-left: 3vw;
@@ -94,6 +107,13 @@
                 -ms-hyphens: auto;
                 hyphens: auto;
                 margin-right: 2vw;
+                margin-bottom: 0;
+            }
+
+            .text-item-dep {
+                font-size: 4.5vw;
+                text-align: left;
+                margin-top: 0;
             }
 
             .titulo_dia_semanal {
@@ -102,11 +122,23 @@
                 margin-top: 0vh;
             }
 
+            .titulo_mensal {
+                position: absolute;
+                font-size: 6.2vw;
+                top: -2vh;
+                left: 14vw;
+                font-family:'BebasKai', sans-serif;                
+            }
+
             .paragrafo {
                 margin-bottom: 5vh;
                 -webkit-hyphens: auto;
                 -ms-hyphens: auto;
                 hyphens: auto;                
+            }
+
+            .paragrafo:last-child {
+                margin-bottom: 0px;
             }
 
             .text-item-semanal {
@@ -134,6 +166,11 @@
                 opacity: 0;
             }  
 
+            .wallpaper {
+                width: 100%;
+                height: 100%;
+            }
+
             @keyframes fade-in {
                 from {opacity: 0;}
                 to {opacity: 1;}
@@ -143,6 +180,27 @@
                 from {opacity: 1;}
                 to {opacity: 0;}
             }             
+
+            #arrow_pointer {
+                position: fixed;
+                top: 0%;
+                left: 95.5%;
+                font-size: 4vmax;
+                margin-top: 1vh;
+                opacity: 0;
+                color:{{config['seta']}};
+
+            }
+
+            .blank_rect {
+                position: relative;
+                background-color: white;
+                z-index:1;
+            }
+
+            ul {
+                z-index:-1;
+            }
 
         </style>
 
@@ -170,9 +228,11 @@
         {% for sld in slides %} 
             {% if sld['tipo'] == 'semanal' %}
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
-                <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-                <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
-                <p class="titulo_dia_semanal"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>
+                <div class="blank_rect">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                    <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
+                    <p class="titulo_dia_semanal"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>                
+                </div>
                 <ul class="text text-item-semanal">
                     {% for evento in sld['eventos'] %}
                     <li class="paragrafo">{{evento['texto']}}</li>
@@ -181,27 +241,39 @@
             </div>
             {% elif sld['tipo'] == 'isolado' %}
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
-                <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-                <p class="titulo_semanal">CALENDÁRIO MENSAL - </span></p>
-                <p class="titulo_dia_semanal">{{sld['desc_dia']}}</p>
+                <div class="blank_rect">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                    <p class="titulo_mensal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="red">{{mes_desc}} DE {{ano}}</span></span></p>
+                    <p class="titulo_dia_semanal">{{sld['desc_dia']}}</p>
+                </div>
                 <ul class="text text-item-semanal">
                     {% for evento in sld['eventos'] %}
                     <li class="paragrafo">{{evento}}</li>
                     {% endfor %}
                 </ul>            
             </div>
-            {% else %}
+            {% elif sld['tipo'] == 'dep' %}
+
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
-                <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-                <p class="titulo_semanal">FESTA DE DEP.</span></p>
-                <p class="titulo_dia_semanal"></p>
-                <ul class="text text-item-semanal">
-  
-                </ul>            
-            </div>            
+                <div class="blank_rect">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                    <p class="titulo_mensal">{{sld['desc_dia']}}</p>
+                </div>
+                <ul class="text text-item-dep">
+                    {% for evento in sld['eventos'] %}
+                    <li class="paragrafo">{{evento}}</li>
+                    {% endfor %}
+                </ul>           
+            </div>     
+            {% else %}       
+            <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
+                <img class="wallpaper" src="{{url_for('static', filename='images/Wallpaper/' + sld['url'])}}">
+            </div>
             {% endif %}
 
         {% endfor %}
+
+        <div id="arrow_pointer"><i class="fa-solid fa-circle-chevron-up"></i></div>
 
         <div id="loading">
             <div class="d-flex justify-content-center vertical-center">
@@ -212,12 +284,32 @@
         </div>        
 
         <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>  
 
         <script>
             window.addEventListener("load", (event) => {
             const element = document.getElementById("loading");
             element.classList.add("out");
             });
+
+            const arrow = document.getElementById('arrow_pointer');
+            const slide_inicial = document.getElementsByClassName('in')[0];
+
+            var espaco_scroll = slide_inicial.scrollHeight - window.innerHeight;
+            try {
+                var margin_top = parseFloat(window.getComputedStyle(slide_inicial.getElementsByTagName('ul')[0], null).getPropertyValue('margin-top'));
+                var margin_top_original = margin_top;
+                var scrolling = false;
+                var posicao = 0;
+                var limite_scroll = slide_inicial.getElementsByTagName('li').length;
+            } catch (error) {
+                console.error(error);
+                var margin_top = 0;
+                var margin_top_original = margin_top;
+                var scrolling = false;
+                var posicao = 0;
+                var limite_scroll = 0;
+            }              
 
             function changeComponent(index) {
                 sld_previous = document.getElementsByClassName('in')[0];
@@ -229,6 +321,23 @@
                 sld_next.classList.add('in');
                 sld_next.classList.remove('hide');
                 sld_next.classList.remove('out');
+
+                if (posicao > 0) {
+                    sld_previous.getElementsByTagName('ul')[0].style.marginTop = margin_top_original + 'px';
+                }
+
+                try {
+                    espaco_scroll = sld_next.scrollHeight - window.innerHeight;
+                    margin_top = parseFloat(window.getComputedStyle(sld_next.getElementsByTagName('ul')[0], null).getPropertyValue('margin-top'));
+                    margin_top_original = margin_top;
+                    posicao = 0;
+                    limite_scroll = sld_next.getElementsByTagName('li').length;
+                } catch (error) {
+                    console.error(error);
+                    // Expected output: ReferenceError: nonExistentFunction is not defined
+                    // (Note: the exact output may be browser-dependent)
+                }                
+            
             }
 
             var socket = io();
@@ -258,6 +367,56 @@
                     scroll_up();
                 }
             }); 
+
+        function scroll_up() {
+            if (posicao > 0) {
+                let slide = document.getElementsByClassName('in')[0]
+                scrolling = true;
+                arrow.innerHTML = '<i class="fa-solid fa-circle-chevron-up">';
+                arrow.classList.remove("final-out"); 
+                void arrow.offsetWidth;
+                arrow.classList.add("final-out");  
+
+                let li_element = slide.getElementsByTagName('ul')[0].getElementsByTagName('li')[posicao - 1];
+
+                margin_top = parseFloat(window.getComputedStyle(li_element, null).getPropertyValue('height')) + parseFloat(window.getComputedStyle(document.getElementsByClassName('paragrafo')[0], null).getPropertyValue('margin-bottom'));
+                
+                posicao -= 1;
+
+                $('.in').find('ul').animate({
+                    "margin-top": "+=" + margin_top
+                }, 2000, function(){
+                    scrolling = false;                   
+                });                                              
+            } else {
+                location.reload();
+            }
+        }
+
+        function scroll_down() {
+
+            if (espaco_scroll > 0 && posicao < limite_scroll - 1) {
+                let slide = document.getElementsByClassName('in')[0]
+                scrolling = true;
+                arrow.innerHTML = '<i class="fa-solid fa-circle-chevron-down">';
+                arrow.classList.remove("final-out");
+                void arrow.offsetWidth;
+                arrow.classList.add("final-out");
+
+                let li_element = slide.getElementsByTagName('ul')[0].getElementsByTagName('li')[posicao];
+
+                margin_top = parseFloat(window.getComputedStyle(li_element, null).getPropertyValue('height')) + parseFloat(window.getComputedStyle(document.getElementsByClassName('paragrafo')[0], null).getPropertyValue('margin-bottom'));
+                
+                posicao += 1;
+
+                $('.in').find('ul').animate({
+                    "margin-top": "-=" + margin_top
+                }, 2000, function(){
+                    scrolling = false;
+                });                
+
+            }
+        }            
 
 
 

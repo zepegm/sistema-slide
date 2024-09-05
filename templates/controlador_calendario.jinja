@@ -99,6 +99,11 @@
       font-weight: bold;
     }
 
+    .tumbnail {
+      width: 300px;
+      height: auto;
+    }
+
     </style>
     
   </head>
@@ -174,19 +179,50 @@
               </tr>              
 
               {% for item in slides %}
-
-              <tr id="sld{{item['pos']}}" class="{{'table-warning' if index == item['pos'] else ''}} ver-1 line-ver">
-                <th class="align-middle t_vers">{{item['pos'] + 1}}</th>
-                <td class="align-middle text">
-                  <p class="fw-bold">{{item['dia']}} (<span class="text-primary">{{item['semana']}}</span>)</p>
-                  <ul>
-                    {% for evento in item['eventos'] %}
-                    <li>{{evento['texto']}}</li>
-                    {% endfor %}                    
-                  </ul>
-                </td>
-              </tr>
-
+                {% if item['tipo'] == 'semanal' %}
+                <tr id="sld{{item['pos']}}" class="{{'table-warning' if index == item['pos'] else ''}} ver-1 line-ver">
+                  <th class="align-middle t_vers">{{item['pos'] + 1}}</th>
+                  <td class="align-middle text">
+                    <p class="fw-bold">{{item['dia']}} (<span class="text-primary">{{item['semana']}}</span>) - CALENDÁRIO SEMANAL</p>
+                    <ul>
+                      {% for evento in item['eventos'] %}
+                      <li>{{evento['texto']}}</li>
+                      {% endfor %}                    
+                    </ul>
+                  </td>
+                </tr>
+                {% elif item['tipo'] == 'isolado' %}
+                <tr id="sld{{item['pos']}}" class="{{'table-warning' if index == item['pos'] else ''}} ver-1 line-ver">
+                  <th class="align-middle t_vers">{{item['pos'] + 1}}</th>
+                  <td class="align-middle text">
+                    <p class="fw-bold">{{item['desc_dia']}} - <span class="text-success">CALENDÁRIO MENSAL</span></p>
+                    <ul>
+                      {% for evento in item['eventos'] %}
+                      <li>{{evento}}</li>
+                      {% endfor %}                    
+                    </ul>
+                  </td>
+                </tr>
+                {% elif item['tipo'] == 'dep' %}
+                <tr id="sld{{item['pos']}}" class="{{'table-warning' if index == item['pos'] else ''}} ver-1 line-ver">
+                  <th class="align-middle t_vers">{{item['pos'] + 1}}</th>
+                  <td class="align-middle text">
+                    <p>{{item['desc_dia']}}</p>
+                    <ul>
+                      {% for evento in item['eventos'] %}
+                      <li>{{evento}}</li>
+                      {% endfor %}                    
+                    </ul>
+                  </td>
+                </tr>
+                {% else %}
+                <tr id="sld{{item['pos']}}" class="{{'table-warning' if index == item['pos'] else ''}} ver-1 line-ver">
+                  <th class="align-middle t_vers">{{item['pos'] + 1}}</th>
+                  <td class="align-middle text">
+                    <img class="tumbnail" src="{{url_for('static', filename='images/Wallpaper/' + item['url'])}}">
+                  </td>
+                </tr>                
+                {% endif %}
               {% endfor %}
               </tbody>
             </table>
@@ -300,7 +336,7 @@
     index++;
     mudarSlide(index);
 
-    if (index == total) {
+    if (index == total + 1) {
       $("#btn_next").attr('disabled', '');
     }
 
@@ -332,7 +368,7 @@
       $("#btn_previous").removeAttr('disabled');
     }
 
-    if (index == total) {
+    if (index == total + 1) {
       $("#btn_next").attr('disabled', '');
     } else {
       $("#btn_next").removeAttr('disabled');
@@ -377,7 +413,7 @@
             index++;
             mudarSlide(index);
 
-            if (index == total) {
+            if (index == total + 1) {
               $("#btn_next").attr('disabled', '');
             }
 

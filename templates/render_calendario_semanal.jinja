@@ -1,0 +1,132 @@
+<html lang="pt-BR">
+    <head>
+        <title>Render Calendário Semanal</title>
+    </head>
+
+    <style>
+
+        @font-face {
+            font-family:bebaskai;
+            font-style:normal;
+            font-weight:400;
+            src:local('BebasKai'),
+            url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+        }
+
+        .container {
+            border: 1px solid black;
+            max-width: 1512px;
+            min-height: 3024px;
+        }
+
+        .titulo {
+            text-decoration: underline;
+            text-align: center;
+            font-size: 80px;
+            margin-bottom: 0px;
+        }
+
+        .subtitulo {
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 60px;
+            margin-top: 10px;
+        }
+
+        #logo {
+            position: absolute;
+            width: 220px;
+            height: auto;
+            top: 30px;
+            left: 50px;       
+        }
+
+        .red {
+            color:#DA2536;
+        }
+
+        .blue {
+            color:#0070C0;
+        }
+
+        .fw-bold {
+            font-weight: bold;
+        }
+
+        .margin_padrao {
+            margin: 25px;
+        }
+
+        .titulo_semanal {
+            font-size: 80px;
+            font-family:'BebasKai', sans-serif;
+            text-align: center;
+            margin: 25px;
+        }
+
+        .titulo_oracao {
+            color:green;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            font-size: 70px;
+            font-weight: bold;
+            margin: 25px;
+        }
+
+        hr {
+            border-top: 5px dashed black;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        .texto_oracao {
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 70px;
+        }
+
+        .titulo_dia_semanal {
+            font-size: 70px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .text {
+            font-size: 60px;
+            margin-left: 3vw;
+            text-align: justify;
+            line-height: 1.31;
+            -webkit-hyphens: auto;
+            -ms-hyphens: auto;
+            hyphens: auto;
+            margin-right: 2vw;
+            margin-bottom: 35px;
+            margin-top: 25px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+    </style>
+
+    <body>
+        <main class="container">
+            <p class="titulo">ASSEMBLEIA DE DEUS</p>
+            <p class="subtitulo">Ministério de Cachoeira Paulista</p>
+            <img id="logo" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+            <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
+            <hr>
+            <p class="titulo_oracao">CALENDÁRIO DE ORAÇÃO</p>
+            <p class="texto_oracao margin_padrao">Todas as <span class="fw-bold blue">terças</span>, <span class="fw-bold blue">quintas</span> e <span class="fw-bold blue">sábados</span> às <span class="fw-bold red">7h</span></p>
+            
+
+            {% for sld in slides %}
+            <hr>
+            <p class="titulo_dia_semanal margin_padrao"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>                
+            <ul class="text">
+                {% for evento in sld['eventos'] %}
+                <li class="paragrafo">{{evento['texto']}}</li>
+                {% endfor %}
+            </ul>                 
+            {% endfor %}
+
+        </main>
+    </body>
+</html>

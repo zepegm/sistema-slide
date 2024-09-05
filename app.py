@@ -252,6 +252,47 @@ def render_pdf_harpa():
 
     return render_template('render_pdf_harpa.jinja', lista=lista_final, total=total, data=hoje, tipo=tipo)
 
+
+@app.route('/render_calendario', methods=['GET', 'POST'])
+def render_calendario():
+
+    slides = []
+    semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+    semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+
+    # começar a criar o vetor com as informações
+    segunda = datetime.datetime.strptime(request.args.get('semana'), r"%Y-%m-%d").date()
+    segunda = datetime.datetime.strptime('2024-09-02', r"%Y-%m-%d").date()
+    domingo = segunda + datetime.timedelta(days=6)
+    
+    cont = 0
+
+    for i in range(7):
+        info = {}
+
+        dia = segunda + datetime.timedelta(days=i)
+        posicao_mensal = (dia.day - 1) // 7 + 1
+        
+        sql = 'SELECT id, texto, plain_text FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) and ativo = 1 UNION ALL ' % (i, posicao_mensal)
+        sql += "select id, texto, plain_text from calendario_mensal where '%s' between inicio and fim UNION ALL " % dia.strftime(r"%Y-%m-%d")
+        sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
+                "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
+                r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "') "
+        sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
+
+        info['dia'] = dia.strftime('%d')
+        info['semana'] = semana[i]
+        info['eventos'] = executarConsultaCalendario(sql)
+        info['tipo'] = 'semanal'
+        info['pos'] = cont + 2
+
+        if len(info['eventos']) > 0:
+            slides.append(info)
+            cont += 1
+
+    return render_template('render_calendario_semanal.jinja', slides=slides, inicio='%s/%s' % (slides[0]['dia'], request.args.get('semana')[5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"))
+
+
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():
 
@@ -370,7 +411,7 @@ def controlador():
         ano = current_presentation['id']
 
         eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' ORDER BY inicio")
-
+        print("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' ORDER BY inicio")
         for evento in eventos_mensais:
             info = {}
 
@@ -393,12 +434,12 @@ def controlador():
                 cont += 1
 
             else:
-                descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
+                descricao = '<span class="fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
 
                 ls_aux = []
                 temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
                 temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
-                for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
+                for item in executarConsultaCalendario(r"select dia_semana, strftime('%Hh%M', horario) as horario, " + "id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
                     ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
                 
                 info['tipo'] = evento['tipo']
@@ -415,12 +456,9 @@ def controlador():
         onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
         for file in onlyfiles:
-            cont += 1
             slides.append({'url':file, 'tipo':'wallpaper', 'pos':cont + 2})        
+            cont += 1
 
-        
-        for sld in slides:
-            print(sld)
 
         return render_template('controlador_calendario.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano)
 
@@ -899,6 +937,8 @@ def slide():
         mes = current_presentation['mes']
         ano = current_presentation['id']
 
+        mes_desc = calendar.month_name[int(mes)]
+
         eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' ORDER BY inicio")
 
         for evento in eventos_mensais:
@@ -922,12 +962,12 @@ def slide():
                 cont += 1
 
             else:
-                descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
+                descricao = '<span class="text-dark">RESUMO FESTA DE DEP. </span> - <span class="text-danger">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
 
                 ls_aux = []
                 temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
                 temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
-                for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
+                for item in executarConsultaCalendario(r"select dia_semana, strftime('%Hh%M', horario) as horario, " + "id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
                     ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
                 
                 info['tipo'] = evento['tipo']
@@ -943,11 +983,11 @@ def slide():
         onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
         for file in onlyfiles:
-            cont += 1
             slides.append({'url':file, 'tipo':'wallpaper', 'pos':cont + 2})
+            cont += 1
 
         
-        return render_template('PowerPoint_Calendar.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano)
+        return render_template('PowerPoint_Calendar.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano, mes_desc=mes_desc)
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
@@ -1620,6 +1660,30 @@ def verificarSenhaHarpa():
 
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 
+@app.route('/gerar_imagem_calendario', methods=['GET', 'POST'])
+async def gerar_imagem_calendario():
+    info = request.json
+    pdf_path = 'static/docs/calendario_semanal.png'
+
+    browser = await launch(
+        executablePath="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        args = [
+            '--user-data-dir=C:\\Users\\Giuseppe\\AppData\\Local\\Google\\Chrome\\User Data'
+        ],        
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False
+    )
+
+    hostname = request.headers.get('Host')
+
+    page = await browser.newPage()
+    await page.setViewport({"width": 1512, "height": 1200})
+    await page.goto('http://%s/render_calendario?semana=%s' % (hostname, info['data']), {'waitUntil':'networkidle2'})
+    await page.screenshot({'path': pdf_path, 'fullPage': True})
+    await browser.close()
+
+    return jsonify(pdf_path)
 
 @app.route('/gerar_pdf', methods=['GET', 'POST'])
 async def gerar_pdf():
@@ -2164,8 +2228,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run('0.0.0.0',port=120)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run('0.0.0.0',port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

@@ -434,7 +434,7 @@
             </div>            
             <div class="col-sm-12"><hr></div>
             <div class="col-sm-6" id="col_calendario_semanal">
-              <h4 id="head_calendario_semanal" class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span></h4>
+              <h4 id="head_calendario_semanal" class="black fw-bold text-center">Calendário Semanal - <span class="text-danger">{{calendario_semanal[0]['dia']}}/{{calendario_semanal[0]['mes']}}</span> a <span class="text-danger">{{calendario_semanal[6]['dia']}}/{{calendario_semanal[6]['mes']}}/{{calendario_semanal[6]['ano']}}</span>&nbsp;<button id="btn_gerar_imagem_calendario_semanal" class="btn btn-secondary"><i class="fa-regular fa-file-image"></i></button></h4>
               <div class="input-group mb-3">
                 <span class="input-group-text">Calendário Semanal - </span>
                 <select class="form-select" id="cb_semana_view" autocomplete="off">
@@ -626,6 +626,26 @@
         }
       }));
     }
+
+    $("#btn_gerar_imagem_calendario_semanal").on('click', function() {
+
+      $(this).attr('disabled', '');
+      $(this).html('<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>');
+
+      $.ajax({
+          type: "POST",
+          url: "gerar_imagem_calendario",
+          contentType: "application/json",
+          data: JSON.stringify({'tipo':'semanal', 'data':$("#cb_semana_view").val()}),
+          dataType: "json",
+          success: function(data) {
+            console.log(data)
+            window.open(data);
+            $("#btn_gerar_imagem_calendario_semanal").removeAttr('disabled');
+            $("#btn_gerar_imagem_calendario_semanal").html('<i class="fa-regular fa-file-image"></i>');
+          },
+      });      
+    });
 
     $("#btn_iniciar_apresentacao").on('click', function() {
       info = {'id':{{calendario_semanal[6]['ano']}}, 'semana':$("#cb_semana_view").val(), 'mes':$("#cb_mes_view").val(), 'tipo':'calendario'}
