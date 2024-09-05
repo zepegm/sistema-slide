@@ -252,17 +252,70 @@ def render_pdf_harpa():
 
     return render_template('render_pdf_harpa.jinja', lista=lista_final, total=total, data=hoje, tipo=tipo)
 
+@app.route('/render_calendario_mensal', methods=['GET', 'POST'])
+def render_calendario_mensal():
+    # pegar agora os eventos mensais
+    mes = request.args.get('mes')
+    ano = request.args.get('ano')
+    slides = []
+    cont = 0
+    
+    semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+    semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+    mes_desc = calendar.month_name[int(mes)]
+
+    eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now') group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now')  ORDER BY inicio")
+
+    for evento in eventos_mensais:
+        info = {}
+
+        if evento['tipo'] == 'isolado':
+            if evento['inicio'] == evento['fim']:
+                desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], semana_sqlite[int(evento['semana'])])
+            else:
+                desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], evento['fim'][8:], semana_sqlite[int(evento['semana'])].replace('-feira', ''), semana_sqlite[int(evento['semana_fim'])].replace('-feira', ''))
+
+            ls_aux = []
+            for item in executarConsultaCalendario("SELECT texto FROM calendario_mensal where inicio = '%s' ORDER BY plain_text" % evento['inicio']):
+                ls_aux.append(item['texto'])
+
+            info['tipo'] = evento['tipo']
+            info['desc_dia'] = desc_dia
+            info['eventos'] = ls_aux
+            info['pos'] = cont
+            slides.append(info)
+
+            cont += 1
+
+        else:
+            descricao = '<span class="fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
+
+            ls_aux = []
+            temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
+            temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
+            for item in executarConsultaCalendario(r"select dia_semana, strftime('%Hh%M', horario) as horario, " + "id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
+                ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
+            
+            info['tipo'] = evento['tipo']
+            info['desc_dia'] = descricao
+            info['eventos'] = ls_aux
+            info['pos'] = cont
+            slides.append(info)
+
+            cont += 1
+
+    return render_template('render_calendario_mensal.jinja', slides=slides,  ano=ano, mes_desc=mes_desc)
+
 
 @app.route('/render_calendario', methods=['GET', 'POST'])
 def render_calendario():
 
     slides = []
     semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
-    semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
 
     # começar a criar o vetor com as informações
     segunda = datetime.datetime.strptime(request.args.get('semana'), r"%Y-%m-%d").date()
-    segunda = datetime.datetime.strptime('2024-09-02', r"%Y-%m-%d").date()
+    #segunda = datetime.datetime.strptime('2024-09-02', r"%Y-%m-%d").date()
     domingo = segunda + datetime.timedelta(days=6)
     
     cont = 0
@@ -410,8 +463,8 @@ def controlador():
         mes = current_presentation['mes']
         ano = current_presentation['id']
 
-        eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' ORDER BY inicio")
-        print("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' ORDER BY inicio")
+        eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now') group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now')  ORDER BY inicio")
+
         for evento in eventos_mensais:
             info = {}
 
@@ -675,7 +728,7 @@ def calendario():
                 
             elif info['tipo'] == 4: # alterar exibição do calendário mensal
                 #ls_aux = executarConsultaCalendario(r"SELECT id, inicio, fim, texto, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + r"' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio, plain_text")
-                eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio")
+                eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, CASE WHEN fim < DATE('now') THEN 'text-decoration-line-through disabled' ELSE '' END as risco  FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, CASE WHEN fim < DATE('now') THEN 'text-decoration-line-through disabled' ELSE '' END as risco  FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(info['mes']).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(info['ano']) + "' ORDER BY inicio")
 
                 ls_final = []
 
@@ -690,7 +743,7 @@ def calendario():
                         for item in executarConsultaCalendario("SELECT texto FROM calendario_mensal where inicio = '%s' ORDER BY plain_text" % evento['inicio']):
                             ls_aux.append(item['texto'])
 
-                        ls_final.append({'descricao':desc_dia, 'eventos':ls_aux})
+                        ls_final.append({'descricao':desc_dia, 'eventos':ls_aux, 'risco':evento['risco']})
 
                     else:
                         descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
@@ -701,7 +754,7 @@ def calendario():
                         for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
                             ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
 
-                        ls_final.append({'descricao':descricao, 'eventos':ls_aux})
+                        ls_final.append({'descricao':descricao, 'eventos':ls_aux, 'risco':evento['risco']})
                 
                 return jsonify(ls_final)
             
@@ -779,7 +832,7 @@ def calendario():
     mes = data_atual.strftime('%m')
 
     # pegar todos os dias de eventos do calendário mensal
-    eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio")
+    eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, CASE WHEN fim < DATE('now') THEN 'text-decoration-line-through disabled' ELSE '' END as risco FROM calendario_mensal WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim, CASE WHEN fim < DATE('now') THEN 'text-decoration-line-through disabled' ELSE '' END as risco FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + mes + "' AND strftime('%Y', inicio) = '" + data_atual.strftime('%Y') + "' ORDER BY inicio")
 
     for evento in eventos_mensais:
         if evento['tipo'] == 'isolado':
@@ -794,7 +847,7 @@ def calendario():
                 ls_aux.append(item['texto'])
                 paragrafo_aux.append({'type':'paragraph', 'data':{'text':item['texto']}})
 
-            calendario_mensal.append({'descricao':desc_dia, 'eventos':ls_aux})
+            calendario_mensal.append({'descricao':desc_dia, 'eventos':ls_aux, 'risco':evento['risco']})
             blocks_mem.append({'inicio':evento['inicio'], 'fim':evento['fim'], 'paragrafos':paragrafo_aux})
         else:
             descricao = '<span class="text-dark fw-bold">RESUMO FESTA DE DEP. </span> - <span class="text-danger fw-bold">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
@@ -805,7 +858,7 @@ def calendario():
             for item in executarConsultaCalendario("select dia_semana, horario, id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
                 ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
 
-            calendario_mensal.append({'descricao':descricao, 'eventos':ls_aux})
+            calendario_mensal.append({'descricao':descricao, 'eventos':ls_aux, 'risco':evento['risco']})
 
     # pegar as semanas disponíveis
     semanas_disponiveis = pegarListaSemanas(data_atual.strftime('%Y'), data_atual.strftime("%m"))
@@ -939,7 +992,7 @@ def slide():
 
         mes_desc = calendar.month_name[int(mes)]
 
-        eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' ORDER BY inicio")
+        eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now') group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now') ORDER BY inicio")
 
         for evento in eventos_mensais:
             info = {}
@@ -1660,15 +1713,44 @@ def verificarSenhaHarpa():
 
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 
+@app.route('/gerar_imagem_calendario_mensal', methods=['GET', 'POST'])
+async def gerar_imagem_calendario_mensal():
+    info = request.json
+    pdf_path = 'static/docs/calendario_mensal.png'
+
+    browser = await launch(
+        executablePath=r"C:\Program Files\Google\Chrome\Application\\chrome.exe",
+        args = [
+            #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
+            '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
+        ],        
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False
+    )
+
+    hostname = request.headers.get('Host')
+
+    page = await browser.newPage()
+    await page.setViewport({"width": 1512, "height": 1200})
+    await page.goto('http://%s/render_calendario_mensal?ano=%s&mes=%s' % (hostname, info['ano'], info['mes']), {'waitUntil':'networkidle2'})
+    await page.screenshot({'path': pdf_path, 'fullPage': True})
+    await browser.close()
+
+    return jsonify(pdf_path)
+
 @app.route('/gerar_imagem_calendario', methods=['GET', 'POST'])
 async def gerar_imagem_calendario():
     info = request.json
     pdf_path = 'static/docs/calendario_semanal.png'
 
+    print(info['data'])
+
     browser = await launch(
-        executablePath="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        executablePath=r"C:\Program Files\Google\Chrome\Application\\chrome.exe",
         args = [
-            '--user-data-dir=C:\\Users\\Giuseppe\\AppData\\Local\\Google\\Chrome\\User Data'
+            #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
+            '--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Chromium\\User Data'
         ],        
         handleSIGINT=False,
         handleSIGTERM=False,
@@ -2228,8 +2310,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0',port=80)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run('0.0.0.0',port=80)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

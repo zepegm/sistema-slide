@@ -1,6 +1,6 @@
 <html lang="pt-BR">
     <head>
-        <title>Render Calendário Semanal</title>
+        <title>Render Calendário Mensal</title>
     </head>
 
     <style>
@@ -46,6 +46,11 @@
             color:#DA2536;
         }
 
+        .green {
+            color:green;
+        }
+
+        .text-primary,
         .blue {
             color:#0070C0;
         }
@@ -109,6 +114,10 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
+        .paragrafo {
+            margin-bottom: 30px;
+        }
+
     </style>
 
     <body>
@@ -116,18 +125,14 @@
             <p class="titulo">ASSEMBLEIA DE DEUS</p>
             <p class="subtitulo">Ministério de Cachoeira Paulista</p>
             <img id="logo" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-            <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
-            <hr>
-            <p class="titulo_oracao">CALENDÁRIO DE ORAÇÃO</p>
-            <p class="texto_oracao margin_padrao">Todas as <span class="fw-bold blue">terças</span>, <span class="fw-bold blue">quintas</span> e <span class="fw-bold blue">sábados</span> às <span class="fw-bold red">7h</span></p>
-            
+            <p class="titulo_semanal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="red">{{mes_desc}} DE {{ano}}</span></p>
 
             {% for sld in slides %}
             <hr>
-            <p class="titulo_dia_semanal margin_padrao"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>                
+            <p class="titulo_dia_semanal margin_padrao"><b>{{sld['desc_dia']}}</b></p>
             <ul class="text">
                 {% for evento in sld['eventos'] %}
-                <li class="paragrafo">{{evento['texto']}}</li>
+                <li class="paragrafo">{{evento}}</li>
                 {% endfor %}
             </ul>                 
             {% endfor %}

@@ -465,7 +465,7 @@
               {% endfor %}
             </div>
             <div class="col-sm-6" id="col_calendario_mensal">
-              <h4 class="black fw-bold text-center">Calendário Mensal de <span id="head_calendario_mensal" class="text-danger">{{mes_atual_desc}} de {{calendario_semanal[6]['ano']}}</span></h4>
+              <h4 class="black fw-bold text-center">Calendário Mensal de <span id="head_calendario_mensal" class="text-danger">{{mes_atual_desc}} de {{calendario_semanal[6]['ano']}}</span>&nbsp;<button id="btn_gerar_imagem_calendario_mensal" class="btn btn-secondary"><i class="fa-regular fa-file-image"></i></button></h4>
 
               <div class="input-group mb-3">
                 <span class="input-group-text">Calendário Mensal - </span>
@@ -486,10 +486,10 @@
                 <hr>
                 {% endif %}
                 <div class="dia_calendario_mensal">
-                  <h5>{{item['descricao']}}</h5>
+                  <h5 class="{{item['risco']}}">{{item['descricao']}}</h5>
                   <ul>
                   {% for evento in item['eventos']%}
-                    <li class="text-dark justify"><h5>{{evento}}</h5></li>
+                    <li class="text-dark justify {{item['risco']}}"><h5>{{evento}}</h5></li>
                   {% endfor %}
                   </ul>
                 </div>
@@ -627,7 +627,29 @@
       }));
     }
 
-    $("#btn_gerar_imagem_calendario_semanal").on('click', function() {
+
+
+    $("#col_calendario_mensal").on('click', '#btn_gerar_imagem_calendario_mensal', function() {
+
+      $(this).attr('disabled', '');
+      $(this).html('<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>');
+
+      $.ajax({
+          type: "POST",
+          url: "gerar_imagem_calendario_mensal",
+          contentType: "application/json",
+          data: JSON.stringify({'tipo':'semanal', 'ano':{{calendario_semanal[0]['ano']}}, 'mes':$("#cb_mes_view").val()}),
+          dataType: "json",
+          success: function(data) {
+            console.log(data)
+            window.open(data);
+            $("#btn_gerar_imagem_calendario_mensal").removeAttr('disabled');
+            $("#btn_gerar_imagem_calendario_mensal").html('<i class="fa-regular fa-file-image"></i>');
+          },
+      });      
+    });
+
+    $("#head_calendario_semanal").on('click', '#btn_gerar_imagem_calendario_semanal', function() {
 
       $(this).attr('disabled', '');
       $(this).html('<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>');
@@ -862,7 +884,7 @@
           dataType: "json",
           success: function(data) {
 
-            $("#head_calendario_semanal").html('Calendário Semanal - <span class="text-danger">' + data[0]['dia'] + '/' + data[0]['mes'] + '</span> a <span class="text-danger">' + data[data.length - 1]['dia'] + '/' + data[data.length - 1]['mes'] + '/' + data[data.length - 1]['ano']);
+            $("#head_calendario_semanal").html('Calendário Semanal - <span class="text-danger">' + data[0]['dia'] + '/' + data[0]['mes'] + '</span> a <span class="text-danger">' + data[data.length - 1]['dia'] + '/' + data[data.length - 1]['mes'] + '/' + data[data.length - 1]['ano'] + '</span>&nbsp;<button id="btn_gerar_imagem_calendario_semanal" class="btn btn-secondary"><i class="fa-regular fa-file-image"></i></button>');
             $(".dia_calendario_semanal").remove();
 
             for (dia in data) {
@@ -1016,11 +1038,11 @@
                 let dia = '<div class="dia_calendario_mensal">';
               }
               
-              dia = "<h5>" + data[item]['descricao'] + "</h5>";
+              dia = "<h5 class='" + data[item]['risco'] + "'>" + data[item]['descricao'] + "</h5>";
               dia += '<ul>';
 
               for (evt in data[item]['eventos']) {
-                dia += '<li class="text-dark justify"><h5>' + data[item]['eventos'][evt] + '</h5></li>';
+                dia += '<li class="text-dark justify ' + data[item]['risco']  + '"><h5>' + data[item]['eventos'][evt] + '</h5></li>';
               }
 
               dia += '</ul>';
