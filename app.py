@@ -1750,7 +1750,7 @@ async def gerar_imagem_calendario():
         executablePath=r"C:\Program Files\Google\Chrome\Application\\chrome.exe",
         args = [
             #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
-            '--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Chromium\\User Data'
+            '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
         ],        
         handleSIGINT=False,
         handleSIGTERM=False,
