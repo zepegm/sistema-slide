@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Controlador</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+
+    .nd {
+      font-variant: small-caps;
+    }
+
+    .add {
+      font-style: italic;
+    }
+
+    .sc {
+      font-variant: small-caps;
+    }
+
+    .heading {
+      font-weight: bold;
+    }
+
+    .red {
+      color: #DA2536;
+    }    
+
+    .t_vers {
+      font-size: 35px;
+    }
+
+    .auto_hifen {
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
+    }
+
+    .cel_vers {
+      cursor: pointer;
+    }
+
+    .arrow {
+      font-size: xx-large;
+      color:black;
+    }
+
+    .line-ver {
+      cursor: pointer;
+    }
+
+    #container {
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    #painel_versiculos {
+      overflow: scroll;
+      height: 40vh;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    #btn_encerrar {
+      margin-bottom: 1vh;
+    }
+
+    .text {
+      font-size: 20px;
+    }
+
+    .titulo_calendario_oracao,
+    .titulo_calendario {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .tumbnail {
+      width: 300px;
+      height: auto;
+    }
+
+    </style>
+    
+  </head>
+
+  <body>
+
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}
+
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row" id="head_principal">
+            <div class="col-sm-12">
+              <h1 class="fw-light">Controlador de Vídeo</h1>
+              <p class="lead text-muted">Abaixo estão os comandos para controlar o vídeo</p>
+            </div>
+
+            <div class="col-sm-12">
+              <table class="table">
+                <thead>
+                <tbody>
+                  <tr>
+                    <td class="text-center table-info">
+                      <button id="btn_back" class="btn btn-primary"><i class="fa-solid fa-backward"></i></button>
+                      <button id="btn_play" class="btn btn-primary"><i class="fa-solid fa-play"></i></button>
+                      <button id="btn_pause" class="btn btn-primary"><i class="fa-solid fa-pause"></i></button>
+                      <button id="btn_stop" class="btn btn-primary"><i class="fa-solid fa-stop"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>  
+
+
+  
+<script>
+
+  var socket = io();
+  socket.on('refresh', function(result) {
+      location.reload();
+  });
+
+  $("#btn_play").on('click', function() {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('videoplayer_command') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'command':'play'}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });      
+  })
+
+
+  $("#btn_pause").on('click', function() {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('videoplayer_command') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'command':'pause'}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });      
+  });
+
+  $("#btn_back").on('click', function() {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('videoplayer_command') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'command':'back'}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });     
+  });
+
+  $("#btn_stop").on('click', function() {
+    $.ajax({
+      type: "POST",
+      url: "{{ url_for('videoplayer_command') }}",
+      contentType: "application/json",
+      data: JSON.stringify({'command':'stop'}),
+      dataType: "json",
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });     
+  });  
+
+
+</script>
+      
+  </body>
+</html>

@@ -1,0 +1,125 @@
+<html lang="pt-BR">
+    <head>
+        <title>Player de Vídeo</title>
+
+        <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet"> 
+
+        <style>
+
+            body {
+                background-color: black;
+                overflow: hidden;
+            }
+
+            #block_first {
+                width: 100vw;
+                height: 100vh;
+                background-color: black;
+                font-size: 25vw;
+                color: white;
+                position: absolute;
+                top:0;
+                left:0;
+                text-align: center;
+                line-height: 3rem;
+
+                display: flex;
+                justify-content: center; /* Centraliza horizontalmente */
+                align-items: center; /* Centraliza verticalmente */
+                
+
+            }
+
+            .in {
+                animation-name: fade-in;
+                animation-duration: 0.5s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 0.5s;
+                opacity: 0;
+            }   
+
+            #btn_permissao {
+                color:black;
+                background-color: white;
+                font-size: 3vw;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            } 
+
+        </style>
+    </head>
+    <body>
+
+        <video id="playback" width="100%" height="100%">
+          <source src="{{ url_for('static', filename='uploads/video.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+        </video>
+
+        <div id="block_first">
+            <!-- <a id="btn_permissao" onclick="interagir()" herf="">Clique aqui para permitir a execução do vídeo</a> -->
+            <i class="fa-solid fa-play" hidden></i>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+
+        <script>
+            const video = document.getElementById('playback');
+            const black_screen = document.getElementById('block_first');
+            const btn_first = document.getElementById('btn_permissao');
+        
+            var first_play = true;
+
+            var socket = io();
+            socket.on('refresh', function(result) {
+                location.reload();
+            });
+
+            socket.on('video_command', function(result) {
+                if (result == 'play') {
+
+                    if (first_play) {
+                        black_screen.classList.remove('in');
+                        black_screen.classList.add('out');
+                        video.currentTime = 0;
+                        first_play = false;
+                    }
+
+                    video.play();
+                } else if (result == 'pause') {
+                    video.pause();
+                } else if (result == 'back') {
+                    video.currentTime = 0
+                } else if (result == 'stop') {
+                    video.pause();
+                    video.currentTime = 0;
+                    first_play = true;
+                    black_screen.classList.remove('out');
+                    black_screen.classList.add('in');
+                }
+            });            
+
+            function interagir() {
+                btn_first.remove();
+                black_screen.insertAdjacentHTML("beforeend", '<i class="fa-solid fa-play" hidden></i>');
+            }
+
+
+        </script>
+        
+
+    </body>    
+</html>

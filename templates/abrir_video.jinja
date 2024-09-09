@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Abrir Vídeo MP4</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      #wallpaper_selecionado {
+        /*position: absolute;*/
+        border: solid 3px black;
+
+        display: block;
+        width: 50vw;
+        max-width: 177.78vh;
+        /* 16/9 = 1.778 */
+        height: 28.12vw;
+        /* height:width ratio = 9/16 = .5625  */
+        max-height: 100vh;
+
+        background-image: url("{{atual}}");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        margin: auto;
+      }
+
+      #file {
+        border: solid;
+        border-color: rgb(0, 0, 0, 0.3);
+      }
+
+      #lista_geral a.toggled { display: none; }
+
+      #preview {
+        width: 25vw;
+        max-width: 177.78vh;
+        /* 16/9 = 1.778 */
+        height: 14.06vw;
+        /* height:width ratio = 9/16 = .5625  */
+        max-height: 100vh;
+        border: 1px solid black;
+
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+          <div class="row"> 
+            <div class="col-sm-12">{{status}}</div>
+            <div class="col-sm-12">
+              <h2 class="fw-bold text-center">Iniciar Execução de Vídeo MP4</h2>
+            </div>
+          </div>
+
+          <form action="abrir_video" method="POST" enctype="multipart/form-data" id="formPrincipal">
+          <div class="row">
+            <div class="col-sm-6">
+              <label for="formFile" class="form-label">Selecionar Vídeo MP4:</label>
+              <input class="form-control" type="file" id="file" name="file" accept=".mp4" required>
+            </div>
+            <div class="col-sm-6 d-flex align-items-end">
+              <button class="btn btn-primary" id="btn_enviar_form">Carregar Vídeo</button>
+              <!-- <input type="submit" class="btn btn-primary" value="Carregar PPTX" id="btn_enviar_form"> -->
+            </div>
+          </div>
+          </form>
+
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  
+      
+  </body>
+</html>
