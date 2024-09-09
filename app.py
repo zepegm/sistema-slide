@@ -85,6 +85,11 @@ def home():
         titulo = 'Calendário Semanal e Mensal'
         tipo = "Apresentação do Calendário"
         capa = 'static/images/Calendar.png'
+    elif estado == 7: # video player
+        titulo = 'VideoPlayer'
+        tipo = 'Vídeo MP4'
+        capa = 'static/images/VideoPlayer.avif'
+
     else:
         titulo = None
         tipo = None
@@ -514,6 +519,11 @@ def controlador():
 
 
         return render_template('controlador_calendario.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano)
+
+    
+    elif estado == 7: #video_player
+
+        return render_template('controlador_video.jinja')
 
     return 'erro'
 
@@ -1043,6 +1053,11 @@ def slide():
         return render_template('PowerPoint_Calendar.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano, mes_desc=mes_desc)
 
 
+    elif estado == 7:
+
+        return render_template('video_player.jinja')
+
+
 @app.route('/updateSlide', methods=['GET', 'POST'])
 def updateSlide():
     if request.method == 'POST':
@@ -1057,6 +1072,19 @@ def updateSlide():
 
             socketio.emit('update', index)
           
+            return jsonify(True)
+
+
+@app.route('/videoplayer_command', methods=['GET', 'POST'])
+def videoplayer_command():
+    if request.method == 'POST':
+
+        if request.is_json: # application/json
+            # handle your ajax request here!
+
+            info = request.json
+            socketio.emit('video_command', info['command'])
+
             return jsonify(True)
 
 
@@ -1719,7 +1747,7 @@ async def gerar_imagem_calendario_mensal():
     pdf_path = 'static/docs/calendario_mensal.png'
 
     browser = await launch(
-        executablePath=r"C:\Program Files\Google\Chrome\Application\\chrome.exe",
+        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         args = [
             #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
             '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
@@ -1747,15 +1775,21 @@ async def gerar_imagem_calendario():
     print(info['data'])
 
     browser = await launch(
-        executablePath=r"C:\Program Files\Google\Chrome\Application\\chrome.exe",
+        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         args = [
+<<<<<<< Updated upstream
             #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
+=======
+            #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Google\\Chrome\\User Data'
+>>>>>>> Stashed changes
             '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
         ],        
         handleSIGINT=False,
         handleSIGTERM=False,
         handleSIGHUP=False
     )
+
+    print('--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data')
 
     hostname = request.headers.get('Host')
 
@@ -2068,6 +2102,29 @@ def wallpaper():
     return render_template('wallpaper.jinja', lista=onlyfiles, atual=atual)
 
 
+@app.route('/abrir_video', methods=['GET', 'POST'])
+def abrir_video():
+
+    global current_presentation
+    global estado
+    global index
+
+    if request.method == 'POST':
+
+        file = request.files.get('file')
+
+        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\uploads\\video.mp4'
+        file.save(path) # processo de salvamento do arquivo
+
+        estado = 7
+        current_presentation['file'] = '\\static\\uploads\\video.mp4'
+
+        socketio.emit('refresh', 1)
+
+        return redirect('/controlador')
+
+    return render_template('abrir_video.jinja')
+
 @app.route('/abrir_pptx', methods=['GET', 'POST'])
 def abrir_pptx():
 
@@ -2203,7 +2260,7 @@ def iniciar_apresentacao():
                         insert_log(5, 3, current_presentation['id'], 0)
                     elif item['tipo'] == 'harpa_versionada':
                         estado = 4
-                        insert_log(5, 3, banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % info['id'])[0], 0)
+                        insert_log(5, 3, banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0], 0)
 
                     index = 0
 
