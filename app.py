@@ -1777,11 +1777,7 @@ async def gerar_imagem_calendario():
     browser = await launch(
         #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         args = [
-<<<<<<< Updated upstream
-            #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
-=======
             #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Google\\Chrome\\User Data'
->>>>>>> Stashed changes
             '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
         ],        
         handleSIGINT=False,
