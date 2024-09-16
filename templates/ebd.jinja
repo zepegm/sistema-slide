@@ -29,81 +29,70 @@
 
     <style>
 
-    #editorseg {
-      color:black;
-    }
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
 
-    .table>tbody>tr>td, 
-    .table>tbody>tr>th, 
-    .table>tfoot>tr>td, 
-    .table>tfoot>tr>th, 
-    .table>thead>tr>td, 
-    .table>thead>tr>th {
-          vertical-align: middle;
-    }
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+        font-weight: bold;
+      }
 
-    .black {
-      color: black;
-    }
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
 
-    .text-editor {
-      width: 500px;
-      background-color: white;
-    }
+      .container {
+        color:black;
+      }
 
-    .ce-paragraph {
-        border-bottom: solid;
-    }
+      .image_area {
+          position: relative;
+      }
 
-    .picture {
-      padding-top: 3vh;
-    }
+      img {
+          display: block;
+          width: 30vw;
+          height: auto;
+          border: solid;
+          border-width: thin;
+      }
 
-    .table-aux {
-      border: solid black 3px;
-    }
+      .overlay {
+          position: absolute;
+          bottom: 1.7vh;
+          background-color: rgba(0, 0, 0, 0.5);
+          overflow: hidden;
+          height: 0;
+          transition: .5s ease;
+          width: 30vw;
+      }
 
-    #loading {
-      background-color: white;
-      height: 100%;
-      left: 0;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 9999;
-    }
+      .lb_principal {
+          cursor: pointer;
+      }
 
-    .loader {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      bottom: 0;
-      margin: auto;
-      border: 20px solid #EAF0F6;
-      border-radius: 50%;
-      border-top: 20px solid #FF7A59;
-      width: 200px;
-      height: 200px;
-      animation: spinner 4s linear infinite;
-    }
-    @keyframes spinner {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }  
+      .lb_principal:hover .overlay {
+          height: 50%;
+      }
 
-    #col_calendario_semanal {
-      border-right: solid 1px black;
-    }
+      .text-hover {
+        color:white;
+      }
 
-    .justify {
-      text-align: justify;
-    }
-
-    .bordered {
-      border: solid 1px;
-      border-color: rgb(0, 0, 0, 0.3);
-    }
+      .cdx-marker {
+        color:rgba(192,0,0);
+        font-weight:bold;
+        background:rgba(0,0,0,0)
+      }
 
     </style>
   </head>
@@ -168,6 +157,28 @@
               <button class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro">Cadastro das Lições</button>
             </div>
             <div class="col-sm-12"><hr></div>
+            <div class="col-sm-6">
+              <h2 class="fw-bold text-center">{{trimestre}}</h2>
+
+
+              <div class="image_area text-center">
+                  <form method="post">
+                      <label class="lb_principal" for="upload_image">
+                          <img src="{{ url_for('static', filename=capa) }}?{{now_txt}}" id="uploaded_image" class="rounded foto" />
+                          <div class="overlay text-center">
+                              <h3 class="text-hover">Clique para Adicionar Foto da Capa</h3>
+                          </div>
+                          <input type="file" name="image" class="image" id="upload_image" style="display:none">
+                      </label>
+                  </form>
+              </div>
+
+            </div>
+
+            <div class="col-sm-6">
+              
+            </div>
+
           </div>
         </section>
       </div>
@@ -192,6 +203,24 @@
 
       $(".codex-editor__redactor").css('padding-bottom', '0px');
     };
+
+    $("#upload_image").on('change', function() {
+      var form_data = new FormData();
+
+      form_data.append('file', $(this).prop('files')[0]);
+
+      $.ajax({
+          type: 'POST',
+          url: '/licoesebd',
+          data: form_data,
+          contentType: false,
+          cache: false,
+          processData: false,
+          success: function(data) {
+              $("#uploaded_image").attr('src', data);
+          },
+      });
+    });
 
   </script>
       

@@ -179,7 +179,7 @@ class db:
             return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error)}        
 
     def insertOrUpdate(self, dados, tabela):
-            
+             
         try:
             database = mysql.connector.connect(host=self.cred['host'], user=self.cred['user'], passwd=self.cred['passwd'], db=self.cred['db'])
             cur = database.cursor()

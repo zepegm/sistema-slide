@@ -27,3 +27,21 @@ def pegarListaSemanas(ano, mes):
 
     return lista
 
+
+def pegarTrimestre(data):
+    mes = data.month
+
+    if mes > 0 and mes < 4:
+        return '1º Trimestre'
+    elif mes > 3 and mes < 7:
+        return '2º Trimestre'
+    elif mes > 6 and mes < 10:
+        return '3º Timestre'
+    else:
+        return '4º Timestre'
+    
+def pegarLicoes(data):
+    mes = data.month
+
+    if mes > 0 and mes < 4:
+        pass

@@ -21,7 +21,7 @@ import calendar
 from pyppeteer import launch
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
-from utilitarios import pegarListaSemanas
+from utilitarios import pegarListaSemanas, pegarTrimestre
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -891,7 +891,27 @@ def calendario():
 @app.route('/licoesebd', methods=['GET', 'POST'])
 def licoesebd():
 
-    return render_template('ebd.jinja')
+    hoje = datetime.datetime.now()
+
+    trimestre = pegarTrimestre(hoje)
+
+    capa = banco.executarConsulta("select valor from config where id = 'capa_ebd'")[0]['valor']
+
+    now_txt = hoje.strftime('%d%m%Y%H%M%S')
+
+
+    if request.method == 'POST':
+        if 'file' in request.files:
+            isthisFile = request.files.get('file')
+            basename, extension = os.path.splitext(isthisFile.filename)
+
+            isthisFile.save('./static/images/EBD/capa' + extension)
+
+            banco.insertOrUpdate({'id':"'capa_ebd'", 'valor':"'images/EBD/capa" + extension + "'"}, 'id', 'config')
+
+            return jsonify('./static/images/EBD/capa' + extension + "?" + now_txt)
+
+    return render_template('ebd.jinja', trimestre=trimestre, capa=capa, now_txt=now_txt)
 
 
 @app.route('/slide', methods=['GET', 'POST'])
