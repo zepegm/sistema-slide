@@ -1747,7 +1747,7 @@ async def gerar_imagem_calendario_mensal():
     pdf_path = 'static/docs/calendario_mensal.png'
 
     browser = await launch(
-        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         args = [
             #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
             '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
@@ -1775,7 +1775,7 @@ async def gerar_imagem_calendario():
     print(info['data'])
 
     browser = await launch(
-        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         args = [
             #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Google\\Chrome\\User Data'
             '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
