@@ -125,6 +125,12 @@
         color: white;
       }
 
+      .text-justify {
+        -webkit-hyphens: auto;
+        -ms-hyphens: auto;
+        hyphens: auto;        
+      }
+
     </style>
   </head>
 
@@ -282,6 +288,17 @@
                 </select>
                 <button class="btn btn-primary">Iniciar Apresentação</button>
               </div>
+
+              <h3 class="mb-5"><b class="text-decoration-underline">Título:</b><span id="lb_titulo" class="text-danger"> {{dados['titulo']}}</span></h3>
+
+              <h4 class="text-justify mb-5"><b class="text-decoration-underline">Texto-Áureo - <span class="text-danger">{{dados['ref_texto_aureo']}}</span>:</b> {{dados['texto_aureo']}}</h4>
+
+              <h4 class="text-justify mb-4"><b class="text-decoration-underline">Verdade Prática:</b> {{dados['verdade_pratica']}}</h4>
+
+              <hr>
+
+              <h4 class="text-center"><b class="text-decoration-underline">Leitura Bíblica:</b></h4>
+
             </div>
 
           </div>

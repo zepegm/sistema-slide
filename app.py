@@ -956,7 +956,21 @@ def licoesebd():
         item['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % item['livro'])[0]['descricao']
 
 
-    return render_template('ebd.jinja', trimestre=trimestre, capa=capa, now_txt=now_txt, licoes=licoes, livros=livros, msg=msg, licao_1_edit=licao_1_edit, lst_leitura=lst_leitura)
+    # info da lição ativa
+    dados = []
+    leitura = []
+
+    for item in licoes:
+        if item['selected'] == 'selected':
+            dados = banco.executarConsulta('select * from licao_ebd where id = %s' % item['licao'])[0]
+            leitura = json.loads(dados['leitura_biblica'])
+
+            for biblia in leitura:
+                biblia['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % biblia['livro'])[0]['descricao']
+                biblia['texto'] = banco.executarConsulta('select ver, texto from biblia_arc where livro = %s and cap = %s and ver BETWEEN %s and %s' % (biblia['livro'], biblia['cap'], biblia['ver1'], biblia['ver2']))
+                
+
+    return render_template('ebd.jinja', trimestre=trimestre, capa=capa, now_txt=now_txt, licoes=licoes, livros=livros, msg=msg, licao_1_edit=licao_1_edit, lst_leitura=lst_leitura, dados=dados, leitura=leitura)
 
 
 @app.route('/slide', methods=['GET', 'POST'])
