@@ -131,6 +131,31 @@
         hyphens: auto;        
       }
 
+      .text-biblia {
+        font-size: large;
+      }
+
+      .nd {
+          font-variant: small-caps;
+      }
+
+      .add {
+          font-style: italic;
+      }
+
+      .sc {
+          font-variant: small-caps;
+      }
+
+      .heading {
+          font-weight: bold;
+      }
+
+      .wj {
+          color: #DB253C;
+      }    
+
+
     </style>
   </head>
 
@@ -291,14 +316,22 @@
 
               <h3 class="mb-5"><b class="text-decoration-underline">Título:</b><span id="lb_titulo" class="text-danger"> {{dados['titulo']}}</span></h3>
 
-              <h4 class="text-justify mb-5"><b class="text-decoration-underline">Texto-Áureo - <span class="text-danger">{{dados['ref_texto_aureo']}}</span>:</b> {{dados['texto_aureo']}}</h4>
+              <h4 class="text-justify mb-5"><b class="text-decoration-underline">Texto-Áureo - <span id="lb_referencia" class="text-danger">{{dados['ref_texto_aureo']}}</span>:</b> <span id="lb_textoaureo">{{dados['texto_aureo']}}</span></h4>
 
-              <h4 class="text-justify mb-4"><b class="text-decoration-underline">Verdade Prática:</b> {{dados['verdade_pratica']}}</h4>
+              <h4 class="text-justify mb-4"><b class="text-decoration-underline">Verdade Prática:</b> <span id="lb_verdade">{{dados['verdade_pratica']}}</span></h4>
 
               <hr>
 
-              <h4 class="text-center"><b class="text-decoration-underline">Leitura Bíblica:</b></h4>
+              <h4 class="text-center mb-3"><b class="text-decoration-underline">Leitura Bíblica:</b></h4>
 
+              <div id="painel_biblia_view">
+                {% for item in leitura %}
+                <p class="text-biblia fw-bold text-decoration-underline">{{item['desc_livro']}} {{item['cap']}}.{{item['ver1']}}-{{item['ver2']}}</p>
+                  {% for ver in item['texto'] %}
+                  <p class="text-biblia text-justify"><b>{{ver['ver']}}.</b> {{ver['texto']}}</p>
+                  {% endfor %}
+                {% endfor %}
+              </div>
             </div>
 
           </div>
@@ -376,6 +409,36 @@
 
       $("#info_leitura").val(JSON.stringify(info));
     }
+
+    $("#cb_licao_view").on('change', function() {
+      info = {'destino':2, 'id':$("#cb_licao_view").val()};
+
+      $.ajax({
+          type: "POST",
+          url: "/licoesebd",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+            if (data) {
+              $("#lb_titulo").html("&nbsp;" + data['info']['titulo']);
+              $("#lb_referencia").html(data['info']['ref_texto_aureo']);
+              $("#lb_textoaureo").html(data['info']['texto_aureo']);
+              $("#lb_verdade").html(data['info']['verdade_pratica']);
+              $("#painel_biblia_view").empty();
+
+              for (item in data['biblia']) {
+                $("#painel_biblia_view").append('<p class="text-biblia fw-bold text-decoration-underline">' + data['biblia'][item]['desc_livro'] + ' ' + data['biblia'][item]['cap'] + "." + data['biblia'][item]['ver1'] + '-' + data['biblia'][item]['ver2'] + '</p>');
+
+                for (txt in data['biblia'][item]['texto']) {
+                  $("#painel_biblia_view").append('<p class="text-biblia text-justify"><b>' + data['biblia'][item]['texto'][txt]['ver'] + '.</b> ' + data['biblia'][item]['texto'][txt]['texto'] + '</p>');
+                }
+              }
+            }
+          },
+      }); 
+
+    });
 
     $("#cb_licao_edit").on('change', function() {
       info = {'destino':1, 'id':$("#cb_licao_edit").val()};
