@@ -21,7 +21,7 @@ import calendar
 from pyppeteer import launch
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
-from utilitarios import pegarListaSemanas, pegarTrimestre
+from utilitarios import pegarListaSemanas, pegarTrimestre, pegarLicoes
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -891,6 +891,8 @@ def calendario():
 @app.route('/licoesebd', methods=['GET', 'POST'])
 def licoesebd():
 
+    msg = ''
+
     hoje = datetime.datetime.now()
 
     trimestre = pegarTrimestre(hoje)
@@ -899,8 +901,33 @@ def licoesebd():
 
     now_txt = hoje.strftime('%d%m%Y%H%M%S')
 
+    licoes = pegarLicoes(hoje)
+
+    livros = banco.executarConsulta('select * from livro_biblia')
+
 
     if request.method == 'POST':
+
+        if request.is_json:
+            
+            info = request.json
+            
+            if info['destino'] == 1: # pegar dados pro edit
+
+                dados = banco.executarConsulta('select * from licao_ebd where id = %s' % info['id'])
+
+                if len(dados) > 0:
+                    dados_licao = dados[0]
+                    lst_leitura = json.loads(dados_licao['leitura_biblica'])
+                    dados_licao['leitura_biblica'] = dados_licao['leitura_biblica'].replace('"', "'")
+
+                    for item in lst_leitura:
+                        item['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % item['livro'])[0]['descricao']
+
+                    return jsonify({'info':dados_licao, 'lst_leitura':lst_leitura})
+                else:
+                    return jsonify(False)
+
         if 'file' in request.files:
             isthisFile = request.files.get('file')
             basename, extension = os.path.splitext(isthisFile.filename)
@@ -910,8 +937,26 @@ def licoesebd():
             banco.insertOrUpdate({'id':"'capa_ebd'", 'valor':"'images/EBD/capa" + extension + "'"}, 'id', 'config')
 
             return jsonify('./static/images/EBD/capa' + extension + "?" + now_txt)
+        
+        if 'titulo' in request.form:
+            info = {'id':request.form['licao'], 'titulo':"'" + request.form['titulo'] + "'", 'ref_texto_aureo':"'" + request.form['referencia'] + "'", 'texto_aureo':"'" + request.form['texto-aureo'] + "'", 'verdade_pratica':"'" + request.form['verdade_pratica'] + "'", 'leitura_biblica':"'" + request.form['leitura'] + "'"}
 
-    return render_template('ebd.jinja', trimestre=trimestre, capa=capa, now_txt=now_txt)
+            if banco.insertOrUpdate(info, 'id', 'licao_ebd'):
+                msg = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída!</strong> Informações da Lição de número <b>%02d</b> cadastradas com sucesso!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>' % int(info['id'])
+            else:
+                msg = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Erro fatal ao tentar cadastrar dados!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+    
+    # info da primeira lição pra ser exibida no canal de edição
+    licao_1_edit = banco.executarConsulta('select * from licao_ebd where id = 1')[0]
+    lst_leitura = json.loads(licao_1_edit['leitura_biblica'])
+    licao_1_edit['leitura_biblica'] = licao_1_edit['leitura_biblica'].replace('"', "'")
+
+    for item in lst_leitura:
+        item['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % item['livro'])[0]['descricao']
+
+
+    return render_template('ebd.jinja', trimestre=trimestre, capa=capa, now_txt=now_txt, licoes=licoes, livros=livros, msg=msg, licao_1_edit=licao_1_edit, lst_leitura=lst_leitura)
 
 
 @app.route('/slide', methods=['GET', 'POST'])

@@ -13,6 +13,7 @@
     
 
     <!-- Bootstrap core CSS -->
+    
     <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
@@ -60,7 +61,7 @@
 
       img {
           display: block;
-          width: 30vw;
+          width: 100%;
           height: auto;
           border: solid;
           border-width: thin;
@@ -73,7 +74,7 @@
           overflow: hidden;
           height: 0;
           transition: .5s ease;
-          width: 30vw;
+          width: 100%;
       }
 
       .lb_principal {
@@ -94,11 +95,66 @@
         background:rgba(0,0,0,0)
       }
 
+      .form-text {
+        border: solid 1px #E3E7EA;
+        padding: 0;
+        margin-top: 0;
+        padding-left: 0.5vw;
+      }
+
+      .form-text:focus {
+        display: block;
+        border: solid 1px #E3E7EA;
+        color: black;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+      }
+
+      .item-biblia {
+        background-color: cornflowerblue;
+        color:white;
+        border: 2px solid blue;
+        padding: 8px;
+        margin-right: 5px;
+        line-height: 50px;
+        border-radius: 30px;
+        white-space: break-spaces;
+      }
+
+      .item-biblia > a {
+        font-weight: bold;
+        color: white;
+      }
+
     </style>
   </head>
 
   <body>
 
+    <div class="modal fade" id="modal_confirmar_edicao" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Habilitar Modo de Edição</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <label for="txt_senha" class="form-label">Digite a senha do Administrador para prosseguir:</label>
+            <input type="password" name="senha" class="form-control input_geral" id="txt_senha" placeholder="Digite a senha">
+            <input type="hidden" name="destino" id="destino" value="0">
+            <input type="hidden" name="id_versao" id="id_versao" value="0">            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn_confirmar_senha" data-dismiss="modal">Confirmar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form action="/licoesebd" method="POST">
+    <input type="hidden" name="leitura" id="info_leitura" value="{{licao_1_edit['leitura_biblica']}}">
     <div class="modal fade" id="modal_cadastro" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -110,28 +166,66 @@
           </div>
           <div class="modal-body">
 
-          <div class="input-group mb-3">
-            <span class="input-group-text" id="basic-addon1">Lição 01</span>
-            <input type="date" class="form-control bordered" name="licao1date" id="licao1date">
-            <span class="input-group-text" id="basic-addon2">Título:</span>
-            <input type="text" class="form-control bordered" name="licao1title" id="licao1title">          
-          </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Lição: </span>
+                <select class="form-select" id="cb_licao_edit" name="licao">
+                  {% for licao in licoes %}
+                    <option value="{{licao['licao']}}">{{licao['licao']}}</option>
+                  {% endfor %}
+                </select>
+                <span class="input-group-text">Título: </span>
+                <input type="text" class="form-control form-text w-50" id="txt_titulo" name="titulo" value="{{licao_1_edit['titulo']}}" required>
+            </div>
 
-          <div class="input-group mb-3">
-            <span class="input-group-text" id="basic-addon1">Texto Áureo</span>
-            <textarea class="form-control" id="licao1textoaureo" name="licao1textoaureo" rows="3"></textarea>
-            <span class="input-group-text" id="basic-addon2">Verdade Prática</span>
-            <textarea class="form-control" id="licao1vdd" name="licao1vdd" rows="3"></textarea>
-          </div>          
+            <div class="input-group mb-3">
+                <span class="input-group-text">Referência: </span>
+                <input type="text" class="form-control form-text" id="txt_ref" name="referencia" value="{{licao_1_edit['ref_texto_aureo']}}" required>
+                <span class="input-group-text">Texto Áureo: </span>
+                <textarea class="form-control form-text w-50" id="txt_texto" name="texto-aureo" required>{{licao_1_edit['texto_aureo']}}</textarea>
+            </div>
+
+            <div class="input-group mb-3">
+                <span class="input-group-text">Verdade Prática: </span>
+                <textarea class="form-control form-text" id="txt_verdade" name="verdade_pratica" required>{{licao_1_edit['verdade_pratica']}}</textarea>
+            </div>            
+
+            <p class="fw-bold">Leitura Bíblica:</p>
+
+            <div class="input-group mb-3">
+                <span class="input-group-text">Livro: </span>
+                <select id="cb_livro" class="form-select">
+                  {% for livro in livros %}
+                  <option value="{{livro['id']}}">{{livro['descricao']}}</option>
+                  {% endfor %}
+                </select>
+                <span class="input-group-text">Capítulo: </span>
+                <input id="txt_cap" type="number" class="form-control form-text">
+                <span class="input-group-text">Versículo de: </span>
+                <input id="txt_ver1" type="number" class="form-control form-text">
+                <span class="input-group-text">Até: </span>
+                <input id="txt_ver2" type="number" class="form-control form-text">
+                <button type="button" id="btn_plus" class="btn btn-success"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <div class="mb-3" id="status"></div>
+
+            <div class="mb-3" id="painel_biblia">
+              {% for item in lst_leitura %}
+                <span class='item-biblia' data-livro="{{item['livro']}}" data-cap="{{item['cap']}}" data-ver1="{{item['ver1']}}" data-ver2="{{item['ver2']}}">{{item['desc_livro']}}&nbsp;{{item['cap']}}.{{item['ver1']}}-{{item['ver2']}}&nbsp;<a href='#'>X</a></span>
+              {% endfor %}
+            </div>
 
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btn_confirmar">Confirmar</button>
+            <button type="submit" class="btn btn-primary" id="btn_confirmar">Confirmar</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
           </div>
         </div>
       </div>
     </div> 
+    </form>
+
+   
     
     {% block menu_superior %}
       {% include 'menu_superior.html' %}
@@ -146,6 +240,9 @@
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
+
+          <div id="status_inicio">{{msg}}</div>
+
           <div id="loading"><div class="loader"></div></div>
           <div class="row"> 
             <div class="col-sm-12">{{status}}</div>
@@ -153,11 +250,12 @@
               <h2 class="fw-bold text-center display-5">Lições EBD</h2>
             </div>
             <div class="col-sm-12"><hr></div>
-            <div class="col-sm-6">
-              <button class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro">Cadastro das Lições</button>
+            <div class="col-sm-4">
+              <button id="btn_cadastro" class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro" hidden>Cadastro das Lições</button>
+              <button id="btn_edicao" class="btn btn-secondary" data-toggle="modal" data-target="#modal_confirmar_edicao">Habilitar Modo de Edição</button>
             </div>
             <div class="col-sm-12"><hr></div>
-            <div class="col-sm-6">
+            <div class="col-sm-4">
               <h2 class="fw-bold text-center">{{trimestre}}</h2>
 
 
@@ -175,8 +273,15 @@
 
             </div>
 
-            <div class="col-sm-6">
-              
+            <div class="col-sm-8">
+              <div class="input-group mb-3">
+                <select class="form-select" id="cb_licao_view">
+                  {% for licao in licoes %}
+                    <option value="{{licao['licao']}}" {{licao['selected']}}>Lição de nº {{licao['licao']}} - {{licao['dia'].strftime('%d/%m/%Y')}}</option>
+                  {% endfor %}
+                </select>
+                <button class="btn btn-primary">Iniciar Apresentação</button>
+              </div>
             </div>
 
           </div>
@@ -221,6 +326,100 @@
           },
       });
     });
+
+    $("#btn_plus").on('click', function() {
+
+      if ($("#txt_cap").val() != '' && $("#txt_ver1").val() != '' && $("#txt_ver2").val() != '') {
+        desc = $("#cb_livro option:selected").text() + " " + $("#txt_cap").val() + "." + $("#txt_ver1").val() + "-" + $("#txt_ver2").val();
+
+        element = "<span class='item-biblia' data-livro='" + $("#cb_livro").val() + "' data-cap='" + $("#txt_cap").val() + "' data-ver1='" + $("#txt_ver1").val() + "' data-ver2='" + $("#txt_ver2").val() + "'>"
+        element += desc
+        element += "&nbsp;<a href='#'>X</a>"
+        element += "</span>"
+
+        $("#painel_biblia").append(element);
+        organizarListaLeituraBiblica()
+      } else {
+        $("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Por favor digite os campos do capítulo e versículos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+      }
+
+    });
+
+    $("#painel_biblia").on('click', 'a', function() {
+      $(this).parent().remove();
+      organizarListaLeituraBiblica()
+    });
+
+    function organizarListaLeituraBiblica() {
+      var info = [];
+
+      $(".item-biblia").each(function(index) {
+        info.push({'livro':parseInt($(this).attr('data-livro')), 'cap':parseInt($(this).attr('data-cap')), 'ver1':parseInt($(this).attr('data-ver1')), 'ver2':parseInt($(this).attr('data-ver2'))})
+      });
+
+      $("#info_leitura").val(JSON.stringify(info));
+    }
+
+    $("#cb_licao_edit").on('change', function() {
+      info = {'destino':1, 'id':$("#cb_licao_edit").val()};
+
+      $.ajax({
+          type: "POST",
+          url: "/licoesebd",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+              if (data) {
+                $("#txt_titulo").val(data['info']['titulo']);
+                $("#txt_ref").val(data['info']['ref_texto_aureo']);
+                $("#txt_texto").text(data['info']['texto_aureo']);
+                $("#txt_verdade").text(data['info']['verdade_pratica']);
+                $("#info_leitura").val(data['info']['leitura_biblica']);
+
+                $("#painel_biblia").empty();
+
+                for (item in data['lst_leitura']) {
+                  element = "<span class='item-biblia' data-livro='" + data['lst_leitura'][item]['livro'] + "' data-cap='" + data['lst_leitura'][item]['cap'] + "' data-ver1='" + data['lst_leitura'][item]['ver1'] + "' data-ver2='" + data['lst_leitura'][item]['ver2'] + "'>"
+                  element += data['lst_leitura'][item]['desc_livro'] + "&nbsp;" + data['lst_leitura'][item]['cap'] + "." + data['lst_leitura'][item]['ver1'] + '-' + data['lst_leitura'][item]['ver2']
+                  element += "&nbsp;<a href='#'>X</a>"
+                  element += "</span>"
+
+                  $("#painel_biblia").append(element);
+                }
+
+              } else {
+                $("#txt_titulo").val('');
+                $("#txt_ref").val('');
+                $("#txt_texto").empty();
+                $("#txt_verdade").empty();
+                $("#painel_biblia").empty();
+                $("#info_leitura").val('');
+              }
+          },
+      });      
+    });
+
+
+    $("#btn_confirmar_senha").on('click', function() {
+      senha = $('#txt_senha').val();
+      
+      $.ajax({
+          type: "POST",
+          url: "calendario",
+          contentType: "application/json",
+          data: JSON.stringify({'tipo':3, 'senha':senha}),
+          dataType: "json",
+          success: function(data) {
+            if (data) {
+              $("#btn_edicao").attr('hidden', '');
+              $("#btn_cadastro").removeAttr('hidden');
+            } else {
+              $("#status_inicio").html('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
+          },
+      });       
+    })
 
   </script>
       

@@ -265,11 +265,11 @@ class db:
                     update += item + "=" + dados[item] + ", "
 
             sql = "INSERT INTO " + tabela + " (" + keys[:-2] + ") VALUES(" + data[:-2] + ") ON CONFLICT(" + id_name + ") DO UPDATE SET " + update[:-2]
-            
+
             cur.execute(sql)
 
             #sql = 'UPDATE %s SET %s WHERE ' % (tabela, update[:-2])
-            #print(sql)
+            
             con.commit()
             con.close()
 

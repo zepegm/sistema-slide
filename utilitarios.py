@@ -43,5 +43,50 @@ def pegarTrimestre(data):
 def pegarLicoes(data):
     mes = data.month
 
-    if mes > 0 and mes < 4:
-        pass
+    licoes = []
+
+    inicio = 1
+    fim = 3
+
+    if mes > 3 and mes < 7:
+        inicio = 3
+        fim = 6
+    elif mes > 6 and mes < 10:
+        inicio = 7
+        fim = 9
+    else:
+        inicio = 10
+        fim = 12
+
+    cont_licao = 1
+    licao_selecionada = 0
+
+    # Encontrar o primeiro dia do mês
+    primeiro_dia = datetime.datetime(data.year, inicio, 1)
+    
+    # Calcular quantos dias precisamos adicionar para chegar ao primeiro domingo
+    dias_a_adicionar = (6 - primeiro_dia.weekday()) % 7
+    
+    # Obter o primeiro domingo
+    primeiro_domingo = primeiro_dia + datetime.timedelta(days=dias_a_adicionar)
+
+    if primeiro_dia <= data:
+        licao_selecionada = cont_licao - 1
+
+    licoes.append({'licao':cont_licao, 'dia':primeiro_domingo, 'selected':''})
+
+    cont_licao += 1
+    proximo_domingo = primeiro_domingo + datetime.timedelta(days=7)
+
+    while (proximo_domingo.month <= fim):
+        licoes.append({'licao':cont_licao, 'dia':proximo_domingo, 'selected':''})
+        
+        if proximo_domingo <= data:
+            licao_selecionada = cont_licao - 1        
+        
+        cont_licao += 1
+        proximo_domingo = proximo_domingo + datetime.timedelta(days=7)
+
+    licoes[licao_selecionada]['selected'] = 'selected'
+
+    return licoes
