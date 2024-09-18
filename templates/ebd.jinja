@@ -294,10 +294,10 @@
                   <form method="post">
                       <label class="lb_principal" for="upload_image">
                           <img src="{{ url_for('static', filename=capa) }}?{{now_txt}}" id="uploaded_image" class="rounded foto" />
-                          <div class="overlay text-center">
+                          <div class="overlay text-center" hidden>
                               <h3 class="text-hover">Clique para Adicionar Foto da Capa</h3>
                           </div>
-                          <input type="file" name="image" class="image" id="upload_image" style="display:none">
+                          <input type="file" name="image" class="image" id="upload_image" disabled style="display:none">
                       </label>
                   </form>
               </div>
@@ -311,7 +311,7 @@
                     <option value="{{licao['licao']}}" {{licao['selected']}}>Lição de nº {{licao['licao']}} - {{licao['dia'].strftime('%d/%m/%Y')}}</option>
                   {% endfor %}
                 </select>
-                <button class="btn btn-primary">Iniciar Apresentação</button>
+                <button id="btn_iniciar_apresentacao" class="btn btn-primary">Iniciar Apresentação</button>
               </div>
 
               <h3 class="mb-5"><b class="text-decoration-underline">Título:</b><span id="lb_titulo" class="text-danger"> {{dados['titulo']}}</span></h3>
@@ -494,12 +494,31 @@
             if (data) {
               $("#btn_edicao").attr('hidden', '');
               $("#btn_cadastro").removeAttr('hidden');
+              $(".overlay").removeAttr('hidden');
+              $("#upload_image").removeAttr('disabled');
             } else {
               $("#status_inicio").html('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
             }
           },
       });       
-    })
+    });
+
+    $("#btn_iniciar_apresentacao").on('click', function() {
+      info = {'id':$("#cb_licao_view").val(), 'tipo':'ebd'}
+
+      $.ajax({
+          type: "POST",
+          url: "iniciar_apresentacao",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+              if (data) {
+                $("#status_inicio").append('<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Projeção da Lição Iniciada! <a href="/controlador">Clique aqui para abrir o controlador.</a><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+              }
+          },
+      });
+    });    
 
   </script>
       

@@ -89,6 +89,12 @@ def home():
         titulo = 'VideoPlayer'
         tipo = 'Vídeo MP4'
         capa = 'static/images/VideoPlayer.avif'
+    elif estado == 8: #EBD
+        licoes = pegarLicoes(datetime.datetime.now())
+        id = int(current_presentation['id'])
+        titulo = "Lição %02d - %s" % (id, licoes[id - 1]['dia'].strftime('%d/%m/%Y'))
+        tipo = "Abertura da Lição de Domingo"
+        capa = 'static/images/EBD.png'
 
     else:
         titulo = None
@@ -524,6 +530,27 @@ def controlador():
     elif estado == 7: #video_player
 
         return render_template('controlador_video.jinja')
+
+    elif estado == 8: #EBD
+
+        dados = []
+        leitura = []
+        licoes = pegarLicoes(datetime.datetime.now())
+
+        data = licoes[int(current_presentation['id']) - 1]['dia'].strftime('%d/%m/%Y')
+
+        dados = banco.executarConsulta('select * from licao_ebd where id = %s' % current_presentation['id'])[0]
+        leitura = json.loads(dados['leitura_biblica'])
+
+        total = 1
+
+        for biblia in leitura:
+            biblia['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % biblia['livro'])[0]['descricao']
+            biblia['texto'] = banco.executarConsulta('select ver, texto from biblia_arc where livro = %s and cap = %s and ver BETWEEN %s and %s' % (biblia['livro'], biblia['cap'], biblia['ver1'], biblia['ver2']))
+
+            total += len(biblia['texto'])
+
+        return render_template('controlador_ebd.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total)
 
     return 'erro'
 
@@ -1152,6 +1179,28 @@ def slide():
     elif estado == 7:
 
         return render_template('video_player.jinja')
+    
+    elif estado == 8:
+
+        dados = []
+        leitura = []
+        licoes = pegarLicoes(datetime.datetime.now())
+
+        data = licoes[int(current_presentation['id']) - 1]['dia'].strftime('%d/%m/%Y')
+
+        dados = banco.executarConsulta('select * from licao_ebd where id = %s' % current_presentation['id'])[0]
+        leitura = json.loads(dados['leitura_biblica'])
+
+        total = 1
+
+        for biblia in leitura:
+            biblia['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % biblia['livro'])[0]['descricao']
+            biblia['texto'] = banco.executarConsulta('select ver, texto from biblia_arc where livro = %s and cap = %s and ver BETWEEN %s and %s' % (biblia['livro'], biblia['cap'], biblia['ver1'], biblia['ver2']))
+
+            total += len(biblia['texto'])
+
+        return render_template('PowerPoint_EBD.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total)
+
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
@@ -2330,6 +2379,8 @@ def iniciar_apresentacao():
                 estado = 6
                 current_presentation['mes'] = info['mes']
                 current_presentation['semana'] = info['semana']
+            elif info['tipo'] == 'ebd':
+                estado = 8
 
             index = 0
 
