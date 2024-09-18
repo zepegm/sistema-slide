@@ -2,6 +2,10 @@
     <head>
         <title>SlideShow</title>
 
+        <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">   
+
         <style>
 
             body {
@@ -165,6 +169,12 @@
                 animation-duration: 0.5s;
                 opacity: 0;
             }  
+
+            .final-out {
+                animation-name: fade-out;
+                animation-duration: 4s;
+                opacity: 0;
+            }
 
             .wallpaper {
                 width: 100%;

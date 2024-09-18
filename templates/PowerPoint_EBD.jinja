@@ -2,6 +2,10 @@
     <head>
         <title>SlideShow</title>
 
+        <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">        
+
         <style>
 
             body {
@@ -120,6 +124,12 @@
                 height: 100%;
             }
 
+            .final-out {
+                animation-name: fade-out;
+                animation-duration: 4s;
+                opacity: 0;
+            }
+
             @keyframes fade-in {
                 from {opacity: 0;}
                 to {opacity: 1;}
@@ -203,8 +213,21 @@
                 font-size: 6vmax;
                 text-align: center;
                 color: black;
-                margin-top:10vh;
-            }            
+                margin-top:4vh;
+            }  
+
+            .text_biblia {
+                width: 90%;
+                margin-left:5vw;
+                margin-top: 1vh;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 7vmax;
+                text-align: justify;
+                line-height: 1.31;
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;                
+            }          
 
         </style>
 
@@ -250,8 +273,10 @@
 
             <div class="slide {{'hide' if index != ns.counter else 'in' }}" id="sld{{ns.counter}}">
                 <div class="head">{{item['desc_livro']}} {{item['cap']}}:<span id="lb_versiculo">{{texto['ver']}}</span> - ARC</div>
+                <div class="text_biblia">{{texto['texto']}}<i class="fa-solid fa-feather-pointed"></i></div>
             </div>
 
+            {% set ns.counter = ns.counter + 1 %}
             {% endfor %}
 
         {% endfor %}
@@ -281,20 +306,11 @@
             const slide_inicial = document.getElementsByClassName('in')[0];
 
             var espaco_scroll = slide_inicial.scrollHeight - window.innerHeight;
-            try {
-                var margin_top = parseFloat(window.getComputedStyle(slide_inicial.getElementsByTagName('ul')[0], null).getPropertyValue('margin-top'));
-                var margin_top_original = margin_top;
-                var scrolling = false;
-                var posicao = 0;
-                var limite_scroll = slide_inicial.getElementsByTagName('li').length;
-            } catch (error) {
-                console.error(error);
-                var margin_top = 0;
-                var margin_top_original = margin_top;
-                var scrolling = false;
-                var posicao = 0;
-                var limite_scroll = 0;
-            }              
+            var posicao = 0;
+            var margin_top = 0;
+            var scrolling = false;
+
+            console.log(espaco_scroll);
 
             function changeComponent(index) {
                 sld_previous = document.getElementsByClassName('in')[0];
@@ -307,21 +323,10 @@
                 sld_next.classList.remove('hide');
                 sld_next.classList.remove('out');
 
-                if (posicao > 0) {
-                    sld_previous.getElementsByTagName('ul')[0].style.marginTop = margin_top_original + 'px';
-                }
-
-                try {
-                    espaco_scroll = sld_next.scrollHeight - window.innerHeight;
-                    margin_top = parseFloat(window.getComputedStyle(sld_next.getElementsByTagName('ul')[0], null).getPropertyValue('margin-top'));
-                    margin_top_original = margin_top;
-                    posicao = 0;
-                    limite_scroll = sld_next.getElementsByTagName('li').length;
-                } catch (error) {
-                    console.error(error);
-                    // Expected output: ReferenceError: nonExistentFunction is not defined
-                    // (Note: the exact output may be browser-dependent)
-                }                
+                espaco_scroll = sld_next.scrollHeight - window.innerHeight;
+                posicao = 0;
+                margin_top = 0;
+                sld_previous.style.marginTop = 0;
             
             }
 
@@ -354,50 +359,65 @@
             }); 
 
         function scroll_up() {
-            if (posicao > 0) {
+            if (margin_top < 0) {
                 let slide = document.getElementsByClassName('in')[0]
+                let element_text = slide.getElementsByClassName('text_biblia')[0]
                 scrolling = true;
                 arrow.innerHTML = '<i class="fa-solid fa-circle-chevron-up">';
-                arrow.classList.remove("final-out"); 
+                arrow.classList.remove("final-out");
                 void arrow.offsetWidth;
-                arrow.classList.add("final-out");  
+                arrow.classList.add("final-out");
 
-                let li_element = slide.getElementsByTagName('ul')[0].getElementsByTagName('li')[posicao - 1];
+                posicao = parseFloat(window.getComputedStyle(element_text, null).getPropertyValue('line-height')) * 4;
+                let velocidade = posicao * 4;
 
-                margin_top = parseFloat(window.getComputedStyle(li_element, null).getPropertyValue('height')) + parseFloat(window.getComputedStyle(document.getElementsByClassName('paragrafo')[0], null).getPropertyValue('margin-bottom'));
-                
-                posicao -= 1;
+                espaco_scroll += posicao;
 
-                $('.in').find('ul').animate({
-                    "margin-top": "+=" + margin_top
-                }, 2000, function(){
-                    scrolling = false;                   
-                });                                              
+                if ((margin_top + posicao) > 0) {
+                    posicao = margin_top * -1;
+                    velocidade = posicao * 4;
+                }
+
+                $('.in').animate({
+                    "margin-top": "+=" + posicao
+                }, velocidade, function(){
+                    scrolling = false;
+                    margin_top = parseFloat(slide.style.marginTop);
+                    espaco_scroll = slide.scrollHeight - window.innerHeight;
+                });                                             
             } else {
                 location.reload();
             }
         }
 
         function scroll_down() {
-
-            if (espaco_scroll > 0 && posicao < limite_scroll - 1) {
+            
+            if (espaco_scroll > 0) {
                 let slide = document.getElementsByClassName('in')[0]
+                let element_text = slide.getElementsByClassName('text_biblia')[0]
                 scrolling = true;
                 arrow.innerHTML = '<i class="fa-solid fa-circle-chevron-down">';
                 arrow.classList.remove("final-out");
                 void arrow.offsetWidth;
                 arrow.classList.add("final-out");
 
-                let li_element = slide.getElementsByTagName('ul')[0].getElementsByTagName('li')[posicao];
-
-                margin_top = parseFloat(window.getComputedStyle(li_element, null).getPropertyValue('height')) + parseFloat(window.getComputedStyle(document.getElementsByClassName('paragrafo')[0], null).getPropertyValue('margin-bottom'));
                 
-                posicao += 1;
+                posicao = parseFloat(window.getComputedStyle(element_text, null).getPropertyValue('line-height')) * 4;
+                let velocidade = posicao * 4;
 
-                $('.in').find('ul').animate({
-                    "margin-top": "-=" + margin_top
-                }, 2000, function(){
+                espaco_scroll -= posicao;
+
+                if (espaco_scroll < 0) {
+                    posicao += espaco_scroll
+                    espaco_scroll = 0;
+                    velocidade = posicao * 4;
+                }
+
+                $('.in').animate({
+                    "margin-top": "-=" + posicao
+                }, velocidade, function(){
                     scrolling = false;
+                    margin_top = parseFloat(slide.style.marginTop);
                 });                
 
             }
