@@ -1189,9 +1189,12 @@ def slide():
         data = licoes[int(current_presentation['id']) - 1]['dia'].strftime('%d/%m/%Y')
 
         dados = banco.executarConsulta('select * from licao_ebd where id = %s' % current_presentation['id'])[0]
+        capa = banco.executarConsulta("select valor from config where id = 'capa_ebd'")[0]['valor']
         leitura = json.loads(dados['leitura_biblica'])
 
         total = 1
+
+        trimestre = pegarTrimestre(datetime.datetime.now())
 
         for biblia in leitura:
             biblia['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % biblia['livro'])[0]['descricao']
@@ -1199,7 +1202,7 @@ def slide():
 
             total += len(biblia['texto'])
 
-        return render_template('PowerPoint_EBD.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total)
+        return render_template('PowerPoint_EBD.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total, trimestre=trimestre, capa=capa)
 
 
 

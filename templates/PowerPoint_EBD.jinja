@@ -1,0 +1,411 @@
+<html lang="pt-BR">
+    <head>
+        <title>SlideShow</title>
+
+        <style>
+
+            body {
+                overflow: hidden;
+            }
+
+            @font-face {
+                font-family:bebaskai;
+                font-style:normal;
+                font-weight:400;
+                src:local('BebasKai'),
+                url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+            }
+
+            .slide {
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                top:0%;    
+                left:0%;
+                font-family: Arial, Helvetica, sans-serif;
+            } 
+
+            .titulo {
+                font-size: 5vw;
+                text-align: center;
+                padding: 0%;
+                margin-top: 12vh;
+                font-family:'BebasKai', sans-serif;
+            }
+
+            .border_img {
+                background-image: url("/static/images/border_ebd.png");
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-size: 100% 100%;
+            }
+
+            .hide {                
+                opacity: 0;
+            }           
+
+            .text-primary,
+            .blue {
+                color:#0070C0;
+            }
+
+            .fw-bold {
+                font-weight: bold;
+            }
+
+            .text-danger,
+            .red {
+                color:#DA2536;
+            }
+
+            .text-success,
+            .green {
+                color:green;
+            }
+
+            .text-dark {
+                color:black;
+            }
+
+            .text {
+                font-size: 5.4vw;
+                margin-left: 3vw;
+                text-align: justify;
+                line-height: 1.31;
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;
+                margin-right: 2vw;
+                margin-bottom: 0;
+            }
+
+            .paragrafo {
+                margin-bottom: 5vh;
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;                
+            }
+
+            .paragrafo:last-child {
+                margin-bottom: 0px;
+            }
+
+            .text-item-semanal {
+                margin-top: -10vh;
+            }
+
+            #loading {
+                background-color:black;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top:0%;
+                left:0%;
+                z-index: 0;
+            } 
+
+            .in {
+                animation-name: fade-in;
+                animation-duration: 0.5s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 0.5s;
+                opacity: 0;
+            }  
+
+            .wallpaper {
+                width: 100%;
+                height: 100%;
+            }
+
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            }             
+
+            #arrow_pointer {
+                position: fixed;
+                top: 0%;
+                left: 95.5%;
+                font-size: 4vmax;
+                margin-top: 1vh;
+                opacity: 0;
+                color:{{config['seta']}};
+
+            }
+
+            .blank_rect {
+                position: relative;
+                background-color: white;
+                z-index:1;
+            }
+
+            ul {
+                z-index:-1;
+            }
+
+            .text-decoration-underline {
+                text-decoration: underline;
+            }
+
+            .trimestre {
+                font-size:3vw;
+                margin-left: 10vw;
+                margin-top: -5vh;
+            }
+
+            .capa {
+                width: 16vw;
+                height: auto;
+                margin-left: 10vw;
+            }
+
+            .ref_ta {
+                position: absolute;
+                font-size: 4vw;
+                font-weight: bold;
+                top:25vh;
+                left:30vw;
+            }
+
+            .texto_aureo {
+                text-align: justify;
+                position: absolute;
+                top:35vh;
+                left:30vw;
+                width: 62vw;
+                height: 50vh;
+                -webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;                
+            }
+
+            .subtitulo {
+                font-weight: bold;
+                font-size: 3vw;
+                position: absolute;
+                top:33vh;
+                left:30vw;
+                line-height: 3vh;
+            }
+
+            .head {
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: bold;
+                text-decoration: underline;
+                font-size: 6vmax;
+                text-align: center;
+                color: black;
+                margin-top:10vh;
+            }            
+
+        </style>
+
+    </head>
+    <body>
+
+        <!-- Texto Áureo -->
+        <div class="slide {{'hide' if index != 0 else 'in' }} border_img" id="sld0">
+            <p class="titulo"><span class="red">Lição {{licao}}</span> - {{dados['titulo']}}</p>
+            <div class="fw-bold trimestre">{{trimestre}}</div>
+            <img class="capa" src="{{ url_for('static', filename=capa) }}">
+            <div class="ref_ta"><span class="text-decoration-underline red">Texto Áureo</span> - <span class="text-decoration-underline">{{dados['ref_texto_aureo']}}:</span></div>
+            <div class="texto_aureo">{{dados['texto_aureo']}}</div>
+        </div>
+
+        <!-- Verdade Prática -->
+        <div class="slide {{'hide' if index != 1 else 'in' }} border_img" id="sld1">
+            <p class="titulo"><span class="red">Lição {{licao}}</span> - {{dados['titulo']}}</p>
+            <div class="fw-bold trimestre">{{trimestre}}</div>
+            <img class="capa" src="{{ url_for('static', filename=capa) }}">
+            <div class="ref_ta"><span class="text-decoration-underline red">Verdade Prática:</span></div>
+            <div class="texto_aureo">{{dados['verdade_pratica']}}</div>
+        </div>
+
+        <!-- Leitura Bíblica -->
+        <div class="slide {{'hide' if index != 2 else 'in' }} border_img" id="sld2">
+            <p class="titulo"><span class="red">Lição {{licao}}</span> - {{dados['titulo']}}</p>
+            <div class="fw-bold trimestre">{{trimestre}}</div>
+            <img class="capa" src="{{ url_for('static', filename=capa) }}">
+            <div class="ref_ta"><span class="text-decoration-underline red">Leitura Bíblica:</span></div>
+            <div class="subtitulo">
+                {% for item in leitura %}
+                <p>{{item['desc_livro']}} {{item['cap']}}.{{item['ver1']}}-{{item['ver2']}};</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- versículos propriamente ditos -->
+        {% set ns = namespace(counter=3) %}
+        {% for item in leitura %}
+
+            {% for texto in item['texto'] %}
+
+            <div class="slide {{'hide' if index != ns.counter else 'in' }}" id="sld{{ns.counter}}">
+                <div class="head">{{item['desc_livro']}} {{item['cap']}}:<span id="lb_versiculo">{{texto['ver']}}</span> - ARC</div>
+            </div>
+
+            {% endfor %}
+
+        {% endfor %}
+
+        <div id="arrow_pointer"><i class="fa-solid fa-circle-chevron-up"></i></div>
+
+        <div id="loading">
+            <div class="d-flex justify-content-center vertical-center">
+              <div class="spinner-border" role="status" style="width: 30rem; height: 30rem; border-width: 5rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+        </div>        
+
+        <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+
+        <script>
+            window.addEventListener("load", (event) => {
+                const element = document.getElementById("loading");
+                element.classList.add("out");
+                textFit($(".texto_aureo"), {alignVert: false, multiLine: true, minFontSize: 5, maxFontSize: 2000});
+            });
+
+            const arrow = document.getElementById('arrow_pointer');
+            const slide_inicial = document.getElementsByClassName('in')[0];
+
+            var espaco_scroll = slide_inicial.scrollHeight - window.innerHeight;
+            try {
+                var margin_top = parseFloat(window.getComputedStyle(slide_inicial.getElementsByTagName('ul')[0], null).getPropertyValue('margin-top'));
+                var margin_top_original = margin_top;
+                var scrolling = false;
+                var posicao = 0;
+                var limite_scroll = slide_inicial.getElementsByTagName('li').length;
+            } catch (error) {
+                console.error(error);
+                var margin_top = 0;
+                var margin_top_original = margin_top;
+                var scrolling = false;
+                var posicao = 0;
+                var limite_scroll = 0;
+            }              
+
+            function changeComponent(index) {
+                sld_previous = document.getElementsByClassName('in')[0];
+                sld_next = document.getElementById('sld' + index)
+
+                sld_previous.classList.add('out');
+                sld_previous.classList.remove('in');
+                
+                sld_next.classList.add('in');
+                sld_next.classList.remove('hide');
+                sld_next.classList.remove('out');
+
+                if (posicao > 0) {
+                    sld_previous.getElementsByTagName('ul')[0].style.marginTop = margin_top_original + 'px';
+                }
+
+                try {
+                    espaco_scroll = sld_next.scrollHeight - window.innerHeight;
+                    margin_top = parseFloat(window.getComputedStyle(sld_next.getElementsByTagName('ul')[0], null).getPropertyValue('margin-top'));
+                    margin_top_original = margin_top;
+                    posicao = 0;
+                    limite_scroll = sld_next.getElementsByTagName('li').length;
+                } catch (error) {
+                    console.error(error);
+                    // Expected output: ReferenceError: nonExistentFunction is not defined
+                    // (Note: the exact output may be browser-dependent)
+                }                
+            
+            }
+
+            var socket = io();
+            socket.on('update', function(index) {
+                changeComponent(index);
+            });        
+        
+            socket.on('refresh', function(result) {
+                location.reload();
+            });
+
+            socket.on('pix', function(result) {
+                window.location.replace("/slide_pix");
+            });
+
+            socket.on('wait_pptx', function(result) {
+                window.location.replace("/wait_pptx");
+            });        
+
+            socket.on('scroll_biblia', function(direcao) {
+
+                console.log('scroll!');
+
+                if (direcao == 'down' && !scrolling) {
+                    scroll_down();    
+                } else if(direcao == 'up' && !scrolling) {
+                    scroll_up();
+                }
+            }); 
+
+        function scroll_up() {
+            if (posicao > 0) {
+                let slide = document.getElementsByClassName('in')[0]
+                scrolling = true;
+                arrow.innerHTML = '<i class="fa-solid fa-circle-chevron-up">';
+                arrow.classList.remove("final-out"); 
+                void arrow.offsetWidth;
+                arrow.classList.add("final-out");  
+
+                let li_element = slide.getElementsByTagName('ul')[0].getElementsByTagName('li')[posicao - 1];
+
+                margin_top = parseFloat(window.getComputedStyle(li_element, null).getPropertyValue('height')) + parseFloat(window.getComputedStyle(document.getElementsByClassName('paragrafo')[0], null).getPropertyValue('margin-bottom'));
+                
+                posicao -= 1;
+
+                $('.in').find('ul').animate({
+                    "margin-top": "+=" + margin_top
+                }, 2000, function(){
+                    scrolling = false;                   
+                });                                              
+            } else {
+                location.reload();
+            }
+        }
+
+        function scroll_down() {
+
+            if (espaco_scroll > 0 && posicao < limite_scroll - 1) {
+                let slide = document.getElementsByClassName('in')[0]
+                scrolling = true;
+                arrow.innerHTML = '<i class="fa-solid fa-circle-chevron-down">';
+                arrow.classList.remove("final-out");
+                void arrow.offsetWidth;
+                arrow.classList.add("final-out");
+
+                let li_element = slide.getElementsByTagName('ul')[0].getElementsByTagName('li')[posicao];
+
+                margin_top = parseFloat(window.getComputedStyle(li_element, null).getPropertyValue('height')) + parseFloat(window.getComputedStyle(document.getElementsByClassName('paragrafo')[0], null).getPropertyValue('margin-bottom'));
+                
+                posicao += 1;
+
+                $('.in').find('ul').animate({
+                    "margin-top": "-=" + margin_top
+                }, 2000, function(){
+                    scrolling = false;
+                });                
+
+            }
+        }            
+
+
+
+        </script>
+
+    </body>
+</html>
