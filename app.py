@@ -1895,11 +1895,11 @@ async def gerar_imagem_calendario_mensal():
     pdf_path = 'static/docs/calendario_mensal.png'
 
     browser = await launch(
-        executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        args = [
+        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        #args = [
             #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
-            '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
-        ],        
+            #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
+        #],        
         handleSIGINT=False,
         handleSIGTERM=False,
         handleSIGHUP=False
@@ -1923,11 +1923,11 @@ async def gerar_imagem_calendario():
     print(info['data'])
 
     browser = await launch(
-        executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        args = [
+        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        #args = [
             #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Google\\Chrome\\User Data'
-            '--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
-        ],        
+            #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
+        #],
         handleSIGINT=False,
         handleSIGTERM=False,
         handleSIGHUP=False
@@ -2513,7 +2513,7 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run('0.0.0.0',port=80)
+    #app.run(debug=True, use_reloader=False, port=80)
     serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
