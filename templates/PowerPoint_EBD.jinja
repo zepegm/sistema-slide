@@ -194,7 +194,7 @@
                 height: 50vh;
                 -webkit-hyphens: auto;
                 -ms-hyphens: auto;
-                hyphens: auto;                
+                hyphens: auto;
             }
 
             .subtitulo {
@@ -226,7 +226,7 @@
                 line-height: 1.31;
                 -webkit-hyphens: auto;
                 -ms-hyphens: auto;
-                hyphens: auto;                
+                hyphens: auto;
             }          
 
         </style>
@@ -299,7 +299,7 @@
             window.addEventListener("load", (event) => {
                 const element = document.getElementById("loading");
                 element.classList.add("out");
-                textFit($(".texto_aureo"), {alignVert: false, multiLine: true, minFontSize: 5, maxFontSize: 2000});
+                textFit(document.getElementsByClassName('texto_aureo'), {alignVert: false, multiLine: true});
             });
 
             const arrow = document.getElementById('arrow_pointer');
