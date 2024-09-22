@@ -393,7 +393,7 @@ def inserir_calendario_semanal(lista):
     try:
         cont = 1
         for item in lista:
-            cur.execute("INSERT INTO calendario_semanal VALUES(%s, %s, %s, '%s', '%s', 1)" % (cont, item['semana'], item['mensal'], item['text'], converHTML_to_PlainText(item['text'])))
+            cur.execute("INSERT INTO calendario_semanal VALUES(%s, %s, %s, '%s', '%s', 1)" % (cont, item['semana'], item['mensal'], item['text'].replace('&nbsp;', ' '), converHTML_to_PlainText(item['text'])))
             cont += 1
 
         con.commit()
@@ -412,7 +412,7 @@ def inserir_calendario_mensal(lista, mes):
         cur.execute(r"DELETE FROM `calendario_mensal` WHERE strftime('%m', inicio) = '" + mes + "'")
         
         for item in lista:
-            cur.execute("INSERT INTO calendario_mensal(inicio, fim, texto, plain_text, ativo) VALUES('%s', '%s', '%s', '%s', 1)" % (item['data_inicial'], item['data_final'], item['texto'], converHTML_to_PlainText(item['texto'])))
+            cur.execute("INSERT INTO calendario_mensal(inicio, fim, texto, plain_text, ativo) VALUES('%s', '%s', '%s', '%s', 1)" % (item['data_inicial'], item['data_final'], item['texto'].replace('&nbsp;', ' '), converHTML_to_PlainText(item['texto'])))
 
         con.commit()
         con.close()
