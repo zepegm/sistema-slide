@@ -312,7 +312,26 @@ class db:
 
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
-            return False                   
+            return False
+        
+    def insertListBiblia(self, lista, tabela):
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()
+
+            for versiculo in lista:
+                sql = "INSERT INTO %s VALUES(%s, %s, %s, '%s')" % (tabela, versiculo['livro'], versiculo['cap'], versiculo['ver'], versiculo['texto'])
+                cur.execute(sql)
+            
+            con.commit()
+            con.close()
+
+            return True
+
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            print(sql)
+            return False        
 
 
 def insert_log(atividade, tipo, id, cap):
