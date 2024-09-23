@@ -20,15 +20,15 @@ async def main(head):
 
 lista_final = []
 
-for i in range(21, 51):
+for i in range(1, 11):
 
-    livro = 1
+    livro = 17
     capitulo = i
-    head = 'GEN.%s.ARA' % capitulo
+    head = 'EST.%s.ARA' % capitulo
     versiculos = asyncio.get_event_loop().run_until_complete(main(head))
     key_span = False
 
-    print('pegando caítulo %s' % i)
+    print('pegando capítulo %s' % i)
 
     for item in versiculos:
         try:
@@ -40,7 +40,7 @@ for i in range(21, 51):
             for txt in text_list:
                 if txt.get_attribute_list('class')[0] not in ['ChapterContent_label__R2PLt', 'ChapterContent_note__YlDW0', 'ChapterContent_body__O3qjr']:
 
-                    if txt.get_attribute_list('class')[0] == 'ChapterContent_nd__ECPAf':
+                    if txt.get_attribute_list('class')[0] in ['ChapterContent_nd__ECPAf', 'ChapterContent_sc__Hg9da']:
                         texto_final += '<span class="nd">'
                         key_span = True
                     elif txt.get_attribute_list('class')[0] == 'ChapterContent_wj___uP1U':
