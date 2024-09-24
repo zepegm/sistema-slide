@@ -20,11 +20,11 @@ async def main(head):
 
 lista_final = []
 
-for i in range(1, 11):
+for i in range(1, 151):
 
-    livro = 17
+    livro = 19
     capitulo = i
-    head = 'EST.%s.ARA' % capitulo
+    head = 'PSA.%s.ARA' % capitulo
     versiculos = asyncio.get_event_loop().run_until_complete(main(head))
     key_span = False
 
