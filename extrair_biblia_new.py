@@ -14,18 +14,34 @@ async def main(head):
  
     soup = BeautifulSoup(html, 'html.parser')
     mydivs = soup.find_all("span", {"class": "ChapterContent_verse__57FIw"})
+    
+    painel_geral = soup.find('div', {'class':'ChapterContent_chapter__uvbXo'})
 
-    return mydivs
+    elements = painel_geral.find_all("div")
+    titulos_poema = {}
+
+    for item in elements:
+        try:
+            if item.get_attribute_list('class')[0] == 'ChapterContent_sp__y6CR3':
+                texto = item.text
+                ver = int(item.find_next("span", {'class':'ChapterContent_label__R2PLt'}).text)
+                titulos_poema[ver] = texto
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+
+    return {'versiculos':mydivs, 'titulos':titulos_poema}
 
 
 lista_final = []
 
-for i in range(1, 151):
+for i in range(1, 9):
 
-    livro = 19
+    livro = 22
     capitulo = i
-    head = 'PSA.%s.ARA' % capitulo
-    versiculos = asyncio.get_event_loop().run_until_complete(main(head))
+    head = 'SNG.%s.ARA' % capitulo
+    ls = asyncio.get_event_loop().run_until_complete(main(head))
+    versiculos = ls['versiculos']
+    titulos_poema = ls['titulos']
     key_span = False
 
     print('pegando capítulo %s' % i)
@@ -35,7 +51,11 @@ for i in range(1, 151):
             ver = int(item.find('span', {"class":"ChapterContent_label__R2PLt"}).text)
 
             text_list = item.find_all('span')
-            texto_final = ''
+
+            try:
+                texto_final = '<span class="heading">%s: </span>' % titulos_poema[ver]
+            except:
+                texto_final = ''
 
             for txt in text_list:
                 if txt.get_attribute_list('class')[0] not in ['ChapterContent_label__R2PLt', 'ChapterContent_note__YlDW0', 'ChapterContent_body__O3qjr']:
@@ -61,6 +81,7 @@ for i in range(1, 151):
 
             if element != ' ':
                 lista_final[-1]['texto'] += ' ' + element
+
 
         
 
