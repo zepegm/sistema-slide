@@ -5,6 +5,8 @@ from SQLite_DB import db
 
 banco = db()
 
+head_list = ['GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI', '2KI']
+
 async def main(head):
     browser = await launch()
     page = await browser.newPage()
@@ -34,11 +36,12 @@ async def main(head):
 
 lista_final = []
 
-for i in range(1, 9):
+livro = banco.executarConsultaVetor('select max(livro) + 1 from biblia_ara')[0]
 
-    livro = 22
+for i in range(1, 1):
+
     capitulo = i
-    head = 'SNG.%s.ARA' % capitulo
+    head = 'ISA.%s.ARA' % capitulo
     ls = asyncio.get_event_loop().run_until_complete(main(head))
     versiculos = ls['versiculos']
     titulos_poema = ls['titulos']
@@ -85,8 +88,8 @@ for i in range(1, 9):
 
         
 
-print('inserindo dados no banco')
-banco.insertListBiblia(lista_final, 'biblia_ara')
+#print('inserindo dados no banco')
+#banco.insertListBiblia(lista_final, 'biblia_ara')
 
 
 
