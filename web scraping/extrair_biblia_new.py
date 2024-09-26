@@ -1,11 +1,22 @@
 import asyncio 
+import os
+import sys
 from pyppeteer import launch 
 from bs4 import BeautifulSoup
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Get the parent directory by going up one level
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+
+# Add the parent directory to the system path
+sys.path.insert(0, parent_dir)
+
 from SQLite_DB import db
 
 banco = db()
 
-head_list = ['GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI', '2KI']
+head_list = ['GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SNG', 'ISA', 'JER', 'LAM', 'EZK', 'DAN', 'HOS', 'JOL', 'AMO', 'OBA', 'JON', 'MIC', 'NAM', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL', 'MAT', 'MRK', 'LUK', 'JHN', 'ACT', 'ROM', '1CO', '2CO', 'GAL', 'EPH', 'PHP', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM', 'HEB', 'JAS', '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV']
 
 async def main(head):
     browser = await launch()
@@ -37,11 +48,16 @@ async def main(head):
 lista_final = []
 
 livro = banco.executarConsultaVetor('select max(livro) + 1 from biblia_ara')[0]
+max_cap = banco.executarConsultaVetor('select max(cap) from biblia_arc where livro = %s' % livro)[0]
+head_desc = head_list[livro - 1]
 
-for i in range(1, 1):
+print(max_cap)
+print(head_desc)
+
+for i in range(1, max_cap + 1):
 
     capitulo = i
-    head = 'ISA.%s.ARA' % capitulo
+    head = '%s.%s.ARA' % (head_desc, capitulo)
     ls = asyncio.get_event_loop().run_until_complete(main(head))
     versiculos = ls['versiculos']
     titulos_poema = ls['titulos']
@@ -61,7 +77,7 @@ for i in range(1, 1):
                 texto_final = ''
 
             for txt in text_list:
-                if txt.get_attribute_list('class')[0] not in ['ChapterContent_label__R2PLt', 'ChapterContent_note__YlDW0', 'ChapterContent_body__O3qjr']:
+                if txt.get_attribute_list('class')[0] not in ['ChapterContent_label__R2PLt', 'ChapterContent_note__YlDW0', 'ChapterContent_body__O3qjr', 'ChapterContent_fr__0KsID']:
 
                     if txt.get_attribute_list('class')[0] in ['ChapterContent_nd__ECPAf', 'ChapterContent_sc__Hg9da']:
                         texto_final += '<span class="nd">'
@@ -88,8 +104,8 @@ for i in range(1, 1):
 
         
 
-#print('inserindo dados no banco')
-#banco.insertListBiblia(lista_final, 'biblia_ara')
+print('inserindo dados no banco')
+banco.insertListBiblia(lista_final, 'biblia_ara')
 
 
 
