@@ -914,6 +914,14 @@ def calendario():
 
     return render_template('calendario.jinja', hoje=data_atual.strftime('%d/%m/%Y'), segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis, congregacoes=congregacoes, eventos=eventos, detalhes_evento_primeira_cong=detalhes_evento_primeira_cong)
 
+@app.route('/musical', methods=['GET', 'POST'])
+def musical():
+
+    harpa = banco.executarConsulta('select * from harpa order by id')
+    musicas = banco.executarConsulta('select * from musicas')
+    musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
+
+    return render_template('musical.jinja', harpa=harpa, musicas=musicas)
 
 @app.route('/licoesebd', methods=['GET', 'POST'])
 def licoesebd():
@@ -2513,8 +2521,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run(debug=True, use_reloader=False, port=80)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run(debug=True, use_reloader=False, port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
