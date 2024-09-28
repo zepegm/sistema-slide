@@ -192,6 +192,24 @@
 
     }; 
 
+    $("#btn_iniciar").on('click', function() {
+      info = {'id':0, 'tipo':'musical'}
+
+      $.ajax({
+          type: "POST",
+          url: "iniciar_apresentacao",
+          contentType: "application/json",
+          data: JSON.stringify(info),
+          dataType: "json",
+          success: function(data) {
+              if (data) {
+                $("#status_inicio").append('<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Projeção do Musical Iniciada!</strong> <a href="/controlador">Clique aqui para abrir o controlador.</a><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+              } else {
+                $("#status_inicio").append('<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Atenção! </strong>Projeção não iniciada devido lista do musical estar vazia, preencha a lista antes de iniciar a projeção!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+              }
+          },
+      });
+    }); 
 
     $("#btn_salvar").on('click', function() {
       lista_final = [];

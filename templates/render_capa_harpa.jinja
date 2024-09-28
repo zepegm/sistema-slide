@@ -1,0 +1,76 @@
+<html lang="pt-BR">
+    <head>
+        <title>Render Calendário Mensal</title>
+    </head>
+
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <style>
+
+        @font-face {
+            font-family:bebaskai;
+            font-style:normal;
+            font-weight:400;
+            src:local('BebasKai'),
+            url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+        }
+
+        #main {
+            color: black;
+            background-size: contain;
+            background-repeat: no-repeat;
+            position: fixed;
+            width: 1366px;
+            height: 768px;
+            background-size: 100% 100%;
+            top:0%;    
+            left:0%;            
+            background-image: url("{{ url_for('static', filename='images/Harpa.jpg') }}");        
+        }
+
+        #titulo_principal {
+            color:#978473;
+            font-style: italic;
+            font-size: 20vh;
+            margin-left: 12vw;
+            margin-top: -5vh;
+        }
+
+        #titulo_musica {
+            /*border: solid 1px black;*/
+            height: 25vh;
+            margin-left: 2vw;
+            width: 70vw;
+            color:#978473;
+            font-weight: bold; 
+            text-align: center;           
+        }
+
+        #autor {
+            /*border: solid 1px black;*/
+            height: 18vh;
+            margin-left: 2vw;
+            width: 70vw;
+            color:black;
+            text-align: center; 
+        }
+
+    </style>
+
+    <body>
+        <div id="main">
+            <div id="titulo_principal">HINO {{ '%03d' % info['id'] }}</div>
+            <div id="titulo_musica">{{info['descricao']}}</div>
+            <div id="autor">{{info['autor']}}</div>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+        <script>
+            var titulo = document.getElementById('titulo_musica');
+            var autor = document.getElementById('autor');
+
+            textFit(titulo, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 5000});
+            textFit(autor, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 5000});
+        </script>
+    </body>
+</html>

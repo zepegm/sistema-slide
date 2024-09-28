@@ -350,7 +350,23 @@ class db:
 
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
-            return False        
+            return False
+        
+    def executeCustomQuery(self, sql):
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()
+
+            cur.execute(sql)
+            
+            con.commit()
+            con.close()
+
+            return True
+
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False
 
 
 def insert_log(atividade, tipo, id, cap):

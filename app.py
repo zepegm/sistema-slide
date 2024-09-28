@@ -34,6 +34,7 @@ CORS(app)
 estado = 0
 current_presentation = {'id':0, 'tipo':''}
 index = 0
+pause_index = 0
 roteiro = []
 temp_pdf = None
 
@@ -95,6 +96,10 @@ def home():
         titulo = "Lição %02d - %s" % (id, licoes[id - 1]['dia'].strftime('%d/%m/%Y'))
         tipo = "Abertura da Lição de Domingo"
         capa = 'static/images/EBD.png'
+    elif estado == 9: # musical
+        titulo = 'Musical'
+        tipo = 'Lista Pré-Gravada'
+        capa = 'static/' + banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
 
     else:
         titulo = None
@@ -263,6 +268,15 @@ def render_pdf_harpa():
 
     return render_template('render_pdf_harpa.jinja', lista=lista_final, total=total, data=hoje, tipo=tipo)
 
+@app.route('/render_capa_harpa', methods=['GET', 'POST'])
+def render_capa_harpa():
+
+    id = request.args.get('id')
+
+    info = banco.executarConsulta('select harpa.id, descricao, autor_harpa.nome as autor from harpa inner join autor_harpa on autor_harpa.id = harpa.autor where harpa.id = %s' % id)[0]
+
+    return render_template('render_capa_harpa.jinja', info=info)
+
 @app.route('/render_calendario_mensal', methods=['GET', 'POST'])
 def render_calendario_mensal():
     # pegar agora os eventos mensais
@@ -358,7 +372,7 @@ def render_calendario():
 
 
 @app.route('/controlador', methods=['GET', 'POST'])
-def controlador():
+async def controlador():
 
     global estado
     global current_presentation
@@ -552,6 +566,51 @@ def controlador():
 
         return render_template('controlador_ebd.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total)
 
+    elif estado == 9:
+        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+
+        lista_final = []
+
+        # adicionado capa principal
+        lista_final.append({'tipo':'capa_img', 'url':banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']})
+
+        # rodando o loop de cada música
+        for item in roteiro_musical:
+            # adicionando capa
+            if item['capa_url'] == '[SEM_CAPA_HARPA]':
+                browser = await launch(      
+                    handleSIGINT=False,
+                    handleSIGTERM=False,
+                    handleSIGHUP=False
+                )
+
+                hostname = request.headers.get('Host')
+
+                page = await browser.newPage()
+                await page.setViewport({"width": 1366, "height": 768})
+                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, item['id_origem']), {'waitUntil':'networkidle2'})
+                base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
+                lista_final.append({'tipo':'capa_base64', 'url':base64})
+                await browser.close()
+            else:
+                lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
+
+            # adicionando slides
+            if item['tabela-origem'] == 'musicas':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+
+            else:
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+
+                cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
+
+        return render_template('controlador_musical.jinja', lista_final=lista_final, cores=cores, index=index)
+
+    
     return 'erro'
 
 @app.route('/abrir_biblia', methods=['GET', 'POST'])
@@ -915,7 +974,7 @@ def calendario():
     return render_template('calendario.jinja', hoje=data_atual.strftime('%d/%m/%Y'), segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis, congregacoes=congregacoes, eventos=eventos, detalhes_evento_primeira_cong=detalhes_evento_primeira_cong)
 
 @app.route('/musical', methods=['GET', 'POST'])
-def musical():
+async def musical():
 
     msg = ''
 
@@ -929,7 +988,27 @@ def musical():
 
                 roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo ELSE printf('%03d', harpa.id) || '. ' || harpa.descricao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
 
-                return render_template('result_musical.jinja', capa=capa, roteiro_musical=roteiro_musical)
+                if len(roteiro_musical) < 1:
+                    msg = '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Operação realizada com sucesso!</strong> Lista do Musical esvaziada com sucesso! Para prosseguir adicione músicas.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                else:
+                    for item in roteiro_musical:
+                        if item['capa_url'] == '[SEM_CAPA_HARPA]':
+                            browser = await launch(      
+                                handleSIGINT=False,
+                                handleSIGTERM=False,
+                                handleSIGHUP=False
+                            )
+
+                            hostname = request.headers.get('Host')
+
+                            page = await browser.newPage()
+                            await page.setViewport({"width": 1366, "height": 768})
+                            await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, item['id_origem']), {'waitUntil':'networkidle2'})
+                            base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
+                            item['capa_base64l'] = base64
+                            await browser.close()
+
+                    return render_template('result_musical.jinja', capa=capa, roteiro_musical=roteiro_musical)
             else:
                 msg = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Erro fatal ao tentar cadastrar dados!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
@@ -1700,6 +1779,32 @@ def upload_capa_musical():
 
     return jsonify('./static/images/musical/' + filename + "?" + current_time)
 
+
+@app.route('/upload_capa_musical_individual',  methods=['GET', 'POST'])
+def upload_capa_musical_individual():
+    isthisFile = request.files.get('file')
+    id = request.form['id']
+    tipo = request.form['tipo']
+    
+    if tipo == 'item-musica':
+        origem = 'musicas'
+    else:
+        origem = 'harpa'
+
+    filename = str(id) + "_" + origem + os.path.splitext(isthisFile.filename)[1]
+
+    print(filename)
+
+
+    banco.executeCustomQuery("UPDATE roteiro_musical SET capa_url = 'images/musical/%s' WHERE id_origem = %s and `tabela-origem` = '%s'" % (filename, id, origem))
+
+    isthisFile.save('./static/images/musical/' + filename)
+
+    c = datetime.datetime.now()
+    current_time = c.strftime('%d%m%Y%H%M%S')
+
+    return jsonify('./static/images/musical/' + filename + "?" + current_time)
+
 @app.route('/converto_to_pdf_list', methods=['GET', 'POST'])
 async def converto_to_pdf_list():
     global temp_pdf
@@ -2413,11 +2518,13 @@ def iniciar_apresentacao():
     global estado
     global index
     global roteiro
+    global pause_index
 
     if request.method == 'POST':
         if request.is_json:
             info = request.json
             current_presentation = {'id':info['id'], 'tipo':info['tipo']}
+            index = 0
 
             if info['tipo'] == 'musicas':
                 estado = 1
@@ -2434,8 +2541,16 @@ def iniciar_apresentacao():
                 current_presentation['semana'] = info['semana']
             elif info['tipo'] == 'ebd':
                 estado = 8
+            elif info['tipo'] == 'musical':
+                total = banco.executarConsulta('select count(*) as total from roteiro_musical')[0]['total']
 
-            index = 0
+                if total > 0:
+                    estado = 9
+                    index = pause_index
+                else:
+                    current_presentation = {'id':0, 'tipo':''}
+                    return jsonify(False)
+
 
             socketio.emit('refresh', 1)
             socketio.emit('update_roteiro', 1)
@@ -2563,8 +2678,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False, port=80)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run(debug=True, use_reloader=False, port=80)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

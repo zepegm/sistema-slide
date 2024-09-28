@@ -66,6 +66,11 @@
           border-width: thin;
       }
 
+      .capa_musica {
+        width: 100%;
+        height: auto;
+      }
+
       .overlay {
           position: absolute;
           bottom: 6%;
@@ -76,6 +81,19 @@
           width: 481px;
       }
 
+      .overlay-musica {
+        position: absolute;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        overflow: hidden;
+        transition: .5s ease;
+        width: 100%;
+        height: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
       .lb_principal {
           cursor: pointer;
       }
@@ -83,6 +101,10 @@
       .lb_principal:hover .overlay {
           height: 50%;
       }
+
+      .lb_principal:hover .overlay-musica {
+          height: 100%;
+      }      
 
       .text-hover {
         color:white;
@@ -132,11 +154,19 @@
             {% for item in roteiro_musical %}
               <div class="col-sm-4">
                 <div data-id="{{item['id']}}" class="big-box card shadow-sm">
-                  <img src="{{ url_for('static', filename=item['capa_url']) }}" class="upload_capa_musica">
-                  <div class="overlay text-center">
-                    <h3 class="text-hover">Clique para Alterar a Foto da Capa</h3>
-                  </div>
-                  <input type="file" name="image" class="image" style="display:none">                  
+                  <form method="post">
+                    <label class="lb_principal" for="musica-{{loop.index}}">
+                      {% if item['capa_url'] == '[SEM_CAPA_HARPA]' %}
+                      <img src="data:image/png;base64,{{item['capa_base64l']}}" id="img-{{loop.index}}" class="capa_musica">
+                      {% else %}
+                      <img src="{{ url_for('static', filename=item['capa_url']) }}" id="img-{{loop.index}}" class="capa_musica" />
+                      {% endif %}
+                      <div class="overlay-musica text-center">
+                        <h4 class="text-hover">Alterar Foto da Música</h4>
+                      </div>
+                      <input type="file" name="image" class="image-musica" id="musica-{{loop.index}}" data-image="img-{{loop.index}}" style="display:none" data-id="{{item['id_origem']}}" data-tipo="{{item['origem']}}">                  
+                    </label>
+                  </form>
                   <div class="card-body">
                     <h4 class="card-text text-center">{{item['titulo']}}</h4>
                   </div>
@@ -171,6 +201,29 @@
         processData: false,
         success: function(data) {
             $("#uploaded_image").attr('src', data);
+        },
+    });
+  });
+
+
+  $(".image-musica").on('change', function() {
+    var form_data = new FormData();
+
+    form_data.append('file', $(this).prop('files')[0]);
+    form_data.append('id', $(this).attr('data-id'));
+    form_data.append('tipo', $(this).attr('data-tipo'));
+
+    imagem = $("#" + $(this).attr('data-image'));
+
+    $.ajax({
+        type: 'POST',
+        url: '/upload_capa_musical_individual',
+        data: form_data,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function(data) {
+            imagem.attr('src', data);
         },
     });
   });

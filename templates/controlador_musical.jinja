@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Controlador Principal</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+    #anterior,
+    #proximo {
+      color: white;
+    }
+
+    #slidePrincipal {
+      width: 640px; /* or whatever width you want. */
+      height: 360px; /* or whatever width you want. */
+    }
+
+    #slideProx {
+      width: 426; /* or whatever width you want. */
+      height: 240px; /* or whatever width you want. */
+    }
+
+    #card_principal {
+      width: 641px; /* or whatever width you want. */
+    }
+
+    #card_prox {
+      width: 428px; /* or whatever width you want. */
+    }
+
+    .mini-box {
+      height: 140px;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: normal; 
+    }
+
+    .capa > img {
+      width: 100%;
+      height: 140px;
+    }
+    .big-box {
+      cursor: pointer;
+    }
+
+    .cdx-marker {
+      color:{{config['mark']}};
+      font-weight:bold;
+      background:rgba(0,0,0,0)
+    }
+
+    .arrow {
+      font-size: xx-large;
+      color:black;
+    }
+
+    #loading {
+      background-color: white;
+      height: 100%;
+      left: 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 9999;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      bottom: 0;
+      margin: auto;
+      border: 20px solid #EAF0F6;
+      border-radius: 50%;
+      border-top: 20px solid #FF7A59;
+      width: 200px;
+      height: 200px;
+      animation: spinner 4s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }    
+
+    #pausa_instrumental,
+    #anotacao {
+      font-size: 20px;
+    }
+
+    .coro {
+      color:{{config['mark']}};
+    }
+
+    .cat-1-harpa,
+    .cat-3-harpa {
+      color: {{cores['cor_harpa_letra']}};
+      background-color: {{cores['cor_harpa_fundo']}};
+    }
+
+    .cdx-num {
+      color: {{cores['cor_harpa_num']}};
+    }
+
+    .red {
+      color: red;
+    }
+
+    </style>
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+
+
+    <script>
+      if (window.innerWidth < 1367) {
+        var sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("active");
+      }
+    </script>
+    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="text-center container">
+          <div id="loading"><div class="loader"></div></div>
+          <div class="row">
+            <h1 class="fw-light">Apresentador de Slides</h1>
+              <p class="lead text-muted">Abaixo você vê o slide atual e prévia do próximo.</p>
+              <div class="col-sm-7">
+                <div id="card_principal" class="card shadow-sm">
+                    {% if lista_final[index]['tipo'] == 'capa_img' %}
+                      <div class="capa" id="slidePrincipal"></div>
+                    {% else %}
+                      <div class="{{lista_final[index]['categoria']}}" id="slidePrincipal">{{lista_final[index]['text-slide']}}</div>
+                    {% endif %}
+                  <div class="card-body">
+                    <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
+                        {% if lista_final[index]['anotacao'] != '' %}
+                        <p id="anotacao"><strong>Anotação: </strong>{{lista_final[index]['anotacao']}}</p>
+                        {% endif %}
+                        {% if lista_final[index]['cat'] == 3 or lista_final[index - 1]['cat'] == 4 %}
+                        <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
+                        {% endif %}                        
+                  </div>
+                </div>        
+              </div>
+            {% if index < lista_final|length  %}
+            <div class="col-sm-5">
+              <div id="card_prox" class="card shadow-sm">
+                <div id="slideProx" class="{{lista_final[index]['categoria']}}">{{lista_final[index + 1]['text-slide']}}</div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 1}}</h4>
+                </div>
+              </div> 
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+                <br>
+                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
+                <button id="btn_proxima" class="btn btn-success" disabled><i class="fa-solid fa-forward"></i> Próxima</button>
+            </div> 
+            {% elif index == lista_final|length %}
+            <div class="col-sm-5">
+              <div id="card_prox" class="card shadow-sm">
+                <div id="slideProx" class="capa"></div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
+                </div>
+              </div> 
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+                <br>
+                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
+                <button id="btn_proxima" class="btn btn-success" disabled><i class="fa-solid fa-forward"></i> Próxima</button>
+            </div> 
+            {% else %} 
+            <div class="col-sm-5">
+              <div id="card_prox" class="card shadow-sm">
+                <div id="slideProx" class="letra"><b>Fim</b></div>
+                <div class="card-body">
+                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: -</h4>
+                </div>
+              </div>        
+                <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button> 
+                <br>
+                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
+                <button id="btn_proxima" class="btn btn-success"><i class="fa-solid fa-forward"></i> Próxima</button>
+            </div>       
+            {% endif %} 
+          </div>
+          <div class="row"><div class="col-sm-12"><hr></div></div>
+          <div class="row">
+            {% for sld in lista_final %}
+              <div class="col-sm-3">
+                {% if index == sld['loop.index'] %}
+                <div id="box{{sld['loop.index']}}" data-index="{{sld['Loop.index']}}" class="big-box card box-index">
+                {% else %}
+                <div id="box{{sld['loop.index']}}" data-index="{{sld['Loop.index']}}" class="big-box card shadow-sm">
+                {% endif %}
+                  {% if sld['tipo'] == 'capa_img' %}
+                  <div class="capa mini-box">
+                    <img src="{{ url_for('static', filename=sld['url']) }}">
+                  </div>
+                  {% elif sld['tipo'] == 'capa_base64' %}
+                  <div class="capa mini-box">
+                    <img src="data:image/png;base64,{{sld['url']}}">
+                  </div>                  
+                  {% else %}
+                  <div class="{{sld['categoria']}} mini-box letra">{{sld['texto']}}</div>
+                  {% endif %}
+                  <div class="card-body">
+                    <h4 class="card-text text-center">Slide: {{loop.index}}</h4>
+                  </div>
+                </div>
+                <br>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+  
+  <script>
+
+    var index = {{index}};
+    var slides = {{lista_final}};
+    var chave = true;
+
+    var socket = io();
+    socket.on('refresh', function(result) {
+        location.reload();
+    });
+
+    window.onload = function() {
+
+      if (index > slides.length) {
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      } else {
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      }
+
+      if (index > 0) {
+        $("#btn_previous").removeAttr('disabled');
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
+      } else {
+        $("#btn_previous").attr('disabled', '');
+      }
+
+      if (index < slides.length) {
+        $("#btn_next").removeAttr('disabled');
+      } else {
+        $("#btn_next").attr('disabled', '');
+      }
+
+      textFit($(".letra"), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 2000})
+
+      $("#loading").remove();
+    };
+
+    $(".big-box").on('click', function() {
+      index = $(this).attr('data-index');
+
+      console.log(index);
+
+      // modificar slide Principal
+      $("#slideAtual").text('Slide Atual: ' + (parseInt(index) + 1));
+
+      if (index > 0) {
+        $("#btn_previous").removeAttr('disabled');
+        $("#slidePrincipal").addClass('letra');
+        $("#slidePrincipal").removeClass('capa');
+
+        $("#slidePrincipal").empty();
+        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
+
+        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
+          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
+        }
+        $("#slidePrincipal").removeClass('coro');
+        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
+          $("#slidePrincipal").addClass('coro');        
+        }
+
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+      } else {
+        $("#btn_previous").attr('disabled', '');
+        $("#slidePrincipal").addClass('capa');
+        $("#slidePrincipal").removeClass('letra');        
+        $("#slidePrincipal").empty();
+      }
+
+      
+      // modificar próximo slide
+      if (index <= slides.length) {
+        $("#proximoSlide").text('Próximo Slide: ' + (parseInt(index) + 2));
+
+        if (index < slides.length) {
+          $("#slideProx").addClass('letra');
+          $("#slideProx").removeClass('capa');
+
+          $("#slideProx").removeClass('coro');
+          if (slides[index]["categoria"] == 2 || slides[index]["categoria"] == 4) {
+            $("#slideProx").addClass('coro');        
+          }
+
+          $("#slideProx").empty();
+          $("#slideProx").html(slides[index]['text-slide']);
+          textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+        } else {
+          $("#slideProx").addClass('capa');
+          $("#slideProx").removeClass('letra');        
+          $("#slideProx").empty();          
+        }
+      }
+
+      changeBox(index);
+
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('updateSlide') }}",
+        contentType: "application/json",
+        data: JSON.stringify(index),
+        dataType: "json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });      
+    });
+
+    function previous() {
+
+      index--;
+
+      $("#slideAtual").text("Slide Atual: " + (index + 1));
+      $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
+
+      // verificar estado do slidePrincipal
+
+      if (index == slides.length) {
+        $("#slidePrincipal").addClass('letra');
+        $("#slidePrincipal").removeClass('capa');     
+
+        $("#slideProx").empty();
+        $("#slideProx").addClass('capa');
+        $("#slideProx").removeClass('letra');             
+      } else {
+        $("#slideProx").addClass('letra');
+        $("#slideProx").removeClass('capa');
+        $("#slideProx").removeClass('coro');
+
+        $("#slideProx").html(slides[index]['text-slide']);
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});         
+           
+        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
+          $("#slideProx").addClass('coro');
+        }
+      }
+
+      console.log(index);
+
+      if (index == 0) {
+        $("#slidePrincipal").empty();
+        $("#slidePrincipal").addClass('capa');
+        $("#slidePrincipal").removeClass('letra');        
+      } else {
+        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});          
+      }
+
+      if (index == 0) {
+        $("#btn_previous").attr('disabled', '');
+      } else {
+        $("#btn_previous").removeAttr('disabled');
+      }
+
+      $("#btn_next").removeAttr('disabled');
+
+
+      if (index > 0) {
+        $("#anotacao").remove();
+        $("#pausa_instrumental").remove();
+        if (slides[index - 1]["anotacao"] != '') {
+          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
+        }   
+        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
+          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
+        }
+        $("#slidePrincipal").removeClass('coro');
+        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
+          $("#slidePrincipal").addClass('coro');
+        }        
+      }
+
+      changeBox(index);
+
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('updateSlide') }}",
+        contentType: "application/json",
+        data: JSON.stringify(index),
+        dataType: "json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
+    }
+
+    function next() {
+
+      index++;
+
+      $("#slideAtual").text("Slide Atual: " + (index + 1));
+      $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
+
+      if (index == 1) { // preciso retirar o background da imagem
+        $("#slidePrincipal").addClass('letra');
+        $("#slidePrincipal").removeClass('capa');
+      }
+
+      if (index <= slides.length) {
+        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});        
+
+        $("#anotacao").remove();
+        $("#pausa_instrumental").remove();
+        if (slides[index - 1]["anotacao"] != '') {
+          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
+        }
+        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
+          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
+        } 
+        $("#slidePrincipal").removeClass('coro');
+        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
+          $("#slidePrincipal").addClass('coro');
+        }
+      } else { // recolocar o background da imagem
+        $("#slidePrincipal").empty();
+        $("#slidePrincipal").addClass('capa');
+        $("#slidePrincipal").removeClass('letra');        
+      }
+
+      $("#slideProx").removeClass('coro');
+
+      if (index < slides.length) {
+        $("#slideProx").html(slides[index]['text-slide']);
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
+
+        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
+          $("#slideProx").addClass('coro');
+        }
+      } else if (index == slides.length) {
+        $("#slideProx").empty();
+        $("#slideProx").addClass('capa');
+        $("#slideProx").removeClass('letra');
+      } else {
+        $("#slideProx").addClass('letra');
+        $("#slideProx").removeClass('capa');
+        $("#slideProx").html('<b>Fim</b>');
+        $("#proximoSlide").text('Próximo Slide: -');
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});        
+      }
+
+      if (index <= slides.length) {
+        $("#btn_next").removeAttr('disabled');
+        $("#btn_proxima").attr('disabled', '');
+      } else {
+        $("#btn_next").attr('disabled', '');
+        $("#btn_proxima").removeAttr('disabled', '');
+      }  
+
+      $("#btn_previous").removeAttr('disabled');
+
+      changeBox(index);
+
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('updateSlide') }}",
+        contentType: "application/json",
+        data: JSON.stringify(index),
+        dataType: "json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
+    }
+
+    function changeBox(index) {
+      $(".card").removeClass('box-index');
+      $(".card").addClass('shadow-sm')
+      $("#box" + index).addClass('box-index');
+      $("#box" + index).removeClass('shadow-sm');
+    }
+
+    function encerrar() {
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('encerrar_apresentacao') }}",
+        contentType: "application/json",
+        data: JSON.stringify(1),
+        dataType: "json",
+        success: function(response) {
+          if (response) {
+            location.reload();
+          }
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });      
+    }
+
+    $("#btn_next").on('click', function() {
+      next();
+    });
+
+    $("#btn_previous").on('click', function() {
+      previous();
+    });    
+
+    $("#btn_encerrar").on('click', function() {
+      encerrar();
+    });
+
+    document.onkeydown = checkKey;
+
+    function checkKey(e) {
+
+        e = e || window.event;
+
+        if (e.keyCode == '27') {
+            e.preventDefault();
+            encerrar();
+        }
+        else if (e.keyCode == '37'  || e.keyCode == '33') {
+            e.preventDefault();
+            if (index > 0) {
+              previous();
+            }
+        }
+        else if (e.keyCode == '39' || e.keyCode == '34') {
+            e.preventDefault();
+            if (index <= slides.length) {
+              next();
+            } else {
+              proxima_PRS();
+            }
+        }           
+    }
+
+    $("#btn_proxima").on('click', function() {
+      proxima_PRS();
+    });
+
+    function proxima_PRS() {
+      if (chave) {
+
+        chave = false;
+
+        $.ajax({
+          type: "POST",
+          url: "{{ url_for('proxima_prs') }}",
+          contentType: "application/json",
+          data: JSON.stringify(1),
+          dataType: "json",
+          success: function(response) {
+            if (response) {
+              location.reload();
+            }
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });
+      }       
+    }
+
+  </script>
+      
+  </body>
+</html>
