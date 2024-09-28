@@ -917,11 +917,38 @@ def calendario():
 @app.route('/musical', methods=['GET', 'POST'])
 def musical():
 
-    harpa = banco.executarConsulta('select * from harpa order by id')
-    musicas = banco.executarConsulta('select * from musicas')
+    msg = ''
+
+    if request.method == 'POST':
+        if 'lista' in request.form:
+            lista = json.loads(request.form['lista'])
+
+            if banco.inserirRoteiroMusical(lista):
+
+                capa = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
+
+                roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo ELSE printf('%03d', harpa.id) || '. ' || harpa.descricao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+
+                return render_template('result_musical.jinja', capa=capa, roteiro_musical=roteiro_musical)
+            else:
+                msg = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Erro fatal ao tentar cadastrar dados!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+    roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo ELSE printf('%03d', harpa.id) || '. ' || harpa.descricao END AS titulo FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem")
+    lista_horizontal_roteiro = banco.executarConsulta("SELECT (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa') as harpa, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'musicas') as musicas")[0]
+    
+    where_harpa = ''
+    if lista_horizontal_roteiro['harpa']:
+        where_harpa = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['harpa']
+
+    where_musica = ''
+    if lista_horizontal_roteiro['musicas']:
+        where_musica = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['musicas']    
+    
+    harpa = banco.executarConsulta('select * from harpa %s order by id' % where_harpa)
+    musicas = banco.executarConsulta('select * from musicas %s' % where_musica)
     musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
 
-    return render_template('musical.jinja', harpa=harpa, musicas=musicas)
+    return render_template('musical.jinja', harpa=harpa, musicas=musicas, roteiro_musical=roteiro_musical, msg=msg)
 
 @app.route('/licoesebd', methods=['GET', 'POST'])
 def licoesebd():
@@ -1657,6 +1684,21 @@ def upload_capa():
     banco.insertOrUpdate({'id_musica':id, 'filename':"'" + filename + "'"}, 'id_musica', 'capas')
 
     return jsonify('./static/images/capas/' + filename)
+
+
+@app.route('/upload_capa_musical',  methods=['GET', 'POST'])
+def upload_capa_musical():
+    isthisFile = request.files.get('file')
+    filename = 'capa' + os.path.splitext(isthisFile.filename)[1]
+
+    isthisFile.save('./static/images/musical/' + filename)
+
+    banco.insertOrUpdate({'id':"'capa_musical'", 'valor':"'images/musical/" + filename + "'"}, 'id', 'config')
+
+    c = datetime.datetime.now()
+    current_time = c.strftime('%d%m%Y%H%M%S')
+
+    return jsonify('./static/images/musical/' + filename + "?" + current_time)
 
 @app.route('/converto_to_pdf_list', methods=['GET', 'POST'])
 async def converto_to_pdf_list():

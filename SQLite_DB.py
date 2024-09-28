@@ -331,6 +331,25 @@ class db:
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
             print(sql)
+            return False
+        
+    def inserirRoteiroMusical(self, lista):
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()
+
+            cur.execute('DELETE FROM roteiro_musical')
+
+            for item in lista:
+                cur.execute("INSERT INTO roteiro_musical(id_origem, `tabela-origem`) VALUES(%s, '%s')" % (item['id'], item['origem']))
+            
+            con.commit()
+            con.close()
+
+            return True
+
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
             return False        
 
 

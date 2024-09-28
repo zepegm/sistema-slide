@@ -99,15 +99,21 @@
               <h2 class="fw-bold text-center display-5">Organizador de Musical</h2>
             </div>
             <div class="col-sm-12"><hr></div>
+            <div class="col-sm-12">
+              <button id="btn_iniciar" class="btn btn-primary">Iniciar Apresentação</button>
+              <button id="btn_salvar" class="btn btn-success">Salvar Configuração Atual</button>
+            </div>
+            <div class="col-sm-12"><hr></div>
             <div class="col-sm-6"><h3>Adicionar Músicas</h3></div>
             <div class="col-sm-1">&nbsp;</div>
             <div class="col-sm-5"><h3>Roteiro do Musical</h3></div>
 
             <div class="col-sm-3">
-              <div id="lista_geral_harpa" class="list-group">
-                <label for="txt_filtro_harpa" class="form-label">Harpa Cristã:</label>
-                <input type="text" class="form-control form-text" id="txt_filtro_harpa" placeholder="Pesquisar...">                
-                <br>
+
+              <label for="txt_filtro_harpa" class="form-label">Harpa Cristã:</label>
+              <input type="text" class="form-control form-text" id="txt_filtro_harpa" placeholder="Pesquisar...">
+              <br>
+              <div id="lista_geral_harpa" class="list-group">             
                 {% for item in harpa %}
                   <a href="#" class="list-group-item list-group-item-action item-harpa" data-id="{{item['id']}}">{{'%03d' % item['id']}}. {{item['descricao']}}</a>
                 {% endfor %}
@@ -115,10 +121,12 @@
             </div>
 
             <div class="col-sm-3">
+
+              <label for="txt_filtro_musica" class="form-label">Músicas:</label>
+              <input type="text" class="form-control form-text" id="txt_filtro_musica" placeholder="Pesquisar...">
+              <br>
+
               <div id="lista_geral_musica" class="list-group">
-                <label for="txt_filtro_musica" class="form-label">Músicas:</label>
-                <input type="text" class="form-control form-text" id="txt_filtro_musica" placeholder="Pesquisar...">                
-                <br>
                 {% for item in musicas %}
                   <a href="#" class="list-group-item list-group-item-action item-musica" data-id="{{item['id']}}">{{item['titulo']}}</a>
                 {% endfor %}
@@ -131,7 +139,11 @@
             </div>
             
             <div class="col-sm-3">
-              <div id="lista_musical" class="list-group"></div>               
+              <div id="lista_musical" class="list-group">
+                {% for item in roteiro_musical %}
+                  <a href="#" class="list-group-item list-group-item-action {{item['origem']}}" data-id="{{item['id_origem']}}">{{item['titulo']}}</a>
+                {% endfor %}
+              </div>               
             </div>
 
           </div>
@@ -139,8 +151,8 @@
       </div>
 		</div>
 
-    <form id="form_calendario_semanal" action="/calendario" method="POST">
-      <input type="hidden" name="calendario_semanal" id="calendario_semanal">
+    <form id="form_salvar" action="/musical" method="POST">
+      <input type="hidden" name="lista" id="ls_musical">
     </form>
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
@@ -148,6 +160,7 @@
   <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/Sortable.min.js') }}"></script>  
 
   <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
 
@@ -157,7 +170,42 @@
       $("#loading").remove();
 
       $(".codex-editor__redactor").css('padding-bottom', '0px');
+
+      Sortable.create(lista_musical, {
+        animation: 100,
+        group: 'list-1',
+        draggable: '.list-group-item',
+        handle: '.list-group-item',
+        sort: true,
+        filter: '.sortable-disabled',
+        //chosenClass: 'active'
+      });
+
+
+      new Sortable(document.getElementById('lista_geral_musica'), {
+          animation: 150
+      });
+
+      new Sortable(document.getElementById('lista_geral_harpa'), {
+          animation: 150
+      });      
+
     }; 
+
+
+    $("#btn_salvar").on('click', function() {
+      lista_final = [];
+      $("#lista_musical .list-group-item").each(function( index ) {
+        let origem = 'harpa'
+        if ($(this).hasClass('item-musica')) {
+          origem = 'musicas'
+        }
+        lista_final.push({'id':$(this).attr('data-id'), 'origem':origem});
+      })
+
+      $("#ls_musical").val(JSON.stringify(lista_final));
+      $("#form_salvar").submit();
+    });
 
     $('#txt_filtro_harpa').on('keyup', function (e) {
       var value = $(this).val().toLowerCase();
@@ -194,10 +242,28 @@
     if (['lista_geral_musica', 'lista_geral_harpa'].includes(id)) {
       $('#lista_musical').append(element);
     } else {
-      
+      if (element.hasClass('item-musica')) {
+        $("#lista_geral_musica").append(element);
+        sortItemsAlphabetically('lista_geral_musica');
+      } else {
+        $("#lista_geral_harpa").append(element);
+        sortItemsAlphabetically('lista_geral_harpa');
+      }
     }
 
   });
+
+function sortItemsAlphabetically(id) {
+    const list = document.getElementById(id);
+    const items = Array.from(list.children);
+
+    items.sort((a, b) => {
+        return a.textContent.toLowerCase().localeCompare(b.textContent.toLowerCase());
+    });
+
+    items.forEach(item => list.appendChild(item));
+}
+
 
   </script>
       
