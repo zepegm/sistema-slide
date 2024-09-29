@@ -297,7 +297,7 @@
             </div>
 
             {% if item['letras_2']|length > 0 %}
-            <div id="pag{{item['pag'] + 1|string}}" class="pagina">
+            <div id="pag{{(item['pag'] + 1) | string}}" class="pagina">
                 <div class="paginacao">{{item['pag']|int + 1}}</div>
                 <div class="content pagina2">
                     {% for par in item['letras_2'] %}
