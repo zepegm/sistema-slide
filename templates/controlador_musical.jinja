@@ -56,6 +56,7 @@
     #slidePrincipal {
       width: 640px; /* or whatever width you want. */
       height: 360px; /* or whatever width you want. */
+      line-height: normal;
     }
 
     #slideProx {
@@ -79,14 +80,14 @@
 
     .capa > img {
       width: 100%;
-      height: 140px;
+      height: auto;
     }
     .big-box {
       cursor: pointer;
     }
 
     .cdx-marker {
-      color:{{config['mark']}};
+      color:{{cores['cor_musica_mark']}};
       font-weight:bold;
       background:rgba(0,0,0,0)
     }
@@ -148,6 +149,18 @@
       color: red;
     }
 
+    .cat-1-musica,
+    .cat-3-musica {
+      color: {{cores['cor_musica_letra']}};
+      background-color: {{cores['cor_musica_fundo']}};
+    }
+
+    .cat-2-musica,
+    .cat-4-musica {
+      color: {{cores['cor_musica_mark']}};
+      background-color: {{cores['cor_musica_fundo']}};
+    }    
+
     </style>
   </head>
 
@@ -181,9 +194,15 @@
               <div class="col-sm-7">
                 <div id="card_principal" class="card shadow-sm">
                     {% if lista_final[index]['tipo'] == 'capa_img' %}
-                      <div class="capa" id="slidePrincipal"></div>
+                      <div class="capa" id="slidePrincipal">
+                        <img src="{{ url_for('static', filename=lista_final[index]['url']) }}">
+                      </div>
+                    {% elif lista_final[index]['tipo'] == 'capa_base64' %}
+                      <div class="capa" id="slidePrincipal">
+                        <img src="data:image/png;base64,{{lista_final[index]['url']}}">
+                      </div>
                     {% else %}
-                      <div class="{{lista_final[index]['categoria']}}" id="slidePrincipal">{{lista_final[index]['text-slide']}}</div>
+                      <div class="{{lista_final[index]['categoria']}} letra" id="slidePrincipal">{{lista_final[index]['texto']}}</div>
                     {% endif %}
                   <div class="card-body">
                     <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
@@ -244,10 +263,10 @@
           <div class="row">
             {% for sld in lista_final %}
               <div class="col-sm-3">
-                {% if index == sld['loop.index'] %}
-                <div id="box{{sld['loop.index']}}" data-index="{{sld['Loop.index']}}" class="big-box card box-index">
+                {% if (index + 1) == loop.index %}
+                <div id="box{{loop.index}}" data-index="{{loop.index}}" class="big-box card box-index">
                 {% else %}
-                <div id="box{{sld['loop.index']}}" data-index="{{sld['Loop.index']}}" class="big-box card shadow-sm">
+                <div id="box{{loop.index}}" data-index="{{loop.index}}" class="big-box card shadow-sm">
                 {% endif %}
                   {% if sld['tipo'] == 'capa_img' %}
                   <div class="capa mini-box">
@@ -293,15 +312,8 @@
 
     window.onload = function() {
 
-      if (index > slides.length) {
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
-      } else {
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
-      }
-
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
       } else {
         $("#btn_previous").attr('disabled', '');
       }
@@ -477,64 +489,6 @@
 
       $("#slideAtual").text("Slide Atual: " + (index + 1));
       $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
-
-      if (index == 1) { // preciso retirar o background da imagem
-        $("#slidePrincipal").addClass('letra');
-        $("#slidePrincipal").removeClass('capa');
-      }
-
-      if (index <= slides.length) {
-        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});        
-
-        $("#anotacao").remove();
-        $("#pausa_instrumental").remove();
-        if (slides[index - 1]["anotacao"] != '') {
-          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
-        }
-        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
-          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
-        } 
-        $("#slidePrincipal").removeClass('coro');
-        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
-          $("#slidePrincipal").addClass('coro');
-        }
-      } else { // recolocar o background da imagem
-        $("#slidePrincipal").empty();
-        $("#slidePrincipal").addClass('capa');
-        $("#slidePrincipal").removeClass('letra');        
-      }
-
-      $("#slideProx").removeClass('coro');
-
-      if (index < slides.length) {
-        $("#slideProx").html(slides[index]['text-slide']);
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
-
-        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
-          $("#slideProx").addClass('coro');
-        }
-      } else if (index == slides.length) {
-        $("#slideProx").empty();
-        $("#slideProx").addClass('capa');
-        $("#slideProx").removeClass('letra');
-      } else {
-        $("#slideProx").addClass('letra');
-        $("#slideProx").removeClass('capa');
-        $("#slideProx").html('<b>Fim</b>');
-        $("#proximoSlide").text('Próximo Slide: -');
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});        
-      }
-
-      if (index <= slides.length) {
-        $("#btn_next").removeAttr('disabled');
-        $("#btn_proxima").attr('disabled', '');
-      } else {
-        $("#btn_next").attr('disabled', '');
-        $("#btn_proxima").removeAttr('disabled', '');
-      }  
-
-      $("#btn_previous").removeAttr('disabled');
 
       changeBox(index);
 
