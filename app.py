@@ -572,7 +572,8 @@ async def controlador():
         lista_final = []
 
         # adicionado capa principal
-        lista_final.append({'tipo':'capa_img', 'url':banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']})
+        capa_padrao = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
+        lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
 
         # rodando o loop de cada música
         for item in roteiro_musical:
@@ -606,7 +607,12 @@ async def controlador():
                 for sld in letras:
                     lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
 
-                cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
+            # adicionando capa inicial no final da música
+            lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
+
+        
+        # adicionando cores
+        cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
 
         return render_template('controlador_musical.jinja', lista_final=lista_final, cores=cores, index=index)
 
