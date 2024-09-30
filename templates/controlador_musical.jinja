@@ -264,9 +264,9 @@
             {% for sld in lista_final %}
               <div class="col-sm-3">
                 {% if (index + 1) == loop.index %}
-                <div id="box{{loop.index}}" data-index="{{loop.index}}" class="big-box card box-index">
+                <div id="box{{loop.index - 1}}" data-index="{{loop.index - 1}}" class="big-box card box-index">
                 {% else %}
-                <div id="box{{loop.index}}" data-index="{{loop.index}}" class="big-box card shadow-sm">
+                <div id="box{{loop.index - 1}}" data-index="{{loop.index - 1}}" class="big-box card shadow-sm">
                 {% endif %}
                   {% if sld['tipo'] == 'capa_img' %}
                   <div class="capa mini-box">
@@ -489,6 +489,22 @@
 
       $("#slideAtual").text("Slide Atual: " + (index + 1));
       $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
+
+      // definir slide principal
+      if (slides[index]['tipo'] == 'capa_img') {
+        $("#slidePrincipal").html('<img src="static/' + slides[index]['url'] + '">');
+        $("#slidePrincipal").attr('class', 'capa');
+      } else if (slides[index]['tipo'] == 'capa_base64') {
+        $("#slidePrincipal").html('<img src="data:image/png;base64,' + slides[index]['url'] + '">');
+        $("#slidePrincipal").attr('class', 'capa');
+      } else {
+        $("#slidePrincipal").html(slides[index]['texto']);
+        $("#slidePrincipal").attr('class', slides[index]['categoria']);
+        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});          
+      }
+
+      // definir estado dos botões
+      $("#btn_previous").removeAttr('disabled');
 
       changeBox(index);
 
