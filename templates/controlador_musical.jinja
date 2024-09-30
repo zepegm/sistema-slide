@@ -505,6 +505,9 @@
 
       // definir estado dos botões
       $("#btn_previous").removeAttr('disabled');
+      if (index + 1 == slides.length) {
+        $("#btn_next").attr('disabled');
+      }
 
       changeBox(index);
 
