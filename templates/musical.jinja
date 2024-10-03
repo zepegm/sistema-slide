@@ -104,6 +104,16 @@
               <button id="btn_salvar" class="btn btn-success">Salvar Configuração Atual</button>
             </div>
             <div class="col-sm-12"><hr></div>
+            <div class="col-sm-6">
+              <div class="form-group">
+                <form id="form_salvar" action="/musical" method="POST">
+                  <input type="hidden" name="lista" id="ls_musical">
+                  <label for="txt_titulo">Título do Musical:</label>
+                  <input type="text" class="form-control form-text" id="txt_titulo" name="titulo" placeholder="Título ou Descrição do Musical" value="{{titulo}}" required>
+                </form>
+              </div>
+            </div>
+            <div class="col-sm-12"><hr></div>            
             <div class="col-sm-6"><h3>Adicionar Músicas</h3></div>
             <div class="col-sm-1">&nbsp;</div>
             <div class="col-sm-5"><h3>Roteiro do Musical</h3></div>
@@ -151,9 +161,7 @@
       </div>
 		</div>
 
-    <form id="form_salvar" action="/musical" method="POST">
-      <input type="hidden" name="lista" id="ls_musical">
-    </form>
+
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>

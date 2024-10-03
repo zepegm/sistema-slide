@@ -1,0 +1,384 @@
+<html lang="pt-BR">
+    <head>
+        <title>SlideShow</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+        <style>
+
+            body {
+                background-color: {{config['fundo']}};
+                overflow: hidden;
+            }
+
+            #myVideo {
+                position: fixed;
+                right: 0;
+                bottom: 0;
+                min-width: 100%;
+                min-height: 100%;
+            }
+
+            .glow {
+                text-shadow: rebeccapurple 0 0 10px;
+            }
+
+            .cdx-marker {
+                color:{{config['mark']}};
+                font-weight:bold;
+                background:rgba(0,0,0,0);
+                /* margin-right: 20px;  */
+            }
+
+            .cdx-marker {
+                color:{{cores['cor_musica_mark']}};
+                font-weight:bold;
+                background:rgba(0,0,0,0)
+            }   
+
+            .capa > img {
+                width: 100%;
+                height: 100%;
+            }                     
+
+            .slide {
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: normal; 
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                top:0%;    
+                left:0%;  
+                text-align: center;          
+            }
+
+            .coro {
+                color:{{config['mark']}};
+            }
+
+            .cat-1-harpa,
+            .cat-3-harpa {
+                color: {{cores['cor_harpa_letra']}};
+                background-color: {{cores['cor_harpa_fundo']}};
+            }
+
+            .cdx-num {
+                color: {{cores['cor_harpa_num']}};
+            }
+
+            .red {
+                color: red;
+            }
+
+            .cat-1-musica,
+            .cat-3-musica {
+                color: {{cores['cor_musica_letra']}};
+                background-color: {{cores['cor_musica_fundo']}};
+            }
+
+            .cat-2-musica,
+            .cat-4-musica {
+                color: {{cores['cor_musica_mark']}};
+                background-color: {{cores['cor_musica_fundo']}};
+            }             
+            
+            .first-in {
+                animation-name: fade-in;
+                animation-duration: 4s;                
+            }
+
+            .in {
+                animation-name: fade-in;
+                animation-duration: 0.5s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 0.5s;
+                opacity: 0;
+            }   
+            
+            .final-out {
+                animation-name: fade-final;
+                animation-duration: 4s;
+                opacity: 0;
+            }
+
+			#fim {
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+			}
+
+            .muzieknootjes {
+              display: block;
+              margin: auto;
+              position: absolute;
+              width: 100%;
+              height: 100%  ;
+              border: 0px solid {{config['fundo']}};
+            }
+
+            .noot-1,
+            .noot-2,
+            .noot-3,
+            .noot-4 {
+              position: absolute;
+              animation: notes 2s infinite linear;
+              font-size: 200px;
+              opacity: 0;
+              color:{{config['letra']}};
+              text-shadow: {{config['letra']}} 0 0 40px;
+              animation-duration: 5s;
+            }
+
+            .noot-1 {
+              top: 30%;
+              left: 5%;
+              animation-delay: 0.5s;
+            }
+
+            .noot-2 {
+              top: 60%;
+              left: 30%;
+              animation-delay: 1s;
+            }
+
+            .noot-3 {
+              top: 30%;
+              left: 50%;
+              animation-delay: 1.5s;
+            }
+
+            .noot-4 {
+              top: 60%;
+              left: 80%;
+              animation-delay: 2s;
+            }
+
+
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            } 
+
+            @keyframes fade-final {
+                0% {
+                    opacity: 0;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            @keyframes notes {
+              0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 0;
+              }
+              50% {
+                opacity: 1;
+                transform: scale(1.5) translate(50%, -50%);
+              }
+              80% {
+                opacity: 0;
+                transform: scale(1.5) translate(100%, -100%);
+              }
+              100% {
+                transform: scale(1.5) translate(100%, -100%);
+                opacity: 0;
+              }
+            }             
+        </style>
+    </head>
+    <body>
+        <!-- <video autoplay muted loop id="myVideo">
+            <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
+        </video> -->
+
+        <div id="notas" class="muzieknootjes">
+            {% if lista_slides|length > 0 and index < lista_slides|length %}
+            {% if lista_slides[index - 1]['categoria'] == 3 or lista_slides[index - 1]['categoria'] == 4 %}
+            <div class="noot-1">&#9835; &#9833;</div>
+            <div class="noot-2">&#9833;</div>
+            <div class="noot-3">&#9839; &#9834;</div>
+            <div class="noot-4">&#9834;</div>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        {% if lista_final[index]['tipo'] == 'capa_img' %}
+            <div class="slide capa first-in" id="slide1">
+                <img src="{{ url_for('static', filename=lista_final[index]['url']) }}">
+            </div>
+        {% elif lista_final[index]['tipo'] == 'capa_base64' %}
+            <div class="slide capa first-in" id="slide1">
+                <img src="data:image/png;base64,{{lista_final[index]['url']}}">
+            </div>
+        {% else %}
+            <div class="slide first-in {{lista_final[index]['categoria']}} letra" id="slide1">{{lista_final[index]['texto']}}</div>
+        {% endif %}
+
+        <div class="slide" id="slide2"></div>      
+
+        <div id="fim"></div>
+
+    <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
+    <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vara.min.js') }}"></script>
+    <script>
+
+        const slides = {{lista_final}}
+        //console.log(slides);
+
+        var key1 = 0;
+        var key2 = 1;
+
+        var key_final = false;
+
+        /*const slide1 = document.getElementById("slide1");
+        const slide2 = document.getElementById("slide2");*/
+
+        const vetor_slides = [document.getElementById("slide1"), document.getElementById("slide2")];
+
+        const notas = document.getElementById("notas");
+        //const source = document.getElementById("myVideo");
+
+       textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
+
+
+        function changeComponent(slide1, slide2, index) {
+            slide1.classList.add('out');
+            
+            if ((index + 1) == slides.length) { // final
+                slide2.innerHTML = '';
+                slide2.classList.remove('letra');
+                slide2.classList.add('capa');
+
+                slide2.classList.remove("in");
+                slide2.classList.add('final-out');
+                vara.draw("draw");
+
+                key_final = true;
+            } else {
+                // definir slide principal
+                if (slides[index]['tipo'] == 'capa_img') {
+                    slide2.innerHTML = '<img src="static/' + slides[index]['url'] + '">';
+                    slide2.setAttribute('class', 'slide capa');
+                    slide2.classList.add('in');
+                } else if (slides[index]['tipo'] == 'capa_base64') {
+                    slide2.innerHTML = '<img src="data:image/png;base64,' + slides[index]['url'] + '">';
+                    slide2.setAttribute('class', 'slide capa');
+                    slide2.classList.add('in');
+                } else {
+                    slide2.innerHTML = slides[index]['texto'];
+                    slide2.setAttribute('class', 'slide letra ' + slides[index]['categoria']);
+                    textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
+                    slide2.classList.add('in');
+                }   
+
+                if (slides[index]['categoria'] == 3 || slides[index]['categoria'] == 4) {
+                    notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
+                    /*notas.classList.remove('hidden');*/
+                } else {
+                    notas.innerHTML = '';
+                    /*notas.classList.add('hidden');*/
+                }
+
+                if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
+                    slide2.classList.add('coro'); 
+                }
+            }
+        }
+
+        var socket = io();
+        socket.on('update', function(index) {
+
+            if (key_final == true) {
+                location.reload();
+            } else {
+                changeComponent(vetor_slides[key1], vetor_slides[key2], index);
+
+                if (key1 == 0) {
+                    key1 = 1;
+                    key2 = 0;
+                } else {
+                    key1 = 0;
+                    key2 = 1;
+                }
+            }
+        });        
+     
+        socket.on('refresh', function(result) {
+            location.reload();
+        });
+
+        socket.on('pix', function(result) {
+            window.location.replace("/slide_pix");
+        });
+
+        socket.on('wait_pptx', function(result) {
+            window.location.replace("/wait_pptx");
+        });        
+
+        socket.on('change_wallpaper', function(result) {
+            if (slides.length == 0) {
+                location.reload();
+            }
+        });        
+
+        var idealFontSize = 300, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
+        fontSize = (screen.width / idealScreenSize) * idealFontSize;
+
+        var vara = new Vara(
+            "#fim",
+
+            //"https://raw.githubusercontent.com/akzhy/Vara/master/fonts/Satisfy/SatisfySL.json",
+            ".{{ url_for('static', filename='fonts/Satisfy/SatisfySl.json') }}",
+            [
+                {
+                    text: 'Fim...',
+                    y:250,
+                    fromCurrentPosition:{y:false},
+                    duration:3000,
+                    autoAnimation:false,
+                    delay:4000,
+                    id:"draw"
+                }													
+            ],
+
+            {
+                strokeWidth: 2,
+                color:'#fff',
+                fontSize:fontSize,
+                textAlign:'center'
+            }
+        );
+
+        vara.ready(function() {
+            var erase = true;
+            vara.animationEnd(function(i, o) {
+                if (i == 'no_erase') erase = false;
+                if (erase) {
+                    o.container.style.transition = "opacity 1s 1s";
+                    o.container.style.opacity = 0;
+                }
+            });
+
+
+        });
+
+    </script>
+
+    </body>    
+</html>

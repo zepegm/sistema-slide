@@ -62,6 +62,7 @@
     #slideProx {
       width: 426; /* or whatever width you want. */
       height: 240px; /* or whatever width you want. */
+      line-height: normal;
     }
 
     #card_principal {
@@ -215,10 +216,22 @@
                   </div>
                 </div>        
               </div>
-            {% if index < lista_final|length  %}
+            {% if index + 1 < lista_final|length  %}
             <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
-                <div id="slideProx" class="{{lista_final[index]['categoria']}}">{{lista_final[index + 1]['text-slide']}}</div>
+
+              {% if lista_final[index + 1]['tipo'] == 'capa_img' %}
+                <div class="capa" id="slideProx">
+                  <img src="{{ url_for('static', filename=lista_final[index + 1]['url']) }}">
+                </div>
+              {% elif lista_final[index + 1]['tipo'] == 'capa_base64' %}
+                <div class="capa" id="slideProx">
+                  <img src="data:image/png;base64,{{lista_final[index + 1]['url']}}">
+                </div>
+              {% else %}
+                <div class="{{lista_final[index + 1]['categoria']}} letra" id="slideProx">{{lista_final[index + 1]['texto']}}</div>
+              {% endif %}
+
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 1}}</h4>
                 </div>
@@ -226,27 +239,13 @@
                 <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
                 <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
                 <br>
-                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
-                <button id="btn_proxima" class="btn btn-success" disabled><i class="fa-solid fa-forward"></i> Próxima</button>
-            </div> 
-            {% elif index == lista_final|length %}
-            <div class="col-sm-5">
-              <div id="card_prox" class="card shadow-sm">
-                <div id="slideProx" class="capa"></div>
-                <div class="card-body">
-                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
-                </div>
-              </div> 
-                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
-                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
-                <br>
-                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
-                <button id="btn_proxima" class="btn btn-success" disabled><i class="fa-solid fa-forward"></i> Próxima</button>
+                <button id="btn_pausar" class="btn btn-warning"><i class="fa-solid fa-circle-pause"></i> Pausar</button>                
+                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Finalizar</button>
             </div> 
             {% else %} 
             <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
-                <div id="slideProx" class="letra"><b>Fim</b></div>
+                <div id="slideProx" class="letra" style="color:white !important; background-color:black !important;"><b>Fim</b></div>
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: -</h4>
                 </div>
@@ -254,8 +253,8 @@
                 <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
                 <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button> 
                 <br>
-                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Encerrar</button>
-                <button id="btn_proxima" class="btn btn-success"><i class="fa-solid fa-forward"></i> Próxima</button>
+                <button id="btn_pausar" class="btn btn-warning"><i class="fa-solid fa-circle-pause"></i> Pausar</button>                
+                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Finalizar</button>
             </div>       
             {% endif %} 
           </div>
@@ -329,163 +328,7 @@
       $("#loading").remove();
     };
 
-    $(".big-box").on('click', function() {
-      index = $(this).attr('data-index');
-
-      console.log(index);
-
-      // modificar slide Principal
-      $("#slideAtual").text('Slide Atual: ' + (parseInt(index) + 1));
-
-      if (index > 0) {
-        $("#btn_previous").removeAttr('disabled');
-        $("#slidePrincipal").addClass('letra');
-        $("#slidePrincipal").removeClass('capa');
-
-        $("#slidePrincipal").empty();
-        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
-
-        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
-          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
-        }
-        $("#slidePrincipal").removeClass('coro');
-        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
-          $("#slidePrincipal").addClass('coro');        
-        }
-
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
-      } else {
-        $("#btn_previous").attr('disabled', '');
-        $("#slidePrincipal").addClass('capa');
-        $("#slidePrincipal").removeClass('letra');        
-        $("#slidePrincipal").empty();
-      }
-
-      
-      // modificar próximo slide
-      if (index <= slides.length) {
-        $("#proximoSlide").text('Próximo Slide: ' + (parseInt(index) + 2));
-
-        if (index < slides.length) {
-          $("#slideProx").addClass('letra');
-          $("#slideProx").removeClass('capa');
-
-          $("#slideProx").removeClass('coro');
-          if (slides[index]["categoria"] == 2 || slides[index]["categoria"] == 4) {
-            $("#slideProx").addClass('coro');        
-          }
-
-          $("#slideProx").empty();
-          $("#slideProx").html(slides[index]['text-slide']);
-          textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
-        } else {
-          $("#slideProx").addClass('capa');
-          $("#slideProx").removeClass('letra');        
-          $("#slideProx").empty();          
-        }
-      }
-
-      changeBox(index);
-
-      $.ajax({
-        type: "POST",
-        url: "{{ url_for('updateSlide') }}",
-        contentType: "application/json",
-        data: JSON.stringify(index),
-        dataType: "json",
-        success: function(response) {
-          console.log(response);
-        },
-        error: function(err) {
-          console.log(err);
-        }
-      });      
-    });
-
-    function previous() {
-
-      index--;
-
-      $("#slideAtual").text("Slide Atual: " + (index + 1));
-      $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
-
-      // verificar estado do slidePrincipal
-
-      if (index == slides.length) {
-        $("#slidePrincipal").addClass('letra');
-        $("#slidePrincipal").removeClass('capa');     
-
-        $("#slideProx").empty();
-        $("#slideProx").addClass('capa');
-        $("#slideProx").removeClass('letra');             
-      } else {
-        $("#slideProx").addClass('letra');
-        $("#slideProx").removeClass('capa');
-        $("#slideProx").removeClass('coro');
-
-        $("#slideProx").html(slides[index]['text-slide']);
-        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});         
-           
-        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
-          $("#slideProx").addClass('coro');
-        }
-      }
-
-      console.log(index);
-
-      if (index == 0) {
-        $("#slidePrincipal").empty();
-        $("#slidePrincipal").addClass('capa');
-        $("#slidePrincipal").removeClass('letra');        
-      } else {
-        $("#slidePrincipal").html(slides[index - 1]['text-slide']);
-        textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});          
-      }
-
-      if (index == 0) {
-        $("#btn_previous").attr('disabled', '');
-      } else {
-        $("#btn_previous").removeAttr('disabled');
-      }
-
-      $("#btn_next").removeAttr('disabled');
-
-
-      if (index > 0) {
-        $("#anotacao").remove();
-        $("#pausa_instrumental").remove();
-        if (slides[index - 1]["anotacao"] != '') {
-          $("#card_principal").append('<p id="anotacao"><strong>Anotação: </strong>' + slides[index - 1]["anotacao"] + '</p>');
-        }   
-        if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
-          $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
-        }
-        $("#slidePrincipal").removeClass('coro');
-        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
-          $("#slidePrincipal").addClass('coro');
-        }        
-      }
-
-      changeBox(index);
-
-      $.ajax({
-        type: "POST",
-        url: "{{ url_for('updateSlide') }}",
-        contentType: "application/json",
-        data: JSON.stringify(index),
-        dataType: "json",
-        success: function(response) {
-          console.log(response);
-        },
-        error: function(err) {
-          console.log(err);
-        }
-      });
-    }
-
-    function next() {
-
-      index++;
+    function changeSlides() {
 
       $("#slideAtual").text("Slide Atual: " + (index + 1));
       $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
@@ -501,12 +344,37 @@
         $("#slidePrincipal").html(slides[index]['texto']);
         $("#slidePrincipal").attr('class', slides[index]['categoria']);
         textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});          
+      }   
+
+      
+      if (index + 1 < slides.length) {
+        if (slides[index + 1]['tipo'] == 'capa_img') {
+          $("#slideProx").html('<img src="static/' + slides[index + 1]['url'] + '">');
+          $("#slideProx").attr('class', 'capa');
+        } else if (slides[index + 1]['tipo'] == 'capa_base64') {
+          $("#slideProx").html('<img src="data:image/png;base64,' + slides[index + 1]['url'] + '">');
+          $("#slideProx").attr('class', 'capa');
+        } else {
+          $("#slideProx").html(slides[index + 1]['texto']);
+          $("#slideProx").attr('class', slides[index + 1]['categoria']);
+          textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
+        }
+      } else {
+        $("#slideProx").html('<div id="slideProx" class="letra" style="color:white !important; background-color:black !important;"><b>Fim</b></div>');
+        $("#proximoSlide").text('Próximo Slide: -');
+        textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});        
       }
 
-      // definir estado dos botões
-      $("#btn_previous").removeAttr('disabled');
+      if (index == 0) {
+        $("#btn_previous").attr('disabled', '');
+      } else {
+        $("#btn_previous").removeAttr('disabled');
+      }
+
       if (index + 1 == slides.length) {
-        $("#btn_next").attr('disabled');
+        $("#btn_next").attr('disabled', '');
+      } else {
+        $("#btn_next").removeAttr('disabled');        
       }
 
       changeBox(index);
@@ -523,7 +391,28 @@
         error: function(err) {
           console.log(err);
         }
-      });
+      }); 
+
+    }
+
+
+    $(".big-box").on('click', function() {
+      index = parseInt($(this).attr('data-index'));
+
+      changeSlides();
+    });
+
+    function previous() {
+      index--;
+
+      changeSlides();
+    }
+
+    function next() {
+
+      index++;
+
+      changeSlides();
     }
 
     function changeBox(index) {
@@ -539,6 +428,24 @@
         url: "{{ url_for('encerrar_apresentacao') }}",
         contentType: "application/json",
         data: JSON.stringify(1),
+        dataType: "json",
+        success: function(response) {
+          if (response) {
+            location.reload();
+          }
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });      
+    }
+    
+    function pausar() {
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('encerrar_apresentacao') }}",
+        contentType: "application/json",
+        data: JSON.stringify(2),
         dataType: "json",
         success: function(response) {
           if (response) {
@@ -571,7 +478,7 @@
 
         if (e.keyCode == '27') {
             e.preventDefault();
-            encerrar();
+            pausar();
         }
         else if (e.keyCode == '37'  || e.keyCode == '33') {
             e.preventDefault();
@@ -581,7 +488,7 @@
         }
         else if (e.keyCode == '39' || e.keyCode == '34') {
             e.preventDefault();
-            if (index <= slides.length) {
+            if (parseInt(index) + 1 < slides.length) {
               next();
             } else {
               proxima_PRS();
@@ -589,8 +496,8 @@
         }           
     }
 
-    $("#btn_proxima").on('click', function() {
-      proxima_PRS();
+    $("#btn_pausar").on('click', function() {
+      pausar();
     });
 
     function proxima_PRS() {

@@ -97,8 +97,8 @@ def home():
         tipo = "Abertura da Lição de Domingo"
         capa = 'static/images/EBD.png'
     elif estado == 9: # musical
-        titulo = 'Musical'
-        tipo = 'Lista Pré-Gravada'
+        titulo = banco.executarConsulta("select valor from config where id = 'titulo_musical'")[0]['valor']
+        tipo = 'Musical'
         capa = 'static/' + banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
 
     else:
@@ -987,6 +987,9 @@ async def musical():
     if request.method == 'POST':
         if 'lista' in request.form:
             lista = json.loads(request.form['lista'])
+            titulo = request.form['titulo']
+
+            banco.insertOrUpdate({'id':"'titulo_musical'", 'valor':"'" + titulo + "'"}, 'id', 'config')
 
             if banco.inserirRoteiroMusical(lista):
 
@@ -1033,7 +1036,9 @@ async def musical():
     musicas = banco.executarConsulta('select * from musicas %s' % where_musica)
     musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
 
-    return render_template('musical.jinja', harpa=harpa, musicas=musicas, roteiro_musical=roteiro_musical, msg=msg)
+    titulo = banco.executarConsulta("select valor from config where id = 'titulo_musical'")[0]['valor']
+
+    return render_template('musical.jinja', harpa=harpa, musicas=musicas, roteiro_musical=roteiro_musical, msg=msg, titulo=titulo)
 
 @app.route('/licoesebd', methods=['GET', 'POST'])
 def licoesebd():
@@ -1138,7 +1143,7 @@ def licoesebd():
 
 
 @app.route('/slide', methods=['GET', 'POST'])
-def slide():
+async def slide():
 
     global estado
     global current_presentation
@@ -1324,6 +1329,55 @@ def slide():
 
         return render_template('PowerPoint_EBD.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total, trimestre=trimestre, capa=capa)
 
+    elif estado == 9: # musical 
+        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+
+        lista_final = []
+
+        # adicionado capa principal
+        capa_padrao = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
+        lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
+
+        # rodando o loop de cada música
+        for item in roteiro_musical:
+            # adicionando capa
+            if item['capa_url'] == '[SEM_CAPA_HARPA]':
+                browser = await launch(      
+                    handleSIGINT=False,
+                    handleSIGTERM=False,
+                    handleSIGHUP=False
+                )
+
+                hostname = request.headers.get('Host')
+
+                page = await browser.newPage()
+                await page.setViewport({"width": 1366, "height": 768})
+                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, item['id_origem']), {'waitUntil':'networkidle2'})
+                base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
+                lista_final.append({'tipo':'capa_base64', 'url':base64})
+                await browser.close()
+            else:
+                lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
+
+            # adicionando slides
+            if item['tabela-origem'] == 'musicas':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+
+            else:
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+
+            # adicionando capa inicial no final da música
+            lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
+
+        
+        # adicionando cores
+        cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
+
+        return render_template('PowerPoint_Musical.jinja', lista_final=lista_final, cores=cores, index=index)
 
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
@@ -2630,6 +2684,7 @@ def encerrar_apresentacao():
     global current_presentation
     global estado
     global index
+    global pause_index
 
 
     if request.method == 'POST':
@@ -2638,9 +2693,19 @@ def encerrar_apresentacao():
                 estado = 0
                 current_presentation = {'id':0, 'tipo':''}
                 index = 0
+                pause_index = index                
 
                 socketio.emit('refresh', 1)
-                socketio.emit('update_roteiro', 1)  
+                socketio.emit('update_roteiro', 1)
+
+            elif int(request.json) == 2: # pausar
+                estado = 0
+                current_presentation = {'id':0, 'tipo':''}
+                pause_index = index
+                index = 0
+
+                socketio.emit('refresh', 1)
+                socketio.emit('update_roteiro', 1)
 
 
                 return jsonify(True)
@@ -2684,8 +2749,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run(debug=True, use_reloader=False, port=80)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run(debug=True, use_reloader=False, port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
