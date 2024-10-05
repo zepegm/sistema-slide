@@ -8,7 +8,6 @@
         <style>
 
             body {
-                background-color: {{config['fundo']}};
                 overflow: hidden;
             }
 
@@ -37,9 +36,10 @@
                 background:rgba(0,0,0,0)
             }   
 
-            .capa > img {
-                width: 100%;
-                height: 100%;
+            .capa {
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: cover;
             }                     
 
             .slide {
@@ -63,6 +63,11 @@
                 background-color: {{cores['cor_harpa_fundo']}};
             }
 
+            .body-cat-1-harpa,
+            .body-cat-3-harpa {
+                background-color: {{cores['cor_harpa_fundo']}};
+            }
+
             .cdx-num {
                 color: {{cores['cor_harpa_num']}};
             }
@@ -77,11 +82,19 @@
                 background-color: {{cores['cor_musica_fundo']}};
             }
 
+            .body-cat-1-musica,
+            .body-cat-1-musica,
+            .body-cat-3-musica,
+            .body-cat-4-musica {
+                background-color: {{cores['cor_musica_fundo']}};
+            }
+
             .cat-2-musica,
             .cat-4-musica {
                 color: {{cores['cor_musica_mark']}};
                 background-color: {{cores['cor_musica_fundo']}};
-            }             
+            }
+
             
             .first-in {
                 animation-name: fade-in;
@@ -200,7 +213,7 @@
             }             
         </style>
     </head>
-    <body>
+    <body class="body-{{lista_final[index]['categoria']}}">
         <!-- <video autoplay muted loop id="myVideo">
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
         </video> -->
@@ -217,13 +230,9 @@
         </div>
 
         {% if lista_final[index]['tipo'] == 'capa_img' %}
-            <div class="slide capa first-in" id="slide1">
-                <img src="{{ url_for('static', filename=lista_final[index]['url']) }}">
-            </div>
+            <div class="slide capa first-in" id="slide1" style="background-image: url('{{ url_for('static', filename=lista_final[index]['url']) }}');"></div>
         {% elif lista_final[index]['tipo'] == 'capa_base64' %}
-            <div class="slide capa first-in" id="slide1">
-                <img src="data:image/png;base64,{{lista_final[index]['url']}}">
-            </div>
+            <div class="slide capa first-in" id="slide1" style="background-image: url('data:image/png;base64,{{lista_final[index]['url']}}');"></div>
         {% else %}
             <div class="slide first-in {{lista_final[index]['categoria']}} letra" id="slide1">{{lista_final[index]['texto']}}</div>
         {% endif %}
@@ -262,10 +271,8 @@
             
             if ((index + 1) == slides.length) { // final
                 slide2.innerHTML = '';
-                slide2.classList.remove('letra');
-                slide2.classList.add('capa');
-
-                slide2.classList.remove("in");
+                slide2.setAttribute('class', 'slide capa');
+                slide2.setAttribute('style', "background-image: url('static/" + slides[0]['url'] + "');");
                 slide2.classList.add('final-out');
                 vara.draw("draw");
 
@@ -273,16 +280,20 @@
             } else {
                 // definir slide principal
                 if (slides[index]['tipo'] == 'capa_img') {
-                    slide2.innerHTML = '<img src="static/' + slides[index]['url'] + '">';
+                    slide2.innerHTML = '';
                     slide2.setAttribute('class', 'slide capa');
+                    slide2.setAttribute('style', "background-image: url('static/" + slides[index]['url'] + "');");
                     slide2.classList.add('in');
                 } else if (slides[index]['tipo'] == 'capa_base64') {
-                    slide2.innerHTML = '<img src="data:image/png;base64,' + slides[index]['url'] + '">';
+                    slide2.innerHTML = '';
                     slide2.setAttribute('class', 'slide capa');
+                    slide2.setAttribute('style', "background-image: url('data:image/png;base64," + slides[index]['url'] + "');");
                     slide2.classList.add('in');
                 } else {
                     slide2.innerHTML = slides[index]['texto'];
+                    slide2.removeAttribute("style");
                     slide2.setAttribute('class', 'slide letra ' + slides[index]['categoria']);
+                    document.body.setAttribute('class', 'body-' + slides[index]['categoria']);
                     textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
                     slide2.classList.add('in');
                 }   
