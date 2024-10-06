@@ -1563,7 +1563,34 @@ def subtitle():
         if len(lista[index]) > 199:
             tamanho = 30
         else:
-            tamanho = 20 
+            tamanho = 20
+
+    elif (estado == 9): # Musical
+        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+
+        lista = [banco.executarConsulta('select valor from config where id = "titulo_musical"')[0]['valor']]
+
+        tamanho = 20
+
+        for item in roteiro_musical:
+            if item['tabela-origem'] == 'harpa':
+                lista.append(banco.executarConsulta('select descricao from harpa where id = %s' % item['id_origem'])[0]['descricao'])
+
+                for item in banco.executarConsulta('select `text-legenda` from slides_harpa where id_harpa = %s' % item['id_origem']):
+                    lista.append(item['text-legenda'])
+                
+                lista.append('')
+
+            elif item['tabela-origem'] == 'musicas':
+                lista.append(banco.executarConsulta('select titulo from musicas where id = %s' % item['id_origem'])[0]['titulo'])
+
+                for item in banco.executarConsulta('select `text-legenda` from slides where id_musica = %s' % item['id_origem']):
+                    lista.append(item['text-legenda'])
+                
+                lista.append('')
+
+
+
     else:
         lista = []
         tamanho = 0
@@ -2217,7 +2244,7 @@ def pesquisarBiblia():
 
             pesquisa = '%' + pesquisa.replace(' ', '%') + '%'
 
-            resultados = banco.executarConsulta("select livro, cap, ver from biblia_arc where texto like '%s' union select livro, cap, ver from biblia_naa where texto like '%s' union select livro, cap, ver from biblia_nvi where texto like '%s' union select livro, cap, ver from biblia_nvt where texto like '%s' order by livro, cap, ver" % (pesquisa, pesquisa, pesquisa, pesquisa))
+            resultados = banco.executarConsulta("select livro, cap, ver from biblia_ara where texto like '%s' union select livro, cap, ver from biblia_arc where texto like '%s' union select livro, cap, ver from biblia_naa where texto like '%s' union select livro, cap, ver from biblia_nvi where texto like '%s' union select livro, cap, ver from biblia_nvt where texto like '%s' order by livro, cap, ver" % (pesquisa, pesquisa, pesquisa, pesquisa, pesquisa))
             
 
             for item in resultados:
@@ -2230,7 +2257,7 @@ def pesquisarBiblia():
 
                 sql = sql[:-2] + ' from %s ' % tabelas[0]
 
-                for i in range(1, 4):
+                for i in range(1, len(tabelas)):
                     sql += 'inner join %s on %s.livro = %s.livro and %s.cap = %s.cap and %s.ver = %s.ver ' % (tabelas[i], tabelas[0], tabelas[i], tabelas[0], tabelas[i], tabelas[0], tabelas[i])
 
                 sql += 'where %s.livro = %s and %s.cap = %s and %s.ver = %s' % (tabelas[0], item['livro'], tabelas[0], item['cap'], tabelas[0], item['ver'])

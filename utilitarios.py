@@ -42,6 +42,7 @@ def pegarTrimestre(data):
     
 def pegarLicoes(data):
     mes = data.month
+    ano = data.year
 
     licoes = []
 
@@ -77,8 +78,9 @@ def pegarLicoes(data):
 
     cont_licao += 1
     proximo_domingo = primeiro_domingo + datetime.timedelta(days=7)
+    
 
-    while (proximo_domingo.month <= fim):
+    while (proximo_domingo.month <= fim and proximo_domingo.year <= ano):
         licoes.append({'licao':cont_licao, 'dia':proximo_domingo, 'selected':''})
         
         if proximo_domingo <= data:
