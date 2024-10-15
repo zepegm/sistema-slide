@@ -1773,17 +1773,28 @@ def enviarDadosNovoHino():
         blocks = []
         blocks_2 = []
         texto = ''
+        aux = ''
         for item in info['slides']:
             texto = item['text-slide'].replace('<b>', '').replace('</b>', '').replace('<br>', ' ') # retirando o negrito e os espaços
+            
 
             # inserindo negrito na numeração
             if texto[0:22] == '<span class="cdx-num">':
+                if aux != '':
+                    blocks.append({'type':'paragraph', 'data':{'text':aux}})
                 texto = '<b>' + texto
                 pos = texto.find('</span>')
 
                 texto = texto[:pos] + '</b>' + texto[pos:]
+                aux = texto + '<br>'
+            elif texto[0:18] == '<span class="red">':
+                blocks.append({'type':'paragraph', 'data':{'text':aux}})
+                aux = texto + '<br>'
 
-            blocks.append({'type':'paragraph', 'data':{'text':texto}})
+            else:
+                aux += texto + '<br>'
+
+        blocks.append({'type':'paragraph', 'data':{'text':aux}})    
 
 
         destino = request.form.getlist('destino')[0]
