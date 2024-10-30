@@ -131,6 +131,13 @@
       padding-top: 25rem;
     }
 
+    #btn_show_preview {
+      position: fixed;
+      width: 10rem;
+      margin-right: 10px;
+      z-index: 2000;
+    }
+
     </style>
     
   </head>
@@ -193,6 +200,7 @@
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
+          <button id="btn_show_preview" class="btn btn-secondary">Ocultar Preview</button>
           <div class="row" id="container-principal">
             <h1 class="fw-light text-center">Editor de Slide Música</h1>
             <div class="col-sm-6 mx-auto">
@@ -331,6 +339,22 @@ window.onload = function() {
   }
 };
 
+  $("#btn_show_preview").on('click', function() {
+
+    if ($("#btn_show_preview").text() == 'Mostrar Preview') {
+      $("#container-principal").show(function() {
+        $("#btn_show_preview").html("Ocultar Preview");
+        $("#editable_content").css('padding-top', '25rem');
+      });
+    } else {
+      $("#container-principal").hide(function() {
+        $("#btn_show_preview").html("Mostrar Preview");
+        $("#editable_content").css('padding-top', '3rem');
+      });
+    }
+
+  });
+
   $("#editable_content").on('input', '.ce-paragraph', function() {
 
     var text_slide = [];
@@ -374,6 +398,11 @@ window.onload = function() {
               } else {
                 btn_next.disabled = true;
               }
+
+              let focusedElement = $(':focus');
+              let count = focusedElement.parent().parent().prevAll('div').find('.ce-paragraph').length;
+
+              slide_count = count + 1;
 
               load();
             } else {
@@ -494,13 +523,6 @@ window.onload = function() {
   }  
 
   function load() {
-
-    const focusedElement = $(':focus');
-    var count = focusedElement.prevAll('.ce-paragraph.cdx-block').length;
-    console.log(count);
-
-
-
     $("#previewSlide").html(slide[slide_count - 1]['text-slide'].replaceAll('cdx-marker', 'view-marker'));
     textFit($('#previewSlide'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
 
