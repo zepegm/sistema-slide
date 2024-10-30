@@ -57,6 +57,17 @@
       color: white;
     }
 
+    .codex-editor__redactor {
+	    counter-reset: my-counter;
+    }
+
+    .ce-paragraph:before {
+	    content: counter(my-counter)" - ";
+	    counter-increment: my-counter;
+      font-weight: bold;
+      color: chocolate;
+    }
+
     .ce-paragraph {
         border-bottom: solid;
     }
@@ -105,6 +116,19 @@
     #editorjs_s,
     #editorjs {
       color:black;
+    }
+
+    #container-principal {
+      position: fixed;
+      z-index: 2;
+      background-color: #FAFAFA;
+      top:4.5rem;
+      padding-top: 2rem;
+      text-align: center;
+    }
+
+    #editable_content {
+      padding-top: 25rem;
     }
 
     </style>
@@ -169,7 +193,7 @@
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
         <section class="container">
-          <div class="row">
+          <div class="row" id="container-principal">
             <h1 class="fw-light text-center">Editor de Slide Música</h1>
             <div class="col-sm-6 mx-auto">
               <div class="card shadow-sm preview">
@@ -199,28 +223,32 @@
             </div> 
           </div>
         </section>
-        <div class="row">
-            <div class="col-sm-12"><hr></div>
-            <div id="status" class="col-sm-12"></div>
-            <div class="col-sm-6">
-              <label for="txt_titulo" class="form-label">Título da Música:</label>
-              <input type="text" class="form-control" id="txt_titulo" placeholder="Digite o Nome da Música" value="{{titulo}}">
-            </div>
-            <div class="col-sm-6 align-self-end">
-              <button id="btn_view" class="btn btn-secondary">Pré-visualizar</button>
-              <button id="btn_import" class="btn btn-success" data-toggle="modal" data-target="#exampleModal">Importar</button>
-              <button id="btn_send" class="btn btn-primary" data-toggle="modal" data-target="#modalConfirm">Confirmar</button>
-            </div> 
-            <div class="col-sm-12">&nbsp;</div>
-            <div class="col-sm-6">
-              <h4 class="text-center fw-bold">Digite o texto do Slide aqui</h4>
-              <div id="editorjs"></div>
-            </div>
-            <div class="col-sm-6">
-              <h4 class="text-center fw-bold">Digite o texto da Legenda aqui</h4>
-              <div id="editorjs_s"></div>
-            </div>
-        </div>
+
+        <section class="container">
+          <div class="row" id="editable_content">
+              <div class="col-sm-12"><hr></div>
+              <div id="status" class="col-sm-12"></div>
+              <div class="col-sm-6">
+                <label for="txt_titulo" class="form-label">Título da Música:</label>
+                <input type="text" class="form-control" id="txt_titulo" placeholder="Digite o Nome da Música" value="{{titulo}}">
+              </div>
+              <div class="col-sm-6 align-self-end">
+                <button id="btn_view" class="btn btn-secondary">Pré-visualizar</button>
+                <button id="btn_import" class="btn btn-success" data-toggle="modal" data-target="#exampleModal">Importar</button>
+                <button id="btn_send" class="btn btn-primary" data-toggle="modal" data-target="#modalConfirm">Confirmar</button>
+              </div> 
+              <div class="col-sm-12">&nbsp;</div>
+              <div class="col-sm-6">
+                <h4 class="text-center fw-bold">Digite o texto do Slide aqui</h4>
+                <div id="editorjs"></div>
+              </div>
+              <div class="col-sm-6">
+                <h4 class="text-center fw-bold">Digite o texto da Legenda aqui</h4>
+                <div id="editorjs_s"></div>
+              </div>
+          </div>        
+        </section>
+
       </div>
 		</div>
 
@@ -302,6 +330,67 @@ window.onload = function() {
     load();
   }
 };
+
+  $("#editable_content").on('input', '.ce-paragraph', function() {
+
+    var text_slide = [];
+    var text_subtitle = [];
+
+    editor.save()
+      .then( data => {
+        text_slide = data['blocks'];
+
+        editor_s.save()
+          .then( data => {
+            text_subtitle = data['blocks'];
+
+            // recuperar anotações antes de limpar o arquivo do slide
+            anotacoes = []
+            for (item in slide) {
+              anotacoes.push(slide[item]['anotacao']);
+            }
+
+            slide = [];
+
+            if (text_slide.length == text_subtitle.length) {
+              for (i = 0; i < text_slide.length; i++) {
+
+                anotacao = '';
+                if (i < anotacoes.length) {
+                  anotacao = anotacoes[i];
+                }
+
+                slide.push({'pos':(i + 1), 'text-slide':text_slide[i]['data']['text'], 'subtitle':text_subtitle[i]['data']['text'], 'anotacao':anotacao});
+              }
+
+              if (slide_count > 1) {
+                btn_previous.disabled = false;
+              } else {
+                btn_previous.disabled = true;
+              }
+
+              if (slide_count < slide.length) {
+                btn_next.disabled = false;
+              } else {
+                btn_next.disabled = true;
+              }
+
+              load();
+            } else {
+              //$("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+            }
+          })
+          .catch((error) => {
+            console.error('Saving error', error);
+            //$("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+          });
+      })
+      .catch((error) => {
+        console.error('Saving error', error);
+        //$("#status").append('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro!</strong> Por favor digite as letras do Slide e das Legendas na mesma quantidade de parágrafos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+      });
+
+  });
 
   btn_view.addEventListener('click', function () {
 
@@ -405,6 +494,13 @@ window.onload = function() {
   }  
 
   function load() {
+
+    const focusedElement = $(':focus');
+    var count = focusedElement.prevAll('.ce-paragraph.cdx-block').length;
+    console.log(count);
+
+
+
     $("#previewSlide").html(slide[slide_count - 1]['text-slide'].replaceAll('cdx-marker', 'view-marker'));
     textFit($('#previewSlide'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
 
