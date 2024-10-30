@@ -125,7 +125,7 @@
               <br>
               <div id="lista_geral_harpa" class="list-group">             
                 {% for item in harpa %}
-                  <a href="#" class="list-group-item list-group-item-action item-harpa" data-id="{{item['id']}}">{{'%03d' % item['id']}}. {{item['descricao']}}</a>
+                  <a href="#" class="list-group-item list-group-item-action {{item['classe']}} {{item['color']}}" data-id="{{item['id']}}">{{'%03d' % item['num']}}. {{item['descricao']}}</a>
                 {% endfor %}
               </div>               
             </div>
@@ -151,7 +151,7 @@
             <div class="col-sm-3">
               <div id="lista_musical" class="list-group">
                 {% for item in roteiro_musical %}
-                  <a href="#" class="list-group-item list-group-item-action {{item['origem']}}" data-id="{{item['id_origem']}}">{{item['titulo']}}</a>
+                  <a href="#" class="list-group-item list-group-item-action {{item['origem']}} {{item['color']}}" data-id="{{item['id_origem']}}">{{item['titulo']}}</a>
                 {% endfor %}
               </div>               
             </div>
@@ -225,6 +225,8 @@
         let origem = 'harpa'
         if ($(this).hasClass('item-musica')) {
           origem = 'musicas'
+        } else if ($(this).hasClass('item-harpa-versionada')) {
+          origem = 'harpa_versionada'
         }
         lista_final.push({'id':$(this).attr('data-id'), 'origem':origem});
       })

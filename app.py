@@ -630,11 +630,16 @@ async def controlador():
                     handleSIGHUP=False
                 )
 
+                id_harpa = item['id_origem']
+
+                if item['tabela-origem'] == 'harpa_versionada':
+                    id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
+
                 hostname = request.headers.get('Host')
 
                 page = await browser.newPage()
                 await page.setViewport({"width": 1366, "height": 768})
-                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, item['id_origem']), {'waitUntil':'networkidle2'})
+                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), {'waitUntil':'networkidle2'})
                 base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
                 lista_final.append({'tipo':'capa_base64', 'url':base64})
                 await browser.close()
@@ -646,7 +651,10 @@ async def controlador():
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item['id_origem'])
                 for sld in letras:
                     lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
-
+            elif item['tabela-origem'] == 'harpa_versionada':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
             else:
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
                 for sld in letras:
@@ -1040,7 +1048,7 @@ async def musical():
 
                 capa = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
 
-                roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo ELSE printf('%03d', harpa.id) || '. ' || harpa.descricao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+                roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' WHEN `tabela-origem` = 'harpa_versionada' THEN 'item-harpa-versionada' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo WHEN `tabela-origem` = 'harpa' THEN printf('%03d', harpa.id) || '. ' || harpa.descricao  ELSE printf('%03d', harpa_versionada.id_harpa) || '. ' || harpa_versionada.titulo_versao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url, CASE WHEN `tabela-origem` = 'harpa_versionada' THEN 'text-danger' ELSE '' END as color FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN harpa_versionada ON harpa_versionada.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
 
                 if len(roteiro_musical) < 1:
                     msg = '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Operação realizada com sucesso!</strong> Lista do Musical esvaziada com sucesso! Para prosseguir adicione músicas.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
@@ -1053,11 +1061,16 @@ async def musical():
                                 handleSIGHUP=False
                             )
 
+                            id_harpa = item['id_origem']
+
+                            if item['origem'] == 'item-harpa-versionada':
+                                id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
+
                             hostname = request.headers.get('Host')
 
                             page = await browser.newPage()
                             await page.setViewport({"width": 1366, "height": 768})
-                            await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, item['id_origem']), {'waitUntil':'networkidle2'})
+                            await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), {'waitUntil':'networkidle2'})
                             base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
                             item['capa_base64l'] = base64
                             await browser.close()
@@ -1066,18 +1079,22 @@ async def musical():
             else:
                 msg = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Erro fatal ao tentar cadastrar dados!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
-    roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo ELSE printf('%03d', harpa.id) || '. ' || harpa.descricao END AS titulo FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem")
-    lista_horizontal_roteiro = banco.executarConsulta("SELECT (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa') as harpa, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'musicas') as musicas")[0]
+    roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' WHEN `tabela-origem` = 'harpa_versionada' THEN 'item-harpa-versionada' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo WHEN `tabela-origem` = 'harpa' THEN printf('%03d', harpa.id) || '. ' || harpa.descricao  ELSE printf('%03d', harpa_versionada.id_harpa) || '. ' || harpa_versionada.titulo_versao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url, CASE WHEN `tabela-origem` = 'harpa_versionada' THEN 'text-danger' ELSE '' END as color FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN harpa_versionada ON harpa_versionada.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+    lista_horizontal_roteiro = banco.executarConsulta("SELECT (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa') as harpa, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'musicas') as musicas, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa_versionada') as harpa_versionada")[0]
     
     where_harpa = ''
     if lista_horizontal_roteiro['harpa']:
         where_harpa = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['harpa']
 
+    where_harpa_versionada = ''
+    if lista_horizontal_roteiro['harpa_versionada']:
+        where_harpa_versionada = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['harpa_versionada']        
+
     where_musica = ''
     if lista_horizontal_roteiro['musicas']:
         where_musica = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['musicas']    
     
-    harpa = banco.executarConsulta('select * from harpa %s order by id' % where_harpa)
+    harpa = banco.executarConsulta("select id as num, id, descricao, 'item-harpa' as classe, '' as color from harpa %s union all select id_harpa as num, id, titulo_versao, 'item-harpa-versionada' as classe, 'text-danger' as color from harpa_versionada %s order by num" % (where_harpa, where_harpa_versionada))
     musicas = banco.executarConsulta('select * from musicas %s' % where_musica)
     musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
 
@@ -1393,11 +1410,16 @@ async def slide():
                     handleSIGHUP=False
                 )
 
+                id_harpa = item['id_origem']
+
+                if item['tabela-origem'] == 'harpa_versionada':
+                    id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
+
                 hostname = request.headers.get('Host')
 
                 page = await browser.newPage()
                 await page.setViewport({"width": 1366, "height": 768})
-                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, item['id_origem']), {'waitUntil':'networkidle2'})
+                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), {'waitUntil':'networkidle2'})
                 base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
                 lista_final.append({'tipo':'capa_base64', 'url':base64})
                 await browser.close()
@@ -1409,7 +1431,10 @@ async def slide():
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item['id_origem'])
                 for sld in letras:
                     lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
-
+            elif item['tabela-origem'] == 'harpa_versionada':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
             else:
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
                 for sld in letras:
@@ -2855,8 +2880,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False, port=80)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run(debug=True, use_reloader=False, port=80)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
