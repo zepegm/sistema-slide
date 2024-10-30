@@ -108,6 +108,51 @@ def home():
 
     return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor, status='')
 
+@app.route('/render_slide_pdf', methods=['GET', 'POST'])
+async def render_slide_pdf():
+
+    id = request.args.get('id')
+    destino = request.args.get('destino')
+    id_name = request.args.get('id_name')
+    classe = request.args.get('classe')
+
+    cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
+    slides = banco.executarConsulta('select `text-slide`, categoria from %s where %s = %s' % (destino, id_name, id))
+
+    if classe == 'musica':
+        capa = banco.executarConsultaVetor('select filename from capas where id_musica = %s' % id)
+        if len(capa) > 0:
+            capa = 'static/images/capas/' + capa[0]
+        else:
+            capa = 'static/images/upload_image.jpg'
+
+    else: # capa da harpa
+
+        if destino == 'slides_harpa_versionada':
+            harpa_id = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id)[0]
+        else:
+            harpa_id = id
+
+        browser = await launch(      
+            handleSIGINT=False,
+            handleSIGTERM=False,
+            handleSIGHUP=False
+        )
+
+        hostname = request.headers.get('Host')
+
+        page = await browser.newPage()
+        await page.setViewport({"width": 1366, "height": 768})
+        await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, harpa_id), {'waitUntil':'networkidle2'})
+        base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
+        capa = base64
+        await browser.close()
+
+    for item in slides:
+        item['categoria'] = 'cat-' + str(item['categoria']) + '-' + classe
+
+    return render_template('render_slide_pdf.jinja', slides=slides, cores=cores, capa=capa, tipo=classe)
+
 @app.route('/render_pdf', methods=['GET', 'POST'])
 def render_pdf():
     lista_final = []
@@ -2198,6 +2243,29 @@ async def gerar_imagem_calendario():
 
     return jsonify(pdf_path)
 
+@app.route('/gerar_pdf_slide', methods=['GET', 'POST'])
+async def gerar_pdf_slide():
+    info = request.json
+
+    pdf_path = 'static/docs/slide.pdf'
+
+    browser = await launch(
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False
+    )
+
+    hostname = request.headers.get('Host')
+
+    page = await browser.newPage()
+    await page.setViewport({"width": 1280, "height": 720})
+    await page.goto('http://%s/render_slide_pdf?id=%s&destino=%s&id_name=%s&classe=%s' % (hostname, info['id'], info['destino'], info['id_name'], info['classe']), {'waitUntil':'networkidle2'})
+    print('http://%s/render_slide_pdf?id=%s&destino=%s&id_name=%s&classe=%s' % (hostname, info['id'], info['destino'], info['id_name'], info['classe']))
+    await page.pdf({'path': pdf_path, 'printBackground':True, 'fullPage': True, 'width':1280, 'height':720})
+    await browser.close()
+
+    return jsonify(pdf_path)
+
 @app.route('/gerar_pdf', methods=['GET', 'POST'])
 async def gerar_pdf():
     ls = request.json
@@ -2787,8 +2855,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run(debug=True, use_reloader=False, port=80)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run(debug=True, use_reloader=False, port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

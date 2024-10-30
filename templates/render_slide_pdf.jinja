@@ -1,0 +1,102 @@
+<html>
+    <head>
+        <title>Slide PDF Render</title>
+
+        <style>
+            .slide {
+                font-family: Arial, Helvetica, sans-serif;
+                /*border: solid 1px white;*/
+                width: 1280px;
+                height: 720px;
+                text-align: center;
+                line-height: normal;
+                margin-left: -8px;
+            }
+
+            .cdx-marker {
+                color:{{config['mark']}};
+                font-weight:bold;
+                background:rgba(0,0,0,0);
+                
+            }
+
+            .cdx-marker {
+                color:{{cores['cor_musica_mark']}};
+                font-weight:bold;
+                background:rgba(0,0,0,0);
+                margin-right: 20px;
+            }   
+
+            .capa {
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: cover;
+                {% if tipo == 'musica' %}
+                background-image: url('{{capa}}');
+                {% else %}
+                background-image: url('data:image/png;base64,{{capa}}');
+                {% endif %}
+                margin-top: -8px;
+            }
+
+
+            .coro {
+                color:{{config['mark']}};
+            }
+
+            .cat-1-harpa,
+            .cat-3-harpa {
+                color: {{cores['cor_harpa_letra']}};
+                background-color: {{cores['cor_harpa_fundo']}};
+            }
+
+            .body-cat-1-harpa,
+            .body-cat-3-harpa {
+                background-color: {{cores['cor_harpa_fundo']}};
+            }
+
+            .cdx-num {
+                color: {{cores['cor_harpa_num']}};
+            }
+
+            .red {
+                color: red;
+            }
+
+            .cat-1-musica,
+            .cat-3-musica {
+                color: {{cores['cor_musica_letra']}};
+                background-color: {{cores['cor_musica_fundo']}};
+            }
+
+            .body-cat-1-musica,
+            .body-cat-1-musica,
+            .body-cat-3-musica,
+            .body-cat-4-musica {
+                background-color: {{cores['cor_musica_fundo']}};
+            }
+
+            .cat-2-musica,
+            .cat-4-musica {
+                color: {{cores['cor_musica_mark']}};
+                background-color: {{cores['cor_musica_fundo']}};
+            }
+
+        </style>
+
+    </head>
+    <body>
+        <div class="slide capa">
+
+        </div>
+        {% for item in slides %}
+        <div class="slide letra {{item['categoria']}}">
+            {{item['text-slide']}}
+        </div>
+        {% endfor %}
+        <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+        <script>
+            textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
+        </script>
+    </body>
+</html>
