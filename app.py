@@ -7,7 +7,7 @@ from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
 #from MySQL import db
 from SQLite_DB import db
-from SQLite_DB import insert_log, get_all_hook, get_photos, inserir_calendario_semanal, executarConsultaCalendario, alterarEventoAtivo, inserir_calendario_mensal, inserirFestaDepCalendario
+from SQLite_DB import insert_log, get_all_hook, get_photos, inserir_calendario_semanal, executarConsultaCalendario, alterarEventoAtivo, inserir_calendario_mensal, inserirFestaDepCalendario, executarConsultaOldMusic
 from HTML_U import converHTML_to_List
 import locale
 import math
@@ -1918,6 +1918,16 @@ def enviarDadosNovaMusica():
                 blocks_2.append({'type':'paragraph', 'data':{'text':item['texto']}})            
 
             cat_slides_list = banco.executarConsulta('select categoria from slides where id_musica = %s order by pos' % destino)
+        else:
+            # tentar buscar vínculos do banco antigo
+            old_vinc = executarConsultaOldMusic(r"select nome_arquivo, vinculo_1, status_1, desc_1, vinculo_2, status_2, desc_2, vinculo_3, status_3, desc_3 from listaMusicas where nome_arquivo like '%" + info['titulo'] + r"%'")
+            
+            if len(old_vinc) > 0: # peguei algum vínculo antigo
+                for i in range(1, 4):
+                    if old_vinc[0]['vinculo_%s' % i] != None:
+                        vinculos.append({'id_vinculo':old_vinc[0]['vinculo_%s' % i], 'id_status':old_vinc[0]['status_%s' % i], 'descricao':old_vinc[0]['desc_%s' % i]})
+
+
 
         return render_template('save_musica.jinja', info=info, cat_slides=cat_slides, blocks=blocks, blocks_2=blocks_2, categoria=categoria, status=status, vinculos=vinculos, cat_slides_list=cat_slides_list, destino=destino)
 

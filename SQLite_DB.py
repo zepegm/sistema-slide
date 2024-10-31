@@ -9,6 +9,7 @@ from HTML_U import converHTML_to_PlainText
 caminho = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Sistema-slide.db'
 caminho_hook = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\log\\hook.db'
 caminho_calendario = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Calendario.db'
+caminho_old_musicas = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\Músicas\\NewMusicas.db'
 
 class db:
     def __init__(self):
@@ -177,7 +178,7 @@ class db:
                 sql = "INSERT INTO capas VALUES(%s, '%s.jpg')" % (id, id)
                 cur.execute(sql)
 
-                capa = destino
+                capa = 'images/capas/%s.jpg' % id
 
             con.commit()
             con.close()
@@ -494,6 +495,23 @@ def inserir_calendario_mensal(lista, mes):
 
 def executarConsultaCalendario(sql):
     con = sqlite3.connect(caminho_calendario)
+    con.row_factory = sqlite3.Row        
+    cur = con.cursor()
+
+    cur.execute(sql)
+
+    result = [dict(row) for row in cur.fetchall()]
+    
+    #for row in cur.fetchall():
+        #print(row)
+
+    con.close()
+
+    return result
+
+
+def executarConsultaOldMusic(sql):
+    con = sqlite3.connect(caminho_old_musicas)
     con.row_factory = sqlite3.Row        
     cur = con.cursor()
 
