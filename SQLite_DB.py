@@ -2,6 +2,8 @@ import os
 import io
 import sqlite3
 import base64
+import shutil
+from utilitarios import verificar_arquivo_existe
 from HTML_U import converHTML_to_PlainText
 
 caminho = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Sistema-slide.db'
@@ -133,6 +135,8 @@ class db:
 
     def inserirNovaMusica(self, musica):   
 
+        capa = 'images/upload_image.jpg'
+
         try:
             con = sqlite3.connect(caminho)
             cur = con.cursor()
@@ -164,16 +168,27 @@ class db:
                 sql = "INSERT INTO letras VALUES(%s, %s, '%s', %s)" % (id, letra['paragrafo'], letra['texto'], letra['pagina'])
                 cur.execute(sql)
 
+            # inserir capa, pois se trata de uma música nova
+            origem = 'static/images/SlidesPPTX/temp_capa.jpg'
+            destino = 'static/images/capas/%s.jpg' % id
+
+            if verificar_arquivo_existe(origem):
+                shutil.move(origem, destino)
+                sql = "INSERT INTO capas VALUES(%s, '%s.jpg')" % (id, id)
+                cur.execute(sql)
+
+                capa = destino
+
             con.commit()
             con.close()
 
             # inserir no log
             insert_log(1, 2, id, 0)
 
-            return {'id':id, 'log':'Operação realizada com sucesso!'}
+            return {'id':id, 'log':'Operação realizada com sucesso!', 'capa':capa}
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
-            return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error)}
+            return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error), 'capa':capa}
         
 
     def alterarMusica(self, musica):

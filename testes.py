@@ -1,26 +1,10 @@
-from pyppeteer import launch
-import asyncio
+import os
+
+# Função para verificar se um arquivo existe
+def verificar_arquivo_existe(caminho_arquivo):
+    return os.path.isfile(caminho_arquivo)
 
 
+file = 'static/images/capas/1.jpg'
 
-async def musical():
-
-    pdf_path = 'static/docs/musica.pdf'
-
-    browser = await launch(      
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-
-    #hostname = request.headers.get('Host')
-    hostname = 'localhost'
-
-    page = await browser.newPage()
-    await page.setViewport({"width": 1280, "height": 720})
-    await page.goto('http://%s/render_slide_pdf?id=%s&destino=slides&id_name=id_musica&classe=musica' % (hostname, 1), {'waitUntil':'networkidle2'})
-    await page.pdf({'path': pdf_path, 'printBackground':True, 'fullPage': True, 'width':1280, 'height':720})
-    await browser.close()
-
-
-asyncio.run(musical()) # Here
+print(verificar_arquivo_existe(file))

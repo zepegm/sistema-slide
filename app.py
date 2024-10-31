@@ -1561,6 +1561,7 @@ def addMusica():
 
         if (info['destino'] == '0'):
             result = banco.inserirNovaMusica(info)
+            capa = result['capa']
         else:
             result = banco.alterarMusica(info)
             ls_capa = banco.executarConsulta('select filename from capas where id_musica = %s' % result['id'])

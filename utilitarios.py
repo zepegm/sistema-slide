@@ -1,5 +1,6 @@
 import numpy as np
 import datetime
+import os
 
 def pegarListaSemanas(ano, mes):
     # Defina o ano e o mês desejados (por exemplo, maio de 2022)
@@ -92,3 +93,7 @@ def pegarLicoes(data):
     licoes[licao_selecionada]['selected'] = 'selected'
 
     return licoes
+
+# Função para verificar se um arquivo existe
+def verificar_arquivo_existe(caminho_arquivo):
+    return os.path.isfile(caminho_arquivo)
