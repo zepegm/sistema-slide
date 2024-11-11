@@ -364,7 +364,7 @@ def render_calendario_mensal():
             temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
             temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
             for item in executarConsultaCalendario(r"select dia_semana, strftime('%Hh%M', horario) as horario, " + "id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
-                ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
+                ls_aux.append("<b>%s (<span class='text-primary mono'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])][0:3], item['horario'], item['evento']))
             
             info['tipo'] = evento['tipo']
             info['desc_dia'] = descricao
@@ -398,8 +398,8 @@ def render_calendario():
         
         sql = 'SELECT id, texto, plain_text FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) and ativo = 1 UNION ALL ' % (i, posicao_mensal)
         sql += "select id, texto, plain_text from calendario_mensal where '%s' between inicio and fim UNION ALL " % dia.strftime(r"%Y-%m-%d")
-        sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
-                "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
+        sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
+                "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
                 r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "') "
         sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
 
@@ -513,8 +513,8 @@ async def controlador():
             
             sql = 'SELECT id, texto, plain_text FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) and ativo = 1 UNION ALL ' % (i, posicao_mensal)
             sql += "select id, texto, plain_text from calendario_mensal where '%s' between inicio and fim UNION ALL " % dia.strftime(r"%Y-%m-%d")
-            sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
-                  "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
+            sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
+                  "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
                   r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "') "
             sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
 
@@ -813,8 +813,8 @@ def calendario():
                     sql += 'UNION ALL '
                     sql += "select id, texto, plain_text, 'checked disabled' as checkbox, '' as disabled from calendario_mensal where '%s' between inicio and fim " % dia.strftime('%Y-%m-%d')
                     sql += 'UNION ALL '
-                    sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as texto, " \
-                        "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text, " \
+                    sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as texto, " \
+                        "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text, " \
                         "'checked disabled' as checkbox, '' as disabled " \
                         r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "')"
                     sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
@@ -958,8 +958,8 @@ def calendario():
         sql += 'UNION ALL '
         sql += "select id, texto, plain_text, 'checked disabled' as checkbox, '' as disabled from calendario_mensal where '%s' between inicio and fim " % dia.strftime('%Y-%m-%d')
         sql += 'UNION ALL '
-        sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as texto, " \
-               "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text, " \
+        sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as texto, " \
+               "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text, " \
                "'checked disabled' as checkbox, '' as disabled " \
                r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "')"
         sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
@@ -1290,8 +1290,8 @@ async def slide():
             
             sql = 'SELECT id, texto, plain_text FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) and ativo = 1 UNION ALL ' % (i, posicao_mensal)
             sql += "select id, texto, plain_text from calendario_mensal where '%s' between inicio and fim UNION ALL " % dia.strftime(r"%Y-%m-%d")
-            sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
-                  "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento != 7 THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
+            sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
+                  "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
                   r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "') "
             sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
 
