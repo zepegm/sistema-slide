@@ -13,10 +13,18 @@
             url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
         }
 
+        @font-face {
+            font-family:hack;
+            font-style:normal;
+            font-weight:100;
+            src:local('Hack'),
+            url({{ url_for('static', filename='fonts/Hack-Regular.woff') }}) format('woff')
+        }        
+
         .container {
             border: 1px solid white;
             max-width: 1512px;
-            min-height: 3024px;
+            min-height: 800px;
         }
 
         .titulo {
@@ -53,6 +61,10 @@
         .text-primary,
         .blue {
             color:#0070C0;
+        }
+
+        .text-primary {
+            font-family:'Hack';
         }
 
         .fw-bold {
@@ -96,12 +108,12 @@
         }
 
         .titulo_dia_semanal {
-            font-size: 70px;
+            font-size: 60px;
             font-family: Arial, Helvetica, sans-serif;
         }
 
         .text {
-            font-size: 60px;
+            font-size: 50px;
             margin-left: 3vw;
             /*text-align: justify;*/
             line-height: 1.31;
@@ -116,6 +128,11 @@
 
         .paragrafo {
             margin-bottom: 30px;
+        }
+
+        .mono {
+            font-family:'Hack';
+
         }
 
     </style>

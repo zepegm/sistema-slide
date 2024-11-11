@@ -121,12 +121,12 @@
       z-index: 2;
       background-color: #FAFAFA;
       top:4.5rem;
-      padding-top: 2rem;
+      /*padding-top: 2rem;*/
       text-align: center;
     }
 
     #editable_content {
-      padding-top: 25rem;
+      padding-top: 20rem;
     }
 
     #btn_show_preview {
@@ -134,6 +134,7 @@
       width: 10rem;
       margin-right: 10px;
       z-index: 2000;
+      top:5.5rem;
     }
 
     </style>
@@ -204,7 +205,7 @@
             <div class="col-sm-6 mx-auto">
               <div class="card shadow-sm preview">
                 <div id="previewSlide" class="text-center"></div>
-                <div class="card-body">
+                <div class="card">
                   <h1 class="card-text text-center" id="slideAtual">Prévia Slide <span class="text-danger">1</span></h1>
                 </div>
               </div>        
@@ -212,7 +213,7 @@
             <div class="col-sm-6">
               <div class="card shadow-sm preview">
                 <div id="previewSubtitle" class="text-center"></div>
-                <div class="card-body">
+                <div class="card">
                   <h4 class="card-text text-center" id="proximoSlide">Prévia Legenda</h4>
                 </div>
               </div>
@@ -342,12 +343,12 @@ window.onload = function() {
     if ($("#btn_show_preview").text() == 'Mostrar Preview') {
       $("#container-principal").show(function() {
         $("#btn_show_preview").html("Ocultar Preview");
-        $("#editable_content").css('padding-top', '25rem');
+        $("#editable_content").css('padding-top', '20rem');
       });
     } else {
       $("#container-principal").hide(function() {
         $("#btn_show_preview").html("Mostrar Preview");
-        $("#editable_content").css('padding-top', '3rem');
+        $("#editable_content").css('padding-top', '0');
       });
     }
 
