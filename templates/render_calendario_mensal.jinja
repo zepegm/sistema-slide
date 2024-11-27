@@ -1,141 +1,178 @@
 <html lang="pt-BR">
     <head>
         <title>Render Calendário Mensal</title>
+        <script src="{{ url_for('static', filename='js/Hyphenator.js') }}"></script>
+
+        <style>
+
+            @font-face {
+                font-family:bebaskai;
+                font-style:normal;
+                font-weight:400;
+                src:local('BebasKai'),
+                url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+            }
+
+            @font-face {
+                font-family:hack;
+                font-style:normal;
+                font-weight:100;
+                src:local('Hack'),
+                url({{ url_for('static', filename='fonts/Hack-Regular.woff') }}) format('woff')
+            }        
+
+            .container {
+                border: 1px solid white;
+                max-width: 1512px;
+                min-height: 800px;
+            }
+
+            .titulo {
+                text-decoration: underline;
+                text-align: center;
+                font-size: 80px;
+                margin-bottom: 0px;
+            }
+
+            .subtitulo {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 60px;
+                margin-top: 10px;
+            }
+
+            #logo {
+                position: absolute;
+                width: 220px;
+                height: auto;
+                top: 30px;
+                left: 50px;       
+            }
+
+            .text-danger,
+            .red {
+                color:#DA2536;
+            }
+
+            .green {
+                color:green;
+            }
+
+            .text-primary,
+            .blue {
+                color:#0070C0;
+            }
+
+            .text-primary {
+                font-family:'Hack';
+            }
+
+            .fw-bold {
+                font-weight: bold;
+            }
+
+            .text-decoration-underline {
+                text-decoration: underline;
+            }
+
+            .margin_padrao {
+                margin: 25px;
+            }
+
+            .titulo_semanal {
+                font-size: 80px;
+                font-family:'BebasKai', sans-serif;
+                text-align: center;
+                margin: 25px;
+            }
+
+            .titulo_oracao {
+                color:green;
+                font-family: Arial, Helvetica, sans-serif;
+                text-align: center;
+                font-size: 70px;
+                font-weight: bold;
+                margin: 25px;
+            }
+
+            hr {
+                border-top: 3px dashed black;
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            .texto_oracao {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 70px;
+            }
+
+            .titulo_dia_semanal {
+                font-size: 40px;
+                font-family: Arial, Helvetica, sans-serif;
+                margin-top: 20px;
+            }
+
+            .text {
+                font-size: 40px;
+                margin-left: 3vw;
+                text-align: justify;
+                line-height: 1.31;
+                /*-webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;*/
+                margin-right: 2vw;
+                margin-bottom: -15px;
+                margin-top: -15px;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            .paragrafo {
+                margin-bottom: 30px;
+            }
+
+            .mono {
+                font-family:'Hack';
+
+            }
+
+            .calendar {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                border: solid 4px black;
+                border-collapse: collapse;
+                width: 1012px;
+                margin-left: 250px;
+            }
+
+            .thead {
+                font-family: bebaskai;
+                font-size: 50px;
+                background-color: bisque;
+                border-bottom: 4px solid black;
+            }
+
+            .calendar td {
+                border: solid 1px black;
+                width: 70px;
+                height: 80px;
+                font-size: 40px;
+            }
+
+            .none {
+                background-color: rgb(173, 173, 173);
+            }
+
+            .yellow {
+                background-color: yellow;
+            }
+
+            .area_descricao {
+                margin-top: 40px;
+            }
+
+        </style>
     </head>
-
-    <style>
-
-        @font-face {
-            font-family:bebaskai;
-            font-style:normal;
-            font-weight:400;
-            src:local('BebasKai'),
-            url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
-        }
-
-        @font-face {
-            font-family:hack;
-            font-style:normal;
-            font-weight:100;
-            src:local('Hack'),
-            url({{ url_for('static', filename='fonts/Hack-Regular.woff') }}) format('woff')
-        }        
-
-        .container {
-            border: 1px solid white;
-            max-width: 1512px;
-            min-height: 800px;
-        }
-
-        .titulo {
-            text-decoration: underline;
-            text-align: center;
-            font-size: 80px;
-            margin-bottom: 0px;
-        }
-
-        .subtitulo {
-            text-align: center;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 60px;
-            margin-top: 10px;
-        }
-
-        #logo {
-            position: absolute;
-            width: 220px;
-            height: auto;
-            top: 30px;
-            left: 50px;       
-        }
-
-        .text-danger,
-        .red {
-            color:#DA2536;
-        }
-
-        .green {
-            color:green;
-        }
-
-        .text-primary,
-        .blue {
-            color:#0070C0;
-        }
-
-        .text-primary {
-            font-family:'Hack';
-        }
-
-        .fw-bold {
-            font-weight: bold;
-        }
-
-        .text-decoration-underline {
-            text-decoration: underline;
-        }
-
-        .margin_padrao {
-            margin: 25px;
-        }
-
-        .titulo_semanal {
-            font-size: 80px;
-            font-family:'BebasKai', sans-serif;
-            text-align: center;
-            margin: 25px;
-        }
-
-        .titulo_oracao {
-            color:green;
-            font-family: Arial, Helvetica, sans-serif;
-            text-align: center;
-            font-size: 70px;
-            font-weight: bold;
-            margin: 25px;
-        }
-
-        hr {
-            border-top: 5px dashed black;
-            margin-left: 20px;
-            margin-right: 20px;
-        }
-
-        .texto_oracao {
-            text-align: center;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 70px;
-        }
-
-        .titulo_dia_semanal {
-            font-size: 60px;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .text {
-            font-size: 50px;
-            margin-left: 3vw;
-            /*text-align: justify;*/
-            line-height: 1.31;
-            /*-webkit-hyphens: auto;
-            -ms-hyphens: auto;
-            hyphens: auto;*/
-            margin-right: 2vw;
-            margin-bottom: 35px;
-            margin-top: 25px;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .paragrafo {
-            margin-bottom: 30px;
-        }
-
-        .mono {
-            font-family:'Hack';
-
-        }
-
-    </style>
 
     <body>
         <main class="container">
@@ -144,16 +181,63 @@
             <img id="logo" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
             <p class="titulo_semanal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="red">{{mes_desc}} DE {{ano}}</span></p>
 
-            {% for sld in slides %}
-            <hr>
-            <p class="titulo_dia_semanal margin_padrao"><b>{{sld['desc_dia']}}</b></p>
-            <ul class="text">
-                {% for evento in sld['eventos'] %}
-                <li class="paragrafo">{{evento}}</li>
-                {% endfor %}
-            </ul>                 
-            {% endfor %}
+            <table class="calendar">
+                <thead>
+                    <tr class="thead">
+                        <td class="red">Dom</td>
+                        <td>Seg</td>
+                        <td>Ter</td>
+                        <td>Qua</td>
+                        <td>Qui</td>
+                        <td>Sex</td>
+                        <td class="red">Sáb</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        {% for i in range(0, dias_do_mes[0][1]) %}
+                            <td class="none"></td>
+                        {% endfor %}
+                        
 
+                        {% for item in dias_do_mes %}
+                            <td class="{{item[2]}} {{ 'red' if item[1] in (0, 6) else '' }}">{{'%02d' % item[0]}}</td>
+
+                            {% if item[1] == 6 %}
+                            </tr><tr>
+                            {% endif %}
+
+                        {% endfor %}
+
+                        {% for i in range (0, ultimo_dia_semana) %}
+                            <td class="none"></td>
+                        {% endfor %}
+
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="area_descricao">
+                {% for sld in slides %}
+                <hr>
+                <p class="titulo_dia_semanal margin_padrao"><b>{{sld['desc_dia']}}</b></p>
+                <ul class="text">
+                    {% for evento in sld['eventos'] %}
+                    <li class="paragrafo">{{evento}}</li>
+                    {% endfor %}
+                </ul>                 
+                {% endfor %}
+            </div>
         </main>
+    <script>
+        Hyphenator.config({
+            minwordlength: 6,
+            defaultlanguage: 'pt',
+            selectorfunction: function () {
+            return document.querySelectorAll('.text');
+            }
+        });
+        Hyphenator.run();
+    </script>
     </body>
 </html>

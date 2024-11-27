@@ -1,119 +1,121 @@
 <html lang="pt-BR">
     <head>
         <title>Render Calendário Semanal</title>
+        <script src="{{ url_for('static', filename='js/Hyphenator.js') }}"></script>
+
+        <style>
+
+            @font-face {
+                font-family:bebaskai;
+                font-style:normal;
+                font-weight:400;
+                src:local('BebasKai'),
+                url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+            }
+
+            .container {
+                border: 1px solid white;
+                max-width: 1512px;
+                min-height: 3024px;
+            }
+
+            .titulo {
+                text-decoration: underline;
+                text-align: center;
+                font-size: 80px;
+                margin-bottom: 0px;
+            }
+
+            .subtitulo {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 60px;
+                margin-top: 10px;
+            }
+
+            #logo {
+                position: absolute;
+                width: 220px;
+                height: auto;
+                top: 30px;
+                left: 50px;       
+            }
+
+            .text-danger,
+            .red {
+                color:#DA2536;
+            }
+
+            .blue {
+                color:#0070C0;
+            }
+
+            .fw-bold {
+                font-weight: bold;
+            }
+
+            .text-decoration-underline {
+                text-decoration: underline;
+            }
+
+            .margin_padrao {
+                margin: 25px;
+            }
+
+            .titulo_semanal {
+                font-size: 80px;
+                font-family:'BebasKai', sans-serif;
+                text-align: center;
+                margin: 25px;
+            }
+
+            .titulo_oracao {
+                color:green;
+                font-family: Arial, Helvetica, sans-serif;
+                text-align: center;
+                font-size: 70px;
+                font-weight: bold;
+                margin: 25px;
+            }
+
+            hr {
+                border-top: 5px dashed black;
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            .texto_oracao {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 70px;
+            }
+
+            .titulo_dia_semanal {
+                font-size: 70px;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            .text {
+                font-size: 60px;
+                margin-left: 3vw;
+                text-align: justify;
+                line-height: 1.31;
+                /*-webkit-hyphens: auto;
+                -ms-hyphens: auto;
+                hyphens: auto;*/
+                margin-right: 2vw;
+                margin-bottom: 25px;
+                margin-top: 25px;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            .paragrafo {
+                margin-bottom: 25px;
+            }
+
+        </style>
+
     </head>
-
-    <style>
-
-        @font-face {
-            font-family:bebaskai;
-            font-style:normal;
-            font-weight:400;
-            src:local('BebasKai'),
-            url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
-        }
-
-        .container {
-            border: 1px solid white;
-            max-width: 1512px;
-            min-height: 3024px;
-        }
-
-        .titulo {
-            text-decoration: underline;
-            text-align: center;
-            font-size: 80px;
-            margin-bottom: 0px;
-        }
-
-        .subtitulo {
-            text-align: center;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 60px;
-            margin-top: 10px;
-        }
-
-        #logo {
-            position: absolute;
-            width: 220px;
-            height: auto;
-            top: 30px;
-            left: 50px;       
-        }
-
-        .text-danger,
-        .red {
-            color:#DA2536;
-        }
-
-        .blue {
-            color:#0070C0;
-        }
-
-        .fw-bold {
-            font-weight: bold;
-        }
-
-        .text-decoration-underline {
-            text-decoration: underline;
-        }
-
-        .margin_padrao {
-            margin: 25px;
-        }
-
-        .titulo_semanal {
-            font-size: 80px;
-            font-family:'BebasKai', sans-serif;
-            text-align: center;
-            margin: 25px;
-        }
-
-        .titulo_oracao {
-            color:green;
-            font-family: Arial, Helvetica, sans-serif;
-            text-align: center;
-            font-size: 70px;
-            font-weight: bold;
-            margin: 25px;
-        }
-
-        hr {
-            border-top: 5px dashed black;
-            margin-left: 20px;
-            margin-right: 20px;
-        }
-
-        .texto_oracao {
-            text-align: center;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 70px;
-        }
-
-        .titulo_dia_semanal {
-            font-size: 70px;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .text {
-            font-size: 60px;
-            margin-left: 3vw;
-            /*text-align: justify;*/
-            line-height: 1.31;
-            /*-webkit-hyphens: auto;
-            -ms-hyphens: auto;
-            hyphens: auto;*/
-            margin-right: 2vw;
-            margin-bottom: 25px;
-            margin-top: 25px;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .paragrafo {
-            margin-bottom: 25px;
-        }
-
-    </style>
 
     <body>
         <main class="container">
@@ -137,5 +139,15 @@
             {% endfor %}
 
         </main>
+        <script>
+            Hyphenator.config({
+                minwordlength: 6,
+                defaultlanguage: 'pt',
+                selectorfunction: function () {
+                return document.querySelectorAll('.text');
+                }
+            });
+            Hyphenator.run();
+        </script>        
     </body>
 </html>

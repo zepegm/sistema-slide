@@ -19,7 +19,6 @@ import datetime
 import random
 import calendar
 import subprocess
-from pyppeteer import launch
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
 from utilitarios import pegarListaSemanas, pegarTrimestre, pegarLicoes
@@ -321,6 +320,7 @@ def render_capa_harpa():
 
 @app.route('/render_calendario_mensal', methods=['GET', 'POST'])
 def render_calendario_mensal():
+
     # pegar agora os eventos mensais
     mes = request.args.get('mes')
     ano = request.args.get('ano')
@@ -331,10 +331,22 @@ def render_calendario_mensal():
     semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
     mes_desc = calendar.month_name[int(mes)]
 
+    # Cria um objeto de calendário
+    cal = calendar.Calendar()
+
+    # Obtém todos os dias do mês com os respectivos dias da semana
+    dias_do_mes = [[dia, (dia_semana + 1) % 7, 'white'] for dia, dia_semana in cal.itermonthdays2(int(ano), int(mes)) if dia != 0]
+    
+
+    ultimo_dia_semana = 6 - dias_do_mes[len(dias_do_mes) - 1][1]
+
     eventos_mensais = executarConsultaCalendario("SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now') group by(inicio) UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now')  ORDER BY inicio")
 
     for evento in eventos_mensais:
         info = {}
+
+        for i in range(int(evento['inicio'][8:10]), int(evento['fim'][8:10]) + 1):
+            dias_do_mes[i - 1][2] = 'yellow'
 
         if evento['tipo'] == 'isolado':
             if evento['inicio'] == evento['fim']:
@@ -371,7 +383,7 @@ def render_calendario_mensal():
 
             cont += 1
 
-    return render_template('render_calendario_mensal.jinja', slides=slides,  ano=ano, mes_desc=mes_desc)
+    return render_template('render_calendario_mensal.jinja', slides=slides,  ano=ano, mes_desc=mes_desc, dias_do_mes=dias_do_mes, ultimo_dia_semana=ultimo_dia_semana)
 
 
 @app.route('/render_calendario', methods=['GET', 'POST'])
@@ -2886,8 +2898,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run(debug=True, use_reloader=False, port=80)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run(debug=True, use_reloader=False, port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

@@ -12,6 +12,8 @@ def run(playwright, source):
     
     # Navigate to a website
     page.goto(info['url'])
+
+    page.wait_for_load_state('domcontentloaded')
     
     # gerar PDF
     if info['tipo'] == 'hinario':
