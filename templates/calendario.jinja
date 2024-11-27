@@ -641,8 +641,13 @@
           data: JSON.stringify({'tipo':'semanal', 'ano':{{calendario_semanal[0]['ano']}}, 'mes':$("#cb_mes_view").val()}),
           dataType: "json",
           success: function(data) {
-            console.log(data)
-            window.open(data);
+
+            let pdfWindow = window.open("")
+            pdfWindow.document.write(
+              "<iframe width='100%' height='100%' src='data:image/png;base64, " +
+              encodeURI(data['output']) + "'></iframe>"
+            );
+
             $("#btn_gerar_imagem_calendario_mensal").removeAttr('disabled');
             $("#btn_gerar_imagem_calendario_mensal").html('<i class="fa-regular fa-file-image"></i>');
           },
@@ -661,8 +666,11 @@
           data: JSON.stringify({'tipo':'semanal', 'data':$("#cb_semana_view").val()}),
           dataType: "json",
           success: function(data) {
-            console.log(data)
-            window.open(data);
+            let pdfWindow = window.open("")
+            pdfWindow.document.write(
+              "<iframe width='100%' height='100%' src='data:image/png;base64, " +
+              encodeURI(data['output']) + "'></iframe>"
+            );
             $("#btn_gerar_imagem_calendario_semanal").removeAttr('disabled');
             $("#btn_gerar_imagem_calendario_semanal").html('<i class="fa-regular fa-file-image"></i>');
           },

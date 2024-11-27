@@ -18,6 +18,7 @@ import re
 import datetime
 import random
 import calendar
+import subprocess
 from pyppeteer import launch
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
@@ -109,7 +110,7 @@ def home():
     return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor, status='')
 
 @app.route('/render_slide_pdf', methods=['GET', 'POST'])
-async def render_slide_pdf():
+def render_slide_pdf():
 
     id = request.args.get('id')
     destino = request.args.get('destino')
@@ -133,20 +134,16 @@ async def render_slide_pdf():
         else:
             harpa_id = id
 
-        browser = await launch(      
-            handleSIGINT=False,
-            handleSIGTERM=False,
-            handleSIGHUP=False
+        hostname = request.headers.get('Host')
+        info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, harpa_id), 'tipo':'capa'}
+
+        result = subprocess.run(
+            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+            capture_output=True,
+            text=True
         )
 
-        hostname = request.headers.get('Host')
-
-        page = await browser.newPage()
-        await page.setViewport({"width": 1366, "height": 768})
-        await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, harpa_id), {'waitUntil':'networkidle2'})
-        base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
-        capa = base64
-        await browser.close()
+        capa = result.stdout.strip()
 
     for item in slides:
         item['categoria'] = 'cat-' + str(item['categoria']) + '-' + classe
@@ -417,7 +414,7 @@ def render_calendario():
 
 
 @app.route('/controlador', methods=['GET', 'POST'])
-async def controlador():
+def controlador():
 
     global estado
     global current_presentation
@@ -611,7 +608,7 @@ async def controlador():
 
         return render_template('controlador_ebd.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total)
 
-    elif estado == 9:
+    elif estado == 9: # musical
         roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
 
         lista_final = []
@@ -624,11 +621,6 @@ async def controlador():
         for item in roteiro_musical:
             # adicionando capa
             if item['capa_url'] == '[SEM_CAPA_HARPA]':
-                browser = await launch(      
-                    handleSIGINT=False,
-                    handleSIGTERM=False,
-                    handleSIGHUP=False
-                )
 
                 id_harpa = item['id_origem']
 
@@ -636,13 +628,19 @@ async def controlador():
                     id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
 
                 hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
 
-                page = await browser.newPage()
-                await page.setViewport({"width": 1366, "height": 768})
-                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), {'waitUntil':'networkidle2'})
-                base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
-                lista_final.append({'tipo':'capa_base64', 'url':base64})
-                await browser.close()
+
+                result = subprocess.run(
+                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+                    capture_output=True,
+                    text=True
+                )
+
+                capa = result.stdout.strip()                
+
+                lista_final.append({'tipo':'capa_base64', 'url':capa})
+                
             else:
                 lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
 
@@ -1033,7 +1031,7 @@ def calendario():
     return render_template('calendario.jinja', hoje=data_atual.strftime('%d/%m/%Y'), segunda_dia=segunda_feira_anterior.strftime('%d/%m'), semana=semana, status=status, calendario_semanal=calendario_semanal, calendario_mensal=calendario_mensal, blocks_sem=blocks_sem, meses=meses, mes_atual=mes_atual, ultimo_dia=ultimo_dia.strftime('%Y-%m-%d'), mes_atual_desc=mes_atual_desc, blocks_mem=blocks_mem, semanas_disponiveis=semanas_disponiveis, congregacoes=congregacoes, eventos=eventos, detalhes_evento_primeira_cong=detalhes_evento_primeira_cong)
 
 @app.route('/musical', methods=['GET', 'POST'])
-async def musical():
+def musical():
 
     msg = ''
 
@@ -1055,11 +1053,6 @@ async def musical():
                 else:
                     for item in roteiro_musical:
                         if item['capa_url'] == '[SEM_CAPA_HARPA]':
-                            browser = await launch(      
-                                handleSIGINT=False,
-                                handleSIGTERM=False,
-                                handleSIGHUP=False
-                            )
 
                             id_harpa = item['id_origem']
 
@@ -1067,13 +1060,15 @@ async def musical():
                                 id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
 
                             hostname = request.headers.get('Host')
+                            info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
 
-                            page = await browser.newPage()
-                            await page.setViewport({"width": 1366, "height": 768})
-                            await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), {'waitUntil':'networkidle2'})
-                            base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
-                            item['capa_base64l'] = base64
-                            await browser.close()
+                            result = subprocess.run(
+                                ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+                                capture_output=True,
+                                text=True
+                            )
+
+                            item['capa_base64l'] = result.stdout.strip()
 
                     return render_template('result_musical.jinja', capa=capa, roteiro_musical=roteiro_musical)
             else:
@@ -1205,7 +1200,7 @@ def licoesebd():
 
 
 @app.route('/slide', methods=['GET', 'POST'])
-async def slide():
+def slide():
 
     global estado
     global current_presentation
@@ -1404,11 +1399,6 @@ async def slide():
         for item in roteiro_musical:
             # adicionando capa
             if item['capa_url'] == '[SEM_CAPA_HARPA]':
-                browser = await launch(      
-                    handleSIGINT=False,
-                    handleSIGTERM=False,
-                    handleSIGHUP=False
-                )
 
                 id_harpa = item['id_origem']
 
@@ -1416,13 +1406,16 @@ async def slide():
                     id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
 
                 hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
 
-                page = await browser.newPage()
-                await page.setViewport({"width": 1366, "height": 768})
-                await page.goto('http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), {'waitUntil':'networkidle2'})
-                base64 = await page.screenshot({'fullPage': True, 'encoding':'base64'})
-                lista_final.append({'tipo':'capa_base64', 'url':base64})
-                await browser.close()
+                result = subprocess.run(
+                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+                    capture_output=True,
+                    text=True
+                )
+
+                lista_final.append({'tipo':'capa_base64', 'url':result.stdout.strip()})
+
             else:
                 lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
 
@@ -1985,27 +1978,28 @@ def upload_capa_musical_individual():
     return jsonify('./static/images/musical/' + filename + "?" + current_time)
 
 @app.route('/converto_to_pdf_list', methods=['GET', 'POST'])
-async def converto_to_pdf_list():
+def converto_to_pdf_list():
     global temp_pdf
     temp_pdf = request.json
 
-    pdf_path = 'static/docs/musica.pdf'
-
-    browser = await launch(
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-
     hostname = request.headers.get('Host')
+    info = {'url':'http://%s/render_pdf?ls=render_preview' % (hostname), 'tipo':'hinario'}
 
-    page = await browser.newPage()
-    #await page.goto('http://localhost:120/render_pdf?ls=render_preview')
-    await page.goto('http://%s/render_pdf?ls=render_preview' % (hostname), {'waitUntil':'networkidle2'})
-    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
-    await browser.close()
-
-    return jsonify(pdf_path)
+    try:
+        # Call the form_interaction.py script with parameters
+        result = subprocess.run(
+            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+            capture_output=True,
+            text=True
+        )
+        
+        # Check if the script ran successfully
+        if result.returncode == 0:
+            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+        else:
+            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+    except Exception as e:
+        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
 
 @app.route('/get_info_harpa', methods=['GET', 'POST'])
@@ -2224,125 +2218,126 @@ def verificarSenhaHarpa():
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
 
 @app.route('/gerar_imagem_calendario_mensal', methods=['GET', 'POST'])
-async def gerar_imagem_calendario_mensal():
+def gerar_imagem_calendario_mensal():
     info = request.json
-    pdf_path = 'static/docs/calendario_mensal.png'
-
-    browser = await launch(
-        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        #args = [
-            #'--user-data-dir=C:\\Users\\giuseppe.manzella\\AppData\\Local\\Google\\Chrome\\User Data'
-            #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
-        #],        
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-
     hostname = request.headers.get('Host')
 
-    page = await browser.newPage()
-    await page.setViewport({"width": 1512, "height": 1200})
-    await page.goto('http://%s/render_calendario_mensal?ano=%s&mes=%s' % (hostname, info['ano'], info['mes']), {'waitUntil':'networkidle2'})
-    await page.screenshot({'path': pdf_path, 'fullPage': True})
-    await browser.close()
+    info = {'url':'http://%s/render_calendario_mensal?ano=%s&mes=%s' % (hostname, info['ano'], info['mes']), 'tipo':'calendario'}
 
-    return jsonify(pdf_path)
+    try:
+        # Call the form_interaction.py script with parameters
+        result = subprocess.run(
+            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+            capture_output=True,
+            text=True
+        )
+        
+        # Check if the script ran successfully
+        if result.returncode == 0:
+            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+        else:
+            print(result.stderr)
+            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+    except Exception as e:
+        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
+
 
 @app.route('/gerar_imagem_calendario', methods=['GET', 'POST'])
-async def gerar_imagem_calendario():
+def gerar_imagem_calendario():
     info = request.json
-    pdf_path = 'static/docs/calendario_semanal.png'
-
-    print(info['data'])
-
-    browser = await launch(
-        #executablePath=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        #args = [
-            #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Google\\Chrome\\User Data'
-            #'--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data'
-        #],
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-
-    print('--user-data-dir=C:\\Users\\' + os.getenv("USERNAME") + '\\AppData\\Local\\Chromium\\User Data')
-
     hostname = request.headers.get('Host')
 
-    page = await browser.newPage()
-    await page.setViewport({"width": 1512, "height": 1200})
-    await page.goto('http://%s/render_calendario?semana=%s' % (hostname, info['data']), {'waitUntil':'networkidle2'})
-    await page.screenshot({'path': pdf_path, 'fullPage': True})
-    await browser.close()
+    info = {'url':'http://%s/render_calendario?semana=%s' % (hostname, info['data']), 'tipo':'calendario'}
 
-    return jsonify(pdf_path)
+    print(json.dumps(info))
+
+    try:
+        # Call the form_interaction.py script with parameters
+        result = subprocess.run(
+            ['python', 'playwright_pdf_generator.py', json.dumps(info), '--browser-channel msedge'],
+            capture_output=True,
+            text=True
+        )
+        
+        # Check if the script ran successfully
+        if result.returncode == 0:
+            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+        else:
+            print(result.stderr)
+            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
 @app.route('/gerar_pdf_slide', methods=['GET', 'POST'])
-async def gerar_pdf_slide():
+def gerar_pdf_slide():
     info = request.json
-
-    pdf_path = 'static/docs/slide.pdf'
-
-    browser = await launch(
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-
     hostname = request.headers.get('Host')
 
-    page = await browser.newPage()
-    await page.setViewport({"width": 1280, "height": 720})
-    await page.goto('http://%s/render_slide_pdf?id=%s&destino=%s&id_name=%s&classe=%s' % (hostname, info['id'], info['destino'], info['id_name'], info['classe']), {'waitUntil':'networkidle2'})
-    print('http://%s/render_slide_pdf?id=%s&destino=%s&id_name=%s&classe=%s' % (hostname, info['id'], info['destino'], info['id_name'], info['classe']))
-    await page.pdf({'path': pdf_path, 'printBackground':True, 'fullPage': True, 'width':1280, 'height':720})
-    await browser.close()
+    web_info = {'url':'http://%s/render_slide_pdf?id=%s&destino=%s&id_name=%s&classe=%s' % (hostname, info['id'], info['destino'], info['id_name'], info['classe']), 'tipo':'slide'}
 
-    return jsonify(pdf_path)
+    try:
+        # Call the form_interaction.py script with parameters
+        result = subprocess.run(
+            ['python', 'playwright_pdf_generator.py', json.dumps(web_info)],
+            capture_output=True,
+            text=True
+        )
+        
+        # Check if the script ran successfully
+        if result.returncode == 0:
+            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+        else:
+            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+    except Exception as e:
+        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
 @app.route('/gerar_pdf', methods=['GET', 'POST'])
-async def gerar_pdf():
+def gerar_pdf():
     ls = request.json
-    pdf_path = 'static/docs/musica.pdf'
-
-    browser = await launch(
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-
     hostname = request.headers.get('Host')
 
-    page = await browser.newPage()
-    await page.goto('http://%s/render_pdf?ls=%s' % (hostname, ls), {'waitUntil':'networkidle2'})
-    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
-    await browser.close()
+    info = {'url':'http://%s/render_pdf?ls=%s' % (hostname, ls), 'tipo':'hinario'}
 
-    return jsonify(pdf_path)
+    try:
+        # Call the form_interaction.py script with parameters
+        result = subprocess.run(
+            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+            capture_output=True,
+            text=True
+        )
+        
+        # Check if the script ran successfully
+        if result.returncode == 0:
+            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+        else:
+            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+    except Exception as e:
+        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
 @app.route('/gerar_pdf_harpa', methods=['GET', 'POST'])
-async def gerar_pdf_harpa():
-    pdf_path = 'static/docs/harpa.pdf'
-
+def gerar_pdf_harpa():
     info = request.json
-
-    browser = await launch(
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-
     hostname = request.headers.get('Host')
 
-    page = await browser.newPage()
+    info = {'url':'http://%s/render_pdf_harpa?tipo=%s' % (hostname, info['tipo']), 'tipo':'hinario'}
 
-    await page.goto('http://%s/render_pdf_harpa?tipo=%s' % (hostname, info['tipo']), {'waitUntil':'networkidle2'})
-    await page.pdf({'path': pdf_path, 'format':'A5', 'scale':1.95, 'margin':{'top':18}, 'printBackground':True})
-    await browser.close()
+    try:
+        # Call the form_interaction.py script with parameters
+        result = subprocess.run(
+            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+            capture_output=True,
+            text=True
+        )
+        
+        # Check if the script ran successfully
+        if result.returncode == 0:
+            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+        else:
+            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+    except Exception as e:
+        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
-    return jsonify(pdf_path)
 
 @app.route('/pesquisarBiblia', methods=['GET', 'POST'])
 def pesquisarBiblia():

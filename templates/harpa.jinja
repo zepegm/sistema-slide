@@ -364,7 +364,12 @@
         data: JSON.stringify({'tipo':$("#opcoes").val()}),
         dataType: "json",
         success: function(data) {
-          window.open(data);
+          let pdfWindow = window.open("")
+          pdfWindow.document.write(
+            "<iframe width='100%' height='100%' src='data:application/pdf;base64, " +
+            encodeURI(data['output']) + "'></iframe>"
+          )
+
           $("#loading").attr('hidden', '');
           $("#btn_gerar_pdf").removeAttr('disabled');
         },
@@ -594,7 +599,11 @@
         data: JSON.stringify(info),
         dataType: "json",
         success: function(data) {
-          window.open(data);
+          let pdfWindow = window.open("")
+          pdfWindow.document.write(
+            "<iframe width='100%' height='100%' src='data:application/pdf;base64, " +
+            encodeURI(data['output']) + "'></iframe>"
+          )
           $(".btn_exportar_slide").removeAttr('disabled');
           $(".btn_exportar_slide").html('Exportar Slide como PDF');
         },
