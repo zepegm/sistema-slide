@@ -12,8 +12,6 @@ def run(playwright, source):
     
     # Navigate to a website
     page.goto(info['url'])
-
-    page.wait_for_load_state('domcontentloaded')
     
     # gerar PDF
     if info['tipo'] == 'hinario':
@@ -25,6 +23,7 @@ def run(playwright, source):
         page.set_viewport_size({"width": 1366, "height": 768})
         pdf_bytes = page.screenshot(full_page=True)
     elif info['tipo'] == 'calendario':
+        page.wait_for_selector('.text')
         page.set_viewport_size({"width": 1512, "height": 1200})
         pdf_bytes = page.screenshot(full_page=True)
 
