@@ -2898,8 +2898,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False, port=80)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run(debug=True, use_reloader=False, port=80)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()
