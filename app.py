@@ -1786,6 +1786,24 @@ def subtitle():
                 
                 lista.append('')
 
+            elif item['tabela-origem'] == 'harpa_versionada':
+                lista.append(banco.executarConsulta('select id_harpa, harpa.descricao as titulo from harpa_versionada inner join harpa on harpa.id = harpa_versionada.id_harpa where harpa_versionada.id = %s' % item['id_origem'])[0]['titulo'])
+                
+                for item in banco.executarConsulta('select `text-legenda` from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem']):
+                    lista.append(item['text-legenda'])
+                
+                lista.append('')
+
+            elif item['tabela-origem'] == 'poesia':
+                lista.append(banco.executarConsulta('select titulo from poesia where id = %s' % item['id_origem'])[0]['titulo'])
+                
+                for item in banco.executarConsulta('select `text-legenda` from slide_poesia where id_poesia = %s' % item['id_origem']):
+                    lista.append(item['text-legenda'])
+                
+                lista.append('')
+
+            print(lista)
+
     elif (estado == 10): # poesia
         legenda = banco.executarConsulta('select `text-legenda` from slide_poesia where id_poesia = %s order by pos' % current_presentation['id'])
         lista = [banco.executarConsulta('select titulo from poesia where id = %s' % current_presentation['id'])[0]['titulo']]
