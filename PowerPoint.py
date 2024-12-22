@@ -63,6 +63,10 @@ def getListText(dir):
                         plain_text += run.text.strip()
                         cont += 1
 
+                if (text_slide != '<b>'):
+                    text_slide += "<br>"
+                    plain_text += "<br>"
+
         if key_b:
             text_slide += "</b>"
         if key_u:
@@ -89,6 +93,7 @@ def getListText(dir):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+    file.close()
     return text_runs
 
 
@@ -154,4 +159,5 @@ def getListTextHarpa(dir):
         text_slide += '</b>'
         text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text, 'anotacao':anotacao})
     
+    file.close()
     return text_runs
