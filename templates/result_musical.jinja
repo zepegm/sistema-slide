@@ -156,7 +156,7 @@
                 <div data-id="{{item['id']}}" class="big-box card shadow-sm">
                   <form method="post">
                     <label class="lb_principal" for="musica-{{loop.index}}">
-                      {% if item['capa_url'] == '[SEM_CAPA_HARPA]' %}
+                      {% if item['capa_url'] == '[SEM_CAPA_HARPA]' or item['capa_url'] == '[SEM_CAPA_POESIA]' %}
                       <img src="data:image/png;base64,{{item['capa_base64l']}}" id="img-{{loop.index}}" class="capa_musica">
                       {% else %}
                       <img src="{{ url_for('static', filename=item['capa_url']) }}" id="img-{{loop.index}}" class="capa_musica" />

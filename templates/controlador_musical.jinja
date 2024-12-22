@@ -151,9 +151,14 @@
     }
 
     .cat-1-musica,
-    .cat-3-musica {
+    .cat-3-musica,
+    .cat-poesia {
       color: {{cores['cor_musica_letra']}};
       background-color: {{cores['cor_musica_fundo']}};
+    }
+
+    .cat-poesia {
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     }
 
     .cat-2-musica,
@@ -212,7 +217,7 @@
                         {% endif %}
                         {% if lista_final[index]['cat'] == 3 or lista_final[index - 1]['cat'] == 4 %}
                         <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
-                        {% endif %}                        
+                        {% endif %}
                   </div>
                 </div>        
               </div>
@@ -375,6 +380,19 @@
         $("#btn_next").attr('disabled', '');
       } else {
         $("#btn_next").removeAttr('disabled');        
+      }
+
+      if (slides[index]['anotacao'] != '' && typeof slides[index]['anotacao'] != "undefined") {
+        $("#slideAtual").parent().append("<p id='anotacao'><strong>Anotação: </strong>" + slides[index]['anotacao'] + "</p>");
+      } else {
+        $("#anotacao").remove();
+      }
+
+      // verificar se existe alguma anotaçao necessária
+      if (slides[index]['categoria'] == "cat-3-musica" || slides[index]['categoria'] == "cat-4-musica") {
+        $("#slideAtual").parent().append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
+      } else {
+        $("#pausa_instrumental").remove();
       }
 
       changeBox(index);

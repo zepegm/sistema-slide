@@ -100,6 +100,10 @@ def home():
         titulo = banco.executarConsulta("select valor from config where id = 'titulo_musical'")[0]['valor']
         tipo = 'Musical'
         capa = 'static/' + banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
+    elif estado == 10: # poesia
+        titulo = banco.executarConsulta("select titulo from poesia where id = %s" % current_presentation['id'])[0]['titulo']
+        tipo = 'Poesia'
+        capa = 'static/images/Poesia.jpg'
 
     else:
         titulo = None
@@ -317,6 +321,17 @@ def render_capa_harpa():
     info = banco.executarConsulta('select harpa.id, descricao, autor_harpa.nome as autor from harpa inner join autor_harpa on autor_harpa.id = harpa.autor where harpa.id = %s' % id)[0]
 
     return render_template('render_capa_harpa.jinja', info=info)
+
+
+@app.route('/render_capa_poesia', methods=['GET', 'POST'])
+def render_capa_poesia():
+
+    id = request.args.get('id')
+
+    titulo = banco.executarConsultaVetor('select titulo from poesia where id = %s' % id)[0]
+
+    return render_template('render_capa_poesia.jinja', titulo=titulo)
+
 
 @app.route('/render_calendario_mensal', methods=['GET', 'POST'])
 def render_calendario_mensal():
@@ -621,7 +636,7 @@ def controlador():
         return render_template('controlador_ebd.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total)
 
     elif estado == 9: # musical
-        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]' ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
 
         lista_final = []
 
@@ -653,6 +668,22 @@ def controlador():
 
                 lista_final.append({'tipo':'capa_base64', 'url':capa})
                 
+            elif item['capa_url'] == '[SEM_CAPA_POESIA]':
+
+                hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
+
+
+                result = subprocess.run(
+                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+                    capture_output=True,
+                    text=True
+                )
+
+                capa = result.stdout.strip()                
+
+                lista_final.append({'tipo':'capa_base64', 'url':capa})                
+
             else:
                 lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
 
@@ -664,7 +695,11 @@ def controlador():
             elif item['tabela-origem'] == 'harpa_versionada':
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem'])
                 for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+            elif item['tabela-origem'] == 'poesia':
+                letras = banco.executarConsulta('select `text-slide`, ifnull(anotacao, "") as anotacao from slide_poesia where id_poesia = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
             else:
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
                 for sld in letras:
@@ -679,6 +714,13 @@ def controlador():
 
         return render_template('controlador_musical.jinja', lista_final=lista_final, cores=cores, index=index)
 
+    elif estado == 10: # poesia
+
+        titulo = banco.executarConsulta('select titulo from poesia where id = %s' % current_presentation['id'])[0]['titulo']
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+        lista_slides = banco.executarConsulta("select `text-slide`, ifnull(anotacao, '') as anotacao, pos from slide_poesia where id_poesia = %s order by pos" % current_presentation['id'])
+
+        return render_template('controlador_poesia.jinja', lista_slides=lista_slides, index=index, config=config, titulo=titulo)
     
     return 'erro'
 
@@ -744,6 +786,13 @@ def abrir_biblia():
 
     return render_template('biblia.jinja', novo=novo_testamento, antigo=antigo_testamento, status='')
 
+@app.route('/abrir_poesia', methods=['GET', 'POST'])
+def abrir_poesia():
+
+    poesias = banco.executarConsulta('select * from poesia order by titulo')
+
+
+    return render_template('poesias.jinja', poesias=poesias)
 
 @app.route('/abrir_musica', methods=['GET', 'POST'])
 def abrir_musica():
@@ -1058,7 +1107,8 @@ def musical():
 
                 capa = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
 
-                roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' WHEN `tabela-origem` = 'harpa_versionada' THEN 'item-harpa-versionada' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo WHEN `tabela-origem` = 'harpa' THEN printf('%03d', harpa.id) || '. ' || harpa.descricao  ELSE printf('%03d', harpa_versionada.id_harpa) || '. ' || harpa_versionada.titulo_versao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url, CASE WHEN `tabela-origem` = 'harpa_versionada' THEN 'text-danger' ELSE '' END as color FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN harpa_versionada ON harpa_versionada.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+                roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' WHEN `tabela-origem` = 'harpa_versionada' THEN 'item-harpa-versionada' WHEN `tabela-origem` = 'poesia' THEN 'item-poesia' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo WHEN `tabela-origem` = 'poesia' THEN poesia.titulo WHEN `tabela-origem` = 'harpa' THEN printf('%03d', harpa.id) || '. ' || harpa.descricao  ELSE printf('%03d', harpa_versionada.id_harpa) || '. ' || harpa_versionada.titulo_versao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]' WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url, CASE WHEN `tabela-origem` = 'harpa_versionada' THEN 'text-danger' ELSE '' END as color FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN poesia ON poesia.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN harpa_versionada ON harpa_versionada.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+                print(roteiro_musical)
 
                 if len(roteiro_musical) < 1:
                     msg = '<div class="alert alert-warning alert-dismissible fade show" role="alert"><strong>Operação realizada com sucesso!</strong> Lista do Musical esvaziada com sucesso! Para prosseguir adicione músicas.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
@@ -1082,12 +1132,27 @@ def musical():
 
                             item['capa_base64l'] = result.stdout.strip()
 
+                        elif item['capa_url'] == '[SEM_CAPA_POESIA]':
+
+                            hostname = request.headers.get('Host')
+                            info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
+
+
+                            result = subprocess.run(
+                                ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+                                capture_output=True,
+                                text=True
+                            )
+
+                            item['capa_base64l'] = result.stdout.strip()             
+
+
                     return render_template('result_musical.jinja', capa=capa, roteiro_musical=roteiro_musical)
             else:
                 msg = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção!</strong> Erro fatal ao tentar cadastrar dados!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
-    roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' WHEN `tabela-origem` = 'harpa_versionada' THEN 'item-harpa-versionada' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo WHEN `tabela-origem` = 'harpa' THEN printf('%03d', harpa.id) || '. ' || harpa.descricao  ELSE printf('%03d', harpa_versionada.id_harpa) || '. ' || harpa_versionada.titulo_versao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url, CASE WHEN `tabela-origem` = 'harpa_versionada' THEN 'text-danger' ELSE '' END as color FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN harpa_versionada ON harpa_versionada.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
-    lista_horizontal_roteiro = banco.executarConsulta("SELECT (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa') as harpa, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'musicas') as musicas, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa_versionada') as harpa_versionada")[0]
+    roteiro_musical = banco.executarConsulta(r"SELECT id_origem, CASE WHEN `tabela-origem` = 'musicas' THEN 'item-musica' WHEN `tabela-origem` = 'poesia' THEN 'item-poesia' WHEN `tabela-origem` = 'harpa_versionada' THEN 'item-harpa-versionada' ELSE 'item-harpa' END as origem, CASE WHEN `tabela-origem` = 'poesia' THEN poesia.titulo WHEN `tabela-origem` = 'musicas' THEN musicas.titulo WHEN `tabela-origem` = 'harpa' THEN printf('%03d', harpa.id) || '. ' || harpa.descricao  ELSE printf('%03d', harpa_versionada.id_harpa) || '. ' || harpa_versionada.titulo_versao END AS titulo, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url, CASE WHEN `tabela-origem` = 'harpa_versionada' THEN 'text-danger' ELSE '' END as color FROM roteiro_musical LEFT JOIN poesia ON poesia.id = id_origem LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN harpa_versionada ON harpa_versionada.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+    lista_horizontal_roteiro = banco.executarConsulta("SELECT (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa') as harpa, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'musicas') as musicas, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'harpa_versionada') as harpa_versionada, (SELECT group_concat(id_origem) from roteiro_musical where `tabela-origem` = 'poesia') as poesia")[0]
     
     where_harpa = ''
     if lista_horizontal_roteiro['harpa']:
@@ -1099,15 +1164,20 @@ def musical():
 
     where_musica = ''
     if lista_horizontal_roteiro['musicas']:
-        where_musica = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['musicas']    
+        where_musica = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['musicas']
+
+    where_poesia = ''
+    if lista_horizontal_roteiro['poesia']:
+        where_poesia = 'WHERE id NOT IN(%s)' % lista_horizontal_roteiro['poesia']  
     
     harpa = banco.executarConsulta("select id as num, id, descricao, 'item-harpa' as classe, '' as color from harpa %s union all select id_harpa as num, id, titulo_versao, 'item-harpa-versionada' as classe, 'text-danger' as color from harpa_versionada %s order by num" % (where_harpa, where_harpa_versionada))
     musicas = banco.executarConsulta('select * from musicas %s' % where_musica)
     musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
+    poesias = banco.executarConsulta('select * from poesia %s order by titulo' % where_poesia)
 
     titulo = banco.executarConsulta("select valor from config where id = 'titulo_musical'")[0]['valor']
 
-    return render_template('musical.jinja', harpa=harpa, musicas=musicas, roteiro_musical=roteiro_musical, msg=msg, titulo=titulo)
+    return render_template('musical.jinja', harpa=harpa, musicas=musicas, roteiro_musical=roteiro_musical, msg=msg, titulo=titulo, poesias=poesias)
 
 @app.route('/licoesebd', methods=['GET', 'POST'])
 def licoesebd():
@@ -1399,7 +1469,7 @@ def slide():
         return render_template('PowerPoint_EBD.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total, trimestre=trimestre, capa=capa)
 
     elif estado == 9: # musical 
-        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]' WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
 
         lista_final = []
 
@@ -1428,6 +1498,22 @@ def slide():
 
                 lista_final.append({'tipo':'capa_base64', 'url':result.stdout.strip()})
 
+            elif item['capa_url'] == '[SEM_CAPA_POESIA]':
+
+                hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
+
+
+                result = subprocess.run(
+                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
+                    capture_output=True,
+                    text=True
+                )
+
+                capa = result.stdout.strip()                
+
+                lista_final.append({'tipo':'capa_base64', 'url':capa})
+
             else:
                 lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
 
@@ -1440,6 +1526,10 @@ def slide():
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem'])
                 for sld in letras:
                     lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
+            elif item['tabela-origem'] == 'poesia':
+                letras = banco.executarConsulta('select `text-slide`, ifnull(anotacao, "") as anotacao from slide_poesia where id_poesia = %s' % item['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
             else:
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
                 for sld in letras:
@@ -1454,6 +1544,15 @@ def slide():
 
         return render_template('PowerPoint_Musical.jinja', lista_final=lista_final, cores=cores, index=index)
 
+    elif estado == 10: # Poesia
+        # estabelecer configuração da música
+        fundo = 'images/Poesia_Background.jpg'
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+
+        lista_slides = banco.executarConsulta('select `text-slide` from slide_poesia where id_poesia = %s order by pos' % current_presentation['id'])
+        titulo = banco.executarConsultaVetor('select titulo from poesia where id = %s' % current_presentation['id'])[0]
+
+        return render_template('PowerPoint_Poesia.jinja', lista_slides=lista_slides, index=index, config=config, fundo=fundo, titulo=titulo)
 
 @app.route('/updateSlide', methods=['GET', 'POST'])
 def updateSlide():
@@ -1536,6 +1635,28 @@ def addHarpa_versionada():
         harpa = banco.executarConsulta('select * from harpa order by id')
 
         return render_template('harpa.jinja', harpa=harpa, status=status)
+
+@app.route('/addPoesia', methods=['GET', 'POST'])
+def addPoesia():
+    if request.method == 'POST':   
+        info = json.loads(request.form.getlist('json_send')[0])
+
+        if info['destino'] == '0':
+            # inserir poesia
+            if banco.inserirNovaPoesia(info):
+                status= '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Poesia <strong>' + info['titulo'] + '</strong> cadastrada com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+        else: # alterar a poesia e não inserir
+            if banco.alterarPoesia(info):
+                status= '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Poesia <strong>' + info['titulo'] + '</strong> alterada com sucesso!.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Erro falta!</strong> Falha ao tentar inserir slides e letra no Banco, favor verificar o problema.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'                
+        
+        poesias = banco.executarConsulta('select * from poesia order by titulo')
+
+        return render_template('poesias.jinja', poesias=poesias, status=status)
+    
 
 @app.route('/addHarpa', methods=['GET', 'POST'])
 def addHarpa():
@@ -1665,7 +1786,13 @@ def subtitle():
                 
                 lista.append('')
 
+    elif (estado == 10): # poesia
+        legenda = banco.executarConsulta('select `text-legenda` from slide_poesia where id_poesia = %s order by pos' % current_presentation['id'])
+        lista = [banco.executarConsulta('select titulo from poesia where id = %s' % current_presentation['id'])[0]['titulo']]
+        for item in legenda:
+            lista.append(item['text-legenda'])
 
+        tamanho = 20        
 
     else:
         lista = []
@@ -1747,6 +1874,34 @@ def edit_harpa_versionada():
     
     return render_template('editor_harpa_versionada.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, number=number, destino=destino, autores=autores, autor=autor, autor_desc=autor_desc, titulo_versao=titulo_versao, desc_versao=desc_versao)
 
+@app.route('/edit_poesia', methods=['GET', 'POST'])
+def edit_poesia():
+
+    lista_texto = []
+    blocks = []
+    blocks_s = []
+    titulo = ''
+    destino = '0'
+
+    if request.method == "POST":
+
+        destino = '0'
+
+        if 'json_back' in request.form:
+            info = json.loads(request.form.getlist('json_back')[0])
+
+            titulo = info['listaGeral']['titulo']
+            lista_texto = info['listaGeral']['slides']
+            destino = info['destino']
+            
+
+        # recriar lista pro editor
+        for item in lista_texto:
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+            blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+    
+    return render_template('editor_poesia.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
 
 @app.route('/edit_harpa', methods=['GET', 'POST'])
 def edit_harpa():
@@ -1836,6 +1991,35 @@ def enviarDadosNovaVersaoHino():
 
         return render_template('save_harpa_versionada.jinja', info=info, cat_slides=cat_slides, blocks=blocks, blocks_2=blocks_2, cat_slides_list=cat_slides_list, destino=destino, autor=nome_autor, titulo_versao=info['titulo_versao'], desc_versao=info['desc_versao'], desc_autor=info['autor_desc'])
 
+@app.route('/enviarDadosNovaPoesia', methods=['GET', 'POST'])
+def enviarDadosNovaPoesia():
+    if request.method == "POST":
+        info = json.loads(request.form.getlist('json_data_send')[0])
+
+        blocks = []
+        blocks_2 = []
+        texto = ''
+
+        for item in info['slides']:
+            texto = item['text-slide'].replace("<i>", '').replace("</i>", '').replace('<br>', ' ') # retirando o negrito e os espaços
+            blocks.append({'type':'paragraph', 'data':{'text':texto}})
+
+
+        destino = request.form.getlist('destino')[0]
+        if destino != '0': # significa que é edição e não acréscimo
+            letras = banco.executarConsulta('select * from letras_poesia where id_poesia = %s and pagina = 1 order by paragrafo' % destino)
+            blocks = []
+
+            for item in letras:
+                blocks.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+            letras = banco.executarConsulta('select * from letras_poesia where id_poesia = %s and pagina = 2 order by paragrafo' % destino)
+            blocks_2 = []
+
+            for item in letras:
+                blocks_2.append({'type':'paragraph', 'data':{'text':item['texto']}})
+
+        return render_template('save_poesia.jinja', info=info, blocks=blocks, blocks_2=blocks_2, destino=destino)
 
 @app.route('/enviarDadosNovoHino', methods=['GET', 'POST'])
 def enviarDadosNovoHino():
@@ -1969,9 +2153,13 @@ def upload_capa_musical_individual():
     isthisFile = request.files.get('file')
     id = request.form['id']
     tipo = request.form['tipo']
-    
+
     if tipo == 'item-musica':
         origem = 'musicas'
+    elif tipo == 'item-harpa-versionada':
+        origem = 'harpa_versionada'
+    elif tipo == 'item-poesia':
+        origem = 'poesia'
     else:
         origem = 'harpa'
 
@@ -2041,6 +2229,14 @@ def get_info_harpa_versionada():
 
 
             return {'letras':letras, 'desc_versao':desc_versao}
+
+@app.route('/get_info_poesia', methods=['GET', 'POST'])
+def get_info_poesia():
+    id = request.json
+    letras = banco.executarConsulta('select texto from letras_poesia where id_poesia = %s order by paragrafo' % id['id'])
+
+    return jsonify({'letras':letras})
+
 
 @app.route('/get_info_musica', methods=['GET', 'POST'])
 def get_info_musica():
@@ -2159,6 +2355,38 @@ def verificarSenhaLog():
                 capa = 'static/images/Background.jpeg'
 
             return render_template('home.jinja', roteiro=roteiro, estado=estado, titulo=titulo, tipo=tipo, capa=capa, number=number, autor=nome_autor, status=status)
+
+
+@app.route('/verificarSenhaPoesia', methods=['GET', 'POST'])
+def verificarSenhaPoesia():
+    if request.method == "POST":
+        print('afs')
+        senha = encriptar(request.form.getlist('senha')[0])
+        destino = request.form.getlist('destino')[0]
+
+        if senha == banco.executarConsultaVetor("select valor from config where id = 'senha_adm'")[0]:
+            if destino == '0':
+                return render_template('editor_poesia.jinja', blocks=[], blocks_s=[], lista_texto=[], destino=0)
+            else:
+                blocks = []
+                blocks_s = []
+                titulo = banco.executarConsulta('select titulo from poesia where id = %s' % destino)[0]['titulo']
+                lista_texto = banco.executarConsulta("select pos, `text-slide`, `text-legenda` as subtitle, ifnull(anotacao, '') as anotacao from slide_poesia where id_poesia = %s order by pos" % destino)
+
+                # recriar lista pro editor
+                for item in lista_texto:
+                    blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+                    blocks_s.append({'type':'paragraph', 'data':{'text':item['subtitle']}})
+
+                return render_template('editor_poesia.jinja', lista_texto=lista_texto, blocks=blocks, blocks_s=blocks_s, titulo=titulo, destino=destino)
+        else:
+            poesias = banco.executarConsulta('select * from poesia order by titulo')
+            status= '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+            return render_template('poesias.jinja', poesias=poesias, status=status)
+    else:
+        return redirect('/')
+
 
 @app.route('/verificarSenhaHarpa', methods=['GET', 'POST'])
 def verificarSenhaHarpa():
@@ -2681,11 +2909,11 @@ def log():
     sql = "SELECT " + \
           r"strftime('%d/%m/%Y às %H:%M',data_hora) as data, " + \
           "cat_log.descricao as atividade, " + \
-          r'CASE WHEN tipo = 1 THEN livro_biblia.descricao || " - Cap. " || capitulo WHEN tipo = 2 THEN musicas.titulo ELSE PRINTF("%03d", harpa.id) || " - " || harpa.descricao END as alvo, ' + \
+          r'CASE WHEN tipo = 1 THEN livro_biblia.descricao || " - Cap. " || capitulo WHEN tipo = 2 THEN musicas.titulo WHEN tipo = 3 THEN PRINTF("%03d", harpa.id) || " - " || harpa.descricao ELSE poesia.titulo END as alvo, ' + \
           "log.atividade as num_atividdade " + \
           "FROM log " + \
           "INNER JOIN cat_log ON cat_log.id = log.atividade " + \
-          "LEFT JOIN musicas ON musicas.id = log.id_musica LEFT JOIN harpa ON harpa.id = log.id_harpa LEFT JOIN livro_biblia ON livro_biblia.id = log.livro_biblia order by data_hora desc"
+          "LEFT JOIN musicas ON musicas.id = log.id_musica LEFT JOIN harpa ON harpa.id = log.id_harpa LEFT JOIN livro_biblia ON livro_biblia.id = log.livro_biblia LEFT JOIN poesia ON poesia.id = log.id_poesia order by data_hora desc"
     
     log = banco.executarConsulta(sql)
 
@@ -2759,6 +2987,8 @@ def iniciar_apresentacao():
                 else:
                     current_presentation = {'id':0, 'tipo':''}
                     return jsonify(False)
+            elif info['tipo'] == 'poesia':
+                estado = 10
 
 
             socketio.emit('refresh', 1)

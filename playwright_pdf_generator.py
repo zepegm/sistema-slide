@@ -11,7 +11,7 @@ def run(playwright, source):
     info = json.loads(source)
     
     # Navigate to a website
-    page.goto(info['url'])
+    page.goto(info['url'], wait_until="load")
     
     # gerar PDF
     if info['tipo'] == 'hinario':

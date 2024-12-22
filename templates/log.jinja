@@ -96,7 +96,7 @@
               <tbody>
                 {% for item in log %}
                 <tr>
-                  {% if item['num_atividdade'] < 5 %}
+                  {% if item['num_atividdade'] < 5 or item['num_atividdade'] in (10, 11) %}
                   <td class="text-danger" data-order="{{item['order']}}">{{item['data']}}</td>
                   <td class="text-danger">{{item['atividade']}} <b>{{item['alvo']}}</b></td>
                   <td class="text-danger">Modificação no Banco</td>

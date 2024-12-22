@@ -133,6 +133,47 @@ class db:
             print("An exception occurred:", error) # An exception occurred: division by zero
             return False
 
+    def inserirNovaPoesia(self, poesia):   
+
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()
+            
+            # primeira etapa é inserir a música
+            sql = "INSERT INTO poesia(titulo) VALUES('%s')" % poesia['titulo']
+            cur.execute(sql)
+
+            id = cur.lastrowid
+
+            print(id)
+
+            # agora preciso inserir os slides
+            for sld in poesia['slides']:
+                anotacao = 'null'
+
+                if 'anotacao' in sld.keys():
+                    if sld['anotacao'] != '':
+                        anotacao = "'%s'" % sld['anotacao']
+
+                sql = "INSERT INTO slide_poesia VALUES(%s, %s, '%s', '%s', %s)" % (id, sld['pos'], sld['text-slide'], sld['subtitle'], anotacao)
+                cur.execute(sql)
+
+            # por último inserir as letras para visualização
+            for letra in poesia['letra']:
+                sql = "INSERT INTO letras_poesia VALUES(%s, %s, '%s', %s)" % (id, letra['paragrafo'], letra['texto'], letra['pagina'])
+                cur.execute(sql)
+
+            con.commit()
+            con.close()
+
+            # inserir no log
+            insert_log(10, 4, id, 0)
+
+            return True
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False
+
 
     def inserirNovaMusica(self, musica):   
 
@@ -190,7 +231,52 @@ class db:
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
             return {'id':0, 'log':'Erro ao tentar acessar banco de dados.<br><span class="fw-bold">Descrição: </span>' + str(error), 'capa':capa}
-        
+
+    def alterarPoesia(self, poesia):
+        try:
+            con = sqlite3.connect(caminho)
+            cur = con.cursor()
+            
+            # primeira preciso alterar a música
+            sql = "UPDATE poesia set titulo = '%s' WHERE id = %s" % (poesia['titulo'], poesia['destino'])
+            cur.execute(sql)
+
+            # agora preciso inserir os slides
+
+            # primeiro vou deletar os antigos
+            sql = 'DELETE FROM slide_poesia WHERE id_poesia = %s' % poesia['destino']
+            cur.execute(sql)
+
+            for sld in poesia['slides']:
+                anotacao = 'null'
+
+                if 'anotacao' in sld.keys():
+                    if sld['anotacao'] != '':
+                        anotacao = "'%s'" % sld['anotacao']
+
+                sql = "INSERT INTO slide_poesia VALUES(%s, %s, '%s', '%s', %s)" % (poesia['destino'], sld['pos'], sld['text-slide'], sld['subtitle'], anotacao)
+                cur.execute(sql)
+
+            # por último inserir as letras para visualização
+
+            # primeiro preciso remover a letra antiga
+            sql = 'DELETE FROM letras_poesia WHERE id_poesia = %s' % poesia['destino']
+            cur.execute(sql)
+
+            for letra in poesia['letra']:
+                sql = "INSERT INTO letras_poesia VALUES(%s, %s, '%s', %s)" % (poesia['destino'], letra['paragrafo'], letra['texto'], letra['pagina'])
+                cur.execute(sql)
+
+            con.commit()
+            con.close()
+
+            insert_log(11, 4, poesia['destino'], 0)
+
+            return True
+        except Exception as error:
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            return False
+
 
     def alterarMusica(self, musica):
         try:
@@ -394,6 +480,8 @@ def insert_log(atividade, tipo, id, cap):
         sql += "id_musica) VALUES (datetime('now','localtime'), %s, %s, %s)" % (atividade, tipo, id)
     elif tipo == 3:
         sql += "id_harpa) VALUES (datetime('now','localtime'), %s, %s, %s)" % (atividade, tipo, id)
+    elif tipo == 4:
+        sql += "id_poesia) VALUES (datetime('now','localtime'), %s, %s, %s)" % (atividade, tipo, id)
 
     try:
         con = sqlite3.connect(caminho)

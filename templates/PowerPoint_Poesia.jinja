@@ -6,8 +6,16 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
         <style>
+            @font-face {
+                font-family:holiday;
+                font-style:normal;
+                font-weight:400;
+                src:local('holiday'),
+                url({{ url_for('static', filename='fonts/Merry Holiday.woff') }}) format('woff')
+            }
 
             body {
+                background-color: {{config['fundo']}};
                 overflow: hidden;
             }
 
@@ -24,74 +32,37 @@
             }
 
             .cdx-marker {
-                color:{{cores['cor_musica_mark']}};
+                color:{{config['mark']}};
                 font-weight:bold;
-                background:rgba(0,0,0,0)
-            }   
+                background:rgba(0,0,0,0);
+                /* margin-right: 20px;  */
+            }
 
             .capa {
+                background-image: url("{{ url_for('static', filename=fundo) }}");  
+                background-size: contain;
                 background-repeat: no-repeat;
-                background-position: center;
-                background-size: cover;
-            }                     
+                background-size: 100% 100%;
+            }
+
+            .letra {
+                color:{{config['letra']}};
+                font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                line-height: normal; 
+                text-align: center;
+                text-shadow: 0 0 10px {{config['fundo']}};
+            }
 
             .slide {
-                font-family: Arial, Helvetica, sans-serif;
-                line-height: normal; 
+                background-size: contain;
+                background-repeat: no-repeat;
                 position: fixed;
                 min-width: 100%;               
                 min-height: 100%;
+                background-size: 100% 100%;
                 top:0%;    
-                left:0%;  
-                text-align: center;          
-            }
-
-            .coro {
-                color:{{cores['cor_musica_mark']}};
-            }
-
-            .cat-1-harpa,
-            .cat-3-harpa {
-                color: {{cores['cor_harpa_letra']}};
-                background-color: {{cores['cor_harpa_fundo']}};
-            }
-
-            .body-cat-1-harpa,
-            .body-cat-3-harpa {
-                background-color: {{cores['cor_harpa_fundo']}};
-            }
-
-            .cdx-num {
-                color: {{cores['cor_harpa_num']}};
-            }
-
-            .red {
-                color: red;
-            }
-
-            .cat-1-musica,
-            .cat-3-musica,
-            .cat-poesia {
-                color: {{cores['cor_musica_letra']}};
-            }
-
-            .cat-poesia {
-                font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-            }
-
-            .body-cat-1-musica,
-            .body-cat-1-musica,
-            .body-cat-3-musica,
-            .body-cat-4-musica,
-            .body-cat-poesia {
-                background-color: {{cores['cor_musica_fundo']}};
-            }
-
-            .cat-2-musica,
-            .cat-4-musica {
-                color: {{cores['cor_musica_mark']}};
-            }
-
+                left:0%;            
+            }     
             
             .first-in {
                 animation-name: fade-in;
@@ -127,7 +98,7 @@
               position: absolute;
               width: 100%;
               height: 100%  ;
-              border: 0px solid {{cores['cor_musica_fundo']}};
+              border: 0px solid {{config['fundo']}};
             }
 
             .noot-1,
@@ -138,8 +109,8 @@
               animation: notes 2s infinite linear;
               font-size: 200px;
               opacity: 0;
-              color:{{cores['cor_musica_letra']}};
-              text-shadow: {{cores['cor_musica_letra']}} 0 0 40px;
+              color:{{config['letra']}};
+              text-shadow: {{config['letra']}} 0 0 40px;
               animation-duration: 5s;
             }
 
@@ -167,6 +138,20 @@
               animation-delay: 2s;
             }
 
+            .coro {
+                color:{{config['mark']}};
+            }
+
+            #lb_titulo {
+                width: 60vw;
+                height: 50vh;
+                position: absolute;
+                left:20vw;
+                top: 22vh;
+                text-align: center;
+                font-family: holiday;
+                color: black;
+            }
 
             @keyframes fade-in {
                 from {opacity: 0;}
@@ -210,14 +195,14 @@
             }             
         </style>
     </head>
-    <body class="body-{{lista_final[index]['categoria']}}">
+    <body>
         <!-- <video autoplay muted loop id="myVideo">
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
         </video> -->
 
         <div id="notas" class="muzieknootjes">
-            {% if lista_final|length > 0 and index < lista_final|length %}
-            {% if lista_final[index]['cat'] == 3 or lista_final[index]['cat'] == 4 %}
+            {% if lista_slides|length > 0 and index < lista_slides|length %}
+            {% if lista_slides[index - 1]['categoria'] == 3 or lista_slides[index - 1]['categoria'] == 4 %}
             <div class="noot-1">&#9835; &#9833;</div>
             <div class="noot-2">&#9833;</div>
             <div class="noot-3">&#9839; &#9834;</div>
@@ -226,14 +211,17 @@
             {% endif %}
         </div>
 
-        {% if lista_final[index]['tipo'] == 'capa_img' %}
-            <div class="slide capa first-in" id="slide1" style="background-image: url('{{ url_for('static', filename=lista_final[index]['url']) }}');"></div>
-        {% elif lista_final[index]['tipo'] == 'capa_base64' %}
-            <div class="slide capa first-in" id="slide1" style="background-image: url('data:image/png;base64,{{lista_final[index]['url']}}');"></div>
+        {% if index == 0 or (index - 1) == lista_slides|length %}
+        <div class="slide capa first-in" id="slide1">
+            <div id="lb_titulo">{{titulo}}</div>
+        </div>
         {% else %}
-            <div class="slide first-in {{lista_final[index]['categoria']}} letra" id="slide1">{{lista_final[index]['texto']}}</div>
+            {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
+            <div class="slide coro letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
+            {% else %}
+            <div class="slide letra in" id="slide1">{{lista_slides[index - 1]['text-slide']}}</div>
+            {% endif %}
         {% endif %}
-
         <div class="slide" id="slide2"></div>      
 
         <div id="fim"></div>
@@ -244,58 +232,57 @@
     <script src="{{ url_for('static', filename='js/vara.min.js') }}"></script>
     <script>
 
-        const slides = {{lista_final}}
-        //console.log(slides);
+        const slides = {{lista_slides}}
 
         var key1 = 0;
         var key2 = 1;
+        var index = {{index}};
 
         var key_final = false;
 
-        /*const slide1 = document.getElementById("slide1");
-        const slide2 = document.getElementById("slide2");*/
-
         const vetor_slides = [document.getElementById("slide1"), document.getElementById("slide2")];
+        const lb_titulo = document.getElementById("lb_titulo");
 
         const notas = document.getElementById("notas");
         //const source = document.getElementById("myVideo");
 
-       textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
-
+        if (index > 0) {
+            textFit(vetor_slides[0], {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});
+        } else {
+            textFit(lb_titulo, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});
+        }
 
         function changeComponent(slide1, slide2, index) {
-            slide1.classList.add('out');
+            slide1.classList.remove("in");
+            slide1.classList.add("out");
+
+            slide2.classList.remove("out");
+            slide2.classList.remove("first-in");
+            slide2.classList.add('in');
             
-            if ((index + 1) == slides.length) { // final
-                slide2.innerHTML = '';
-                slide2.setAttribute('class', 'slide capa');
-                slide2.setAttribute('style', "background-image: url('static/" + slides[0]['url'] + "');");
+            if (index == 0) {
+                slide2.innerHTML = '<div id="lb_titulo">{{titulo}}</div>';
+                slide2.classList.remove('letra');
+                slide2.classList.add('capa');
+                textFit(document.getElementById("lb_titulo"), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});
+            } else if((index - 1) == slides.length) { // final
+                slide2.innerHTML = '<div id="lb_titulo">{{titulo}}</div>';
+                slide2.classList.remove('letra');
+                slide2.classList.add('capa');
+                textFit(document.getElementById("lb_titulo"), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});
+                slide2.classList.remove("in");
                 slide2.classList.add('final-out');
                 vara.draw("draw");
 
                 key_final = true;
             } else {
-                // definir slide principal
-                if (slides[index]['tipo'] == 'capa_img') {
-                    slide2.innerHTML = '';
-                    slide2.setAttribute('class', 'slide capa');
-                    slide2.setAttribute('style', "background-image: url('static/" + slides[index]['url'] + "');");
-                    slide2.classList.add('in');
-                } else if (slides[index]['tipo'] == 'capa_base64') {
-                    slide2.innerHTML = '';
-                    slide2.setAttribute('class', 'slide capa');
-                    slide2.setAttribute('style', "background-image: url('data:image/png;base64," + slides[index]['url'] + "');");
-                    slide2.classList.add('in');
-                } else {
-                    slide2.innerHTML = slides[index]['texto'];
-                    slide2.removeAttribute("style");
-                    slide2.setAttribute('class', 'slide letra ' + slides[index]['categoria']);
-                    document.body.setAttribute('class', 'body-' + slides[index]['categoria']);
-                    textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
-                    slide2.classList.add('in');
-                }   
+                slide2.classList.remove('capa');
+                slide2.classList.remove('coro');
+                slide2.classList.add('letra');                    
+                slide2.innerHTML = slides[index - 1]['text-slide'];
+                textFit(slide2, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});   
 
-                if (slides[index]['cat'] == 3 || slides[index]['cat'] == 4) {
+                if (slides[index -1]['categoria'] == 3 || slides[index -1]['categoria'] == 4) {
                     notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
                     /*notas.classList.remove('hidden');*/
                 } else {
@@ -303,7 +290,7 @@
                     /*notas.classList.add('hidden');*/
                 }
 
-                if (slides[index]['cat'] == 2 || slides[index]['cat'] == 4) {
+                if (slides[index -1]['categoria'] == 2 || slides[index -1]['categoria'] == 4) {
                     slide2.classList.add('coro'); 
                 }
             }

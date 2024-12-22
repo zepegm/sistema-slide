@@ -114,7 +114,7 @@
               </div>
             </div>
             <div class="col-sm-12"><hr></div>            
-            <div class="col-sm-6"><h3>Adicionar Músicas</h3></div>
+            <div class="col-sm-6"><h3>Adicionar Itens</h3></div>
             <div class="col-sm-1">&nbsp;</div>
             <div class="col-sm-5"><h3>Roteiro do Musical</h3></div>
 
@@ -142,6 +142,19 @@
                 {% endfor %}
               </div>               
             </div>
+
+            <div class="col-sm-2">
+
+              <label for="txt_filtro_poesia" class="form-label">Poesia:</label>
+              <input type="text" class="form-control form-text" id="txt_filtro_poesia" placeholder="Pesquisar...">
+              <br>
+
+              <div id="lista_geral_poesia" class="list-group">
+                {% for item in poesias %}
+                  <a href="#" class="list-group-item list-group-item-action item-poesia" data-id="{{item['id']}}">{{item['titulo']}}</a>
+                {% endfor %}
+              </div>               
+            </div>            
 
             <div class="col-sm-1">
               <p>&nbsp;</p>
@@ -227,6 +240,8 @@
           origem = 'musicas'
         } else if ($(this).hasClass('item-harpa-versionada')) {
           origem = 'harpa_versionada'
+        } else if ($(this).hasClass('item-poesia')) {
+          origem = 'poesia';
         }
         lista_final.push({'id':$(this).attr('data-id'), 'origem':origem});
       })
@@ -257,6 +272,17 @@
       });
     });
 
+    $('#txt_filtro_poesia').on('keyup', function (e) {
+      var value = $(this).val().toLowerCase();
+      $("#lista_geral_poesia a").toggleClass('toggled', true);
+      $("#lista_geral_poesia a").filter(function() {
+        if ($(this).text().toLowerCase().indexOf(value) > -1) {
+          $(this).removeClass('toggled');
+        }
+        //console.log($(this).find("label").find("input").data("pasta"))
+      });
+    });    
+
   $(".list-group-item").on('click', function() {
     $("#btn_troca").removeAttr('disabled');
     $(".list-group-item").toggleClass('active', false);
@@ -267,15 +293,18 @@
     let element = $('.active');
     let id = element.parent().attr('id');
     
-    if (['lista_geral_musica', 'lista_geral_harpa'].includes(id)) {
+    if (['lista_geral_musica', 'lista_geral_harpa', 'lista_geral_poesia'].includes(id)) {
       $('#lista_musical').append(element);
     } else {
       if (element.hasClass('item-musica')) {
         $("#lista_geral_musica").append(element);
         sortItemsAlphabetically('lista_geral_musica');
-      } else {
+      } else if (element.hasClass('item-harpa')) {
         $("#lista_geral_harpa").append(element);
         sortItemsAlphabetically('lista_geral_harpa');
+      } else {
+        $("#lista_geral_poesia").append(element);
+        sortItemsAlphabetically('lista_geral_poesia');        
       }
     }
 

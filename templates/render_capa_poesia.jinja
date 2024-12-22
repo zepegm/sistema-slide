@@ -1,0 +1,64 @@
+<html lang="pt-BR">
+    <head>
+        <title>Render Calendário Mensal</title>
+    </head>
+
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <style>
+
+        @font-face {
+            font-family:bebaskai;
+            font-style:normal;
+            font-weight:400;
+            src:local('BebasKai'),
+            url({{ url_for('static', filename='fonts/BebasKai-Regular.woff') }}) format('woff')
+        }
+
+        @font-face {
+            font-family:holiday;
+            font-style:normal;
+            font-weight:400;
+            src:local('holiday'),
+            url({{ url_for('static', filename='fonts/Merry Holiday.woff') }}) format('woff')
+        }        
+
+        #main {
+            color: black;
+            background-size: contain;
+            background-repeat: no-repeat;
+            position: fixed;
+            width: 1366px;
+            height: 768px;
+            background-size: 100% 100%;
+            top:0%;    
+            left:0%;            
+            background-image: url("{{ url_for('static', filename='images/Poesia_Background.jpg') }}");        
+        }
+
+        #titulo_principal {
+            color:black;
+            font-style: italic;
+            margin-left: 260px;
+            margin-top: 200px;
+            width: 840px;
+            height: 300px;
+            text-align: center;
+            font-family: holiday;
+        }
+
+    </style>
+
+    <body>
+        <div id="main">
+            <div id="titulo_principal">{{titulo}}</div>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+        <script>
+            var titulo = document.getElementById('titulo_principal');
+
+            textFit(titulo, {alignVert: true, multiLine: true, minFontSize: 5, maxFontSize: 5000});
+        </script>
+    </body>
+</html>
