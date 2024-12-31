@@ -250,6 +250,57 @@
       </div>
     </div>
 
+
+    <div class="modal fade" id="modal_festa_departamentos_sede" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div style="max-width: 90%;" class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Festa de Departamentos Sede</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+              <div class="col-sm-12 mb-3">
+                <span class="fw-bold">Lista de Eventos:</span>&nbsp;<button class="btn btn-primary" id="btn_add_row_evento_sede"><i class="fa-solid fa-plus"></i></button>
+              </div>
+              <div class="col-sm-12">
+                <table class="table table-hover">
+                  <thead>
+                    <tr class="table-warning">
+                      <th>Período</th>
+                      <th>Descrição Curta</th>
+                      <th>Descrição Longa</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tb_jan">
+                    {% for item in lista_festa_dep_sede %}
+                    <tr>
+                      <td>
+                        <div class="input-group mb-3 row-evento-jan">
+                          <span class="input-group-text">De:</span>
+                          <input type="date" class="form-control input_geral data_de_jan" value="{{item['data_de']}}">
+                          <span class="input-group-text">Até:</span>
+                          <input type="date" class="form-control input_geral data_ate_jan" value="{{item['date_ate']}}">
+                          <button class="btn btn-danger btn_delete_row_month" data-id="1"><i class="fa-solid fa-calendar-xmark"></i></button>
+                      </td>
+                      <td><div class="editor_desc_curta" id="editor_js_jan_{{loop.index - 1}}"></div></td>
+                      <td><div class="editor_desc_longa" id="editor_js_jan_longo_{{loop.index - 1}}"></div></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>                      
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn_confirmar_dep_jan">Confirmar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
     <div class="modal fade" id="modal_cadastro_semanal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -429,6 +480,7 @@
               <button id="btn_semanal" class="btn btn-primary" data-toggle="modal" data-target="#modal_cadastro_semanal" hidden>Eventos Semanais Persistentes</button>
               <button id="btn_mensal" class="btn btn-success" data-toggle="modal" data-target="#modal_cadastro_mensal" hidden>Eventos Mensais</button>
               <button id="btn_dep" class="btn btn-danger" data-toggle="modal" data-target="#modal_festa_departamentos" hidden>Festa de Departamentos</button>
+              <button id="btn_jan" class="btn btn-warning" data-toggle="modal" data-target="#modal_festa_departamentos_sede" hidden>Festa de Dep. Sede</button>
               <button id="btn_edicao" class="btn btn-secondary" data-toggle="modal" data-target="#modal_confirmar_edicao">Habilitar Modo de Edição</button>
               <button id="btn_iniciar_apresentacao" class="btn btn-primary">Iniciar Apresentação</button>
             </div>            
@@ -441,11 +493,11 @@
                   {% for item in semanas_disponiveis %}
                     {% if segunda_dia == item['inicio'] %}
 
-                    <option value="{{calendario_semanal[6]['ano']}}-{{item['inicio'][3:5]}}-{{item['inicio'][:2]}}" selected>{{item['inicio']}} a {{item['fim']}}</option>
+                    <option value="{{item['data']}}" selected>{{item['inicio']}} a {{item['fim']}}</option>
 
                     {% else %}
 
-                    <option value="{{calendario_semanal[6]['ano']}}-{{item['inicio'][3:5]}}-{{item['inicio'][:2]}}">{{item['inicio']}} a {{item['fim']}}</option>
+                    <option value="{{item['data']}}">{{item['inicio']}} a {{item['fim']}}</option>
 
                     {% endif %}
                   {% endfor %}
@@ -516,7 +568,11 @@
 
     <form id="form_dep" action="/calendario" method="POST">
       <input type="hidden" name="festa_dep" id="festa_dep">
-    </form>      
+    </form>
+
+    <form id="form_dep_jan" action="/calendario" method="POST">
+      <input type="hidden" name="festa_dep_jan" id="festa_dep_jan">
+    </form>
 
   <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
@@ -538,15 +594,19 @@
     bloco_semanal = {{blocks_sem}};
     bloco_mensal = {{blocks_mem}};
     eventos = {{eventos}};
+    lista_festa_dep_sede = {{lista_festa_dep_sede}};
     //console.log(bloco_mensal)
     editores = [];
     editores_mes = []
+    editores_jan = []
 
     if (bloco_mensal.length > 0) {
       var next_row = bloco_mensal.length + 1;
     } else {
       var next_row = 2;
     }
+
+    next_row_jan = lista_festa_dep_sede.length;
     
 
     window.onload = function() {
@@ -627,7 +687,69 @@
       }));
     }
 
+    // preencher bloco
+    for (let i = 0; i < lista_festa_dep_sede.length; i++) {
 
+      editores_jan.push(new EditorJS({
+          /**
+          * Id of Element that should contain Editor instance
+          */
+          holder: 'editor_js_jan_' + i,
+
+          inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+          tools: {
+            // ...
+            underline: Underline,
+            red: {
+              class: Red
+            }        
+          },
+          data: {
+            blocks: [{"type":"paragraph", "data":{"text":lista_festa_dep_sede[i]['desc_curta']} }]
+          }      
+      }));
+
+      editores_jan.push(new EditorJS({
+          /**
+          * Id of Element that should contain Editor instance
+          */
+          holder: 'editor_js_jan_longo_' + i,
+
+          inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+          tools: {
+            // ...
+            underline: Underline,
+            red: {
+              class: Red
+            }        
+          },
+          data: {
+            blocks: [{"type":"paragraph", "data":{"text":lista_festa_dep_sede[i]['desc_longa']} }]
+          }      
+      }));
+
+    }
+
+    $("#btn_confirmar_dep_jan").on('click', function() {
+
+      let lista = [];
+
+      $("#tb_jan tr").each(function(index) {
+        let info = {};
+        info['de'] = ($(this).find('.data_de_jan').val());
+        info['ate'] = ($(this).find('.data_ate_jan').val());
+        info['desc_curta'] = $(this).find('.editor_desc_curta').find('.ce-paragraph').html();
+        info['desc_longa'] = $(this).find('.editor_desc_longa').find('.ce-paragraph').html();
+        info['plain_text'] = $(this).find('.editor_desc_longa').find('.ce-paragraph').text();
+
+        lista.push(info);
+      });
+
+      $("#festa_dep_jan").val(JSON.stringify(lista));
+      $("#form_dep_jan").submit();
+    });
 
     $("#col_calendario_mensal").on('click', '#btn_gerar_imagem_calendario_mensal', function() {
 
@@ -638,7 +760,7 @@
           type: "POST",
           url: "gerar_imagem_calendario_mensal",
           contentType: "application/json",
-          data: JSON.stringify({'tipo':'semanal', 'ano':{{calendario_semanal[0]['ano']}}, 'mes':$("#cb_mes_view").val()}),
+          data: JSON.stringify({'tipo':'semanal', 'ano':{{calendario_semanal[6]['ano']}}, 'mes':$("#cb_mes_view").val()}),
           dataType: "json",
           success: function(data) {
 
@@ -789,6 +911,62 @@
       $("#dia_ate_" + id).attr('min', $(this).val());
     });
 
+    $("#btn_add_row_evento_sede").on('click', function() {
+      data = '<tr><td><div class="input-group mb-3 row-evento-sede">' +
+                  '<span class="input-group-text">De:</span>' +
+                  '<input type="date" class="form-control input_geral data_de_jan" value="{{hoje_value}}">' +
+                  '<span class="input-group-text">Até:</span>' +
+                  '<input type="date" class="form-control input_geral data_ate_jan" value="{{hoje_value}}">' +
+                  '<button class="btn btn-danger btn_delete_row_month" data-id="1"><i class="fa-solid fa-calendar-xmark"></i></button></td>' +
+                  '<td><div class="editor_desc_curta" id="editor_js_jan_' + next_row_jan + '"></div></td>' +
+                  '<td><div class="editor_desc_longa" id="editor_js_jan_longo_' + next_row_jan + '"></div></div></td></tr>';
+
+      $("#tb_jan").append(data);
+
+      editores_jan.push(new EditorJS({
+          /**
+          * Id of Element that should contain Editor instance
+          */
+          holder: 'editor_js_jan_' + next_row_jan,
+
+          inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+          tools: {
+            // ...
+            underline: Underline,
+            red: {
+              class: Red
+            }        
+          },
+          data: {
+            blocks: []
+          }      
+      }));
+
+      editores_jan.push(new EditorJS({
+          /**
+          * Id of Element that should contain Editor instance
+          */
+          holder: 'editor_js_jan_longo_' + next_row_jan,
+
+          inlineToolbar: ['bold', 'italic', 'underline', 'red'],
+
+          tools: {
+            // ...
+            underline: Underline,
+            red: {
+              class: Red
+            }        
+          },
+          data: {
+            blocks: []
+          }      
+      }));      
+
+      next_row_jan++;
+
+    });
+
     $("#btn_add_row_evento").on('click', function() {
       data = '<div class="input-group mb-3 row-evento">' +
                   '<span class="input-group-text">Dia:</span>' +
@@ -881,6 +1059,10 @@
       $(this).parent().parent().parent().remove();
     });
 
+    $("#tb_jan").on('click', '.btn_delete_row_month', function() {
+      $(this).parent().parent().parent().remove();
+    });
+
     $("#cb_semana_view").on('change', function() {
       info = {'tipo':1, 'segunda':$(this).val()};
 
@@ -932,6 +1114,7 @@
               $("#btn_semanal").removeAttr('hidden');
               $("#btn_mensal").removeAttr('hidden');
               $("#btn_dep").removeAttr('hidden');
+              $("#btn_jan").removeAttr('hidden');
             } else {
               $("#status").html('<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
             }
@@ -1067,7 +1250,7 @@
     $("#cb_mes").on('change', function() {
       mes = $(this).val();
       hoje = '{{hoje}}';
-      ano = hoje.substring(6, 10);
+      ano = "{{calendario_semanal[6]['ano']}}";
 
       //console.log(ano);
       

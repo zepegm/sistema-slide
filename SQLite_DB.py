@@ -379,6 +379,7 @@ class db:
 
         except Exception as error:
             print("An exception occurred:", error) # An exception occurred: division by zero
+            #print(sql)
             return False          
 
 
@@ -652,4 +653,22 @@ def inserirFestaDepCalendario(lista):
     except Exception as error:
         con.close()
         print("An exception occurred:", error) # An exception occurred: division by zero
-        return False  
+        return False
+
+def inserirFestaDepSedeCalendario(lista):
+    con = sqlite3.connect(caminho_calendario)
+    cur = con.cursor()
+
+    try:
+        cur.execute('DELETE FROM calendario_festa_dep_sede')
+
+        for evento in lista:
+            cur.execute("INSERT INTO calendario_festa_dep_sede VALUES('%s', '%s', '%s', '%s', '%s')" % (evento['de'], evento['ate'], evento['desc_curta'].replace("&nbsp;", " "), evento['desc_longa'].replace("&nbsp;", " "), evento['plain_text']))
+
+        con.commit()
+        con.close()
+        return True
+    except Exception as error:
+        con.close()
+        print("An exception occurred:", error) # An exception occurred: division by zero
+        return False          
