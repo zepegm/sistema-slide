@@ -30,18 +30,16 @@
             } 
 
             .titulo {
-                color:red;
+                color:#1F604C;
                 font-size: 10vw;
                 text-align: center;
                 padding: 0%;
-                margin-top: 4vh;
+                margin-top: 15vh;
             }
 
             #logo_1 {
-                width: 60%;
+                width: 100%;
                 height: auto;
-                margin-top: -20vh;
-                margin-left: -5vw;
             }
 
             #img-calendar {
@@ -63,7 +61,7 @@
             }
 
             .titulo_oracao {
-                color:green;
+                color:#1F604C;
                 font-size: 11vw;
                 position: absolute;
                 top: -15vh;
@@ -81,21 +79,24 @@
 
             .text-primary,
             .blue {
-                color:#0070C0;
+                color:#629380;
             }
 
             .fw-bold {
                 font-weight: bold;
             }
 
-            .text-danger,
+            .text-danger {
+                color:#629380;
+            }
+
             .red {
                 color:#DA2536;
             }
 
             .text-success,
             .green {
-                color:green;
+                color:#1F604C;
             }
 
             .text-dark {
@@ -131,7 +132,8 @@
                 font-size: 6.2vw;
                 top: -2vh;
                 left: 14vw;
-                font-family:'BebasKai', sans-serif;                
+                font-family:'BebasKai', sans-serif;
+                color:#1F604C;           
             }
 
             .paragrafo {
@@ -223,14 +225,13 @@
 
         <!-- Primeiro slide de apresentação -->
         <div class="slide {{'hide' if index != 0 else 'in' }}" id="sld0">
+            <img id="logo_1" src="{{ url_for('static', filename='images/head_calendar.png') }}">
             <p class="titulo">CALENDÁRIO {{ano}}</p>
-            <img id="logo_1" src="{{ url_for('static', filename='images/Logo Legenda.png') }}">
-            <img id="img-calendar" src="{{ url_for('static', filename='images/Calendar_show.png') }}">
         </div>
 
         <!-- Slide da Oração -->
         <div class="slide {{'hide' if index != 1 else 'in' }}" id="sld1">
-            <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+            <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
             <p class="titulo_oracao">CALENDÁRIO DE ORAÇÃO</p>
             <ul class="text">
                 <li class="paragrafo">Todas as <b class="blue">Terças</b>, <b class="blue">Quintas</b> e <b class="blue">Sábados</b> às <b class="red">7h</b> e <b class="blue">Domingo</b> às <b class="red">08h30</b>.</li>
@@ -243,7 +244,7 @@
             {% if sld['tipo'] == 'semanal' %}
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
                 <div class="blank_rect">
-                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
                     <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
                     <p class="titulo_dia_semanal"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>                
                 </div>
@@ -256,8 +257,8 @@
             {% elif sld['tipo'] == 'isolado' %}
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
                 <div class="blank_rect">
-                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-                    <p class="titulo_mensal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="red">{{mes_desc}} DE {{ano}}</span></span></p>
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
+                    <p class="titulo_mensal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="text-danger">{{mes_desc}} DE {{ano}}</span></span></p>
                     <p class="titulo_dia_semanal">{{sld['desc_dia']}}</p>
                 </div>
                 <ul class="text text-item-semanal">
@@ -270,7 +271,7 @@
 
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
                 <div class="blank_rect">
-                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
                     <p class="titulo_mensal">{{sld['desc_dia']}}</p>
                 </div>
                 <ul class="text text-item-dep">

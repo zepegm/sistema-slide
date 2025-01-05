@@ -42,11 +42,10 @@
             }
 
             #logo {
-                position: absolute;
-                width: 220px;
+                width: 1520px;
+                margin-top: -9px;
+                margin-left: -9px;
                 height: auto;
-                top: 30px;
-                left: 50px;       
             }
 
             .text-danger,
@@ -55,16 +54,16 @@
             }
 
             .green {
-                color:green;
+                color:#1F604C;
+            }
+
+            .green-2 {
+                color:#629380;
             }
 
             .text-primary,
             .blue {
-                color:#0070C0;
-            }
-
-            .text-primary {
-                font-family:'Hack';
+                color:#216651;
             }
 
             .fw-bold {
@@ -148,8 +147,9 @@
             .thead {
                 font-family: bebaskai;
                 font-size: 50px;
-                background-color: bisque;
+                background-color: #A4C8AC;
                 border-bottom: 4px solid black;
+                color: #1F604C;
             }
 
             .calendar td {
@@ -163,8 +163,13 @@
                 background-color: rgb(173, 173, 173);
             }
 
+            .white {
+                color:#1F604C;
+            }
+
             .yellow {
-                background-color: yellow;
+                background-color: #216651;
+                color: white;
             }
 
             .area_descricao {
@@ -176,21 +181,19 @@
 
     <body>
         <main class="container">
-            <p class="titulo">ASSEMBLEIA DE DEUS</p>
-            <p class="subtitulo">Ministério de Cachoeira Paulista</p>
-            <img id="logo" src="{{ url_for('static', filename='images/Logo Colorido.png') }}">
-            <p class="titulo_semanal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="red">{{mes_desc}} DE {{ano}}</span></p>
+            <img id="logo" src="{{ url_for('static', filename='images/head_calendar.png') }}">
+            <p class="titulo_semanal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="green-2">{{mes_desc}} DE {{ano}}</span></p>
 
             <table class="calendar">
                 <thead>
                     <tr class="thead">
-                        <td class="red">Dom</td>
+                        <td>Dom</td>
                         <td>Seg</td>
                         <td>Ter</td>
                         <td>Qua</td>
                         <td>Qui</td>
                         <td>Sex</td>
-                        <td class="red">Sáb</td>
+                        <td>Sáb</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,7 +204,7 @@
                         
 
                         {% for item in dias_do_mes %}
-                            <td class="{{item[2]}} {{ 'red' if item[1] in (0, 6) else '' }}">{{'%02d' % item[0]}}</td>
+                            <td class="{{item[2]}}">{{'%02d' % item[0]}}</td>
 
                             {% if item[1] == 6 %}
                             </tr><tr>
