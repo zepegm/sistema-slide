@@ -1392,9 +1392,25 @@ def slide():
     global index
 
     if estado == 0:
-        fundo = 'images/Wallpaper/' + banco.executarConsulta("select valor from config where id = 'wallpaper'")[0]['valor']
-        config = {'fundo':'black', 'mark':'white', 'letra':'white'}
-        return render_template('PowerPoint.jinja', fundo=fundo, lista_slides=[], index=0, config=config)
+        consulta = banco.executarConsulta("SELECT segundos, arquivos FROM slide_show_wallpaper WHERE id = (SELECT valor FROM config WHERE id = 'wallpaper_show_id')")[0]
+        imagens = eval(consulta['arquivos'])
+        segundos = consulta['segundos']
+
+        ls_final = []
+        id = 0
+
+        if len(imagens) > 1: # se for mais de uma imagem, definir a imagem inicial aleatoriamente
+            for item in imagens:
+                ls_final.append({'class':'hide', 'image':item})
+
+            random_id = random.randint(0, len(imagens) - 1)
+            ls_final[random_id]['class'] = 'in'
+            id = random_id
+
+        else:
+            ls_final.append({'class':'in', 'image':imagens[0]})
+        
+        return render_template('PowerPoint_StandBy.jinja', fundo=ls_final, id=id, segundos=segundos, limite=len(imagens) - 1)
     elif estado == 1: # se iniciou uma apresentação de música
 
         # estabelecer configuração da música
@@ -2970,28 +2986,42 @@ def wallpaper_new():
     if request.method == 'POST':
 
         if request.is_json:
-            id = request.json
+
+            info = request.json
+
+            if info['destino'] == 0:
+
+                id = info['id']
+                
+                # pegar dados novamente
+                selecionado = banco.executarConsultaVetor("select valor from config where id = 'wallpaper_show_id'")[0]
+                lista_wallpapers = banco.executarConsulta("select id, descricao, arquivos, segundos, CASE WHEN id == %s THEN 'selected' ELSE '' END AS selected from slide_show_wallpaper order by id" % id)
+
+                arquivos_selecionados = banco.executarConsulta('select arquivos, segundos from slide_show_wallpaper where id = %s' % id)[0]
+
+                path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+                files_folder = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+                file_list = eval(arquivos_selecionados['arquivos'])
+
+                lista_final = []
+                for item in file_list:
+                    lista_final.append({'nome':item, 'class':'box-index', 'check':'checked'})
+
+                for item in files_folder:
+                    if item not in file_list:
+                        lista_final.append({'nome':item, 'class':'shadow-sm', 'check':''})            
+
+
+                return jsonify({'seg':arquivos_selecionados['segundos'], 'lista':lista_final})
             
-            # pegar dados novamente
-            selecionado = banco.executarConsultaVetor("select valor from config where id = 'wallpaper_show_id'")[0]
-            lista_wallpapers = banco.executarConsulta("select id, descricao, arquivos, segundos, CASE WHEN id == %s THEN 'selected' ELSE '' END AS selected from slide_show_wallpaper order by id" % id)
-
-            arquivos_selecionados = banco.executarConsulta('select arquivos, segundos from slide_show_wallpaper where id = %s' % id)[0]
-
-            path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
-            files_folder = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-            file_list = eval(arquivos_selecionados['arquivos'])
-
-            lista_final = []
-            for item in file_list:
-                lista_final.append({'nome':item, 'class':'box-index', 'check':'checked'})
-
-            for item in files_folder:
-                if item not in file_list:
-                    lista_final.append({'nome':item, 'class':'shadow-sm', 'check':''})            
-
-
-            return jsonify({'seg':arquivos_selecionados['segundos'], 'lista':lista_final});
+            if info['destino'] == 1:
+                id = info['id']
+                
+                if banco.change_config([{'id':"'wallpaper_show_id'", 'valor':id}]):
+                    socketio.emit('change_wallpaper', 1)
+                    return jsonify(True)
+                else:
+                    return jsonify(False)
         
         if 'upload' in request.files:
 
@@ -3019,6 +3049,14 @@ def wallpaper_new():
             except:
                 status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção! Erro fatal!</strong> Falha grave ao tentar incluir esquema de SlideShow!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
+        if 'val_delete_id' in request.form:
+            sql = 'DELETE FROM slide_show_wallpaper WHERE id = %s' % request.form['val_delete_id']
+            print(sql)
+            if banco.executeCustomQuery(sql):
+                status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação realizada com sucesso!</strong> Esquema de Slide excluído com sucesso!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção! Erro fatal!</strong> Falha grave ao tentar excluir esquema de SlideShow!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
         if 'val_id_update' in request.form:
 
             try:
@@ -3028,13 +3066,14 @@ def wallpaper_new():
 
                 banco.executeCustomQuery('UPDATE slide_show_wallpaper SET arquivos="%s", segundos=%s WHERE id=%s' % (files, seg, id_slideshow))
                 status = '<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação realizada com sucesso!</strong> Alteração do SlideShow efetuado com sucesso!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                socketio.emit('change_wallpaper', 1)
             except:
                 status = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Atenção! Erro fatal!</strong> Falha grave ao tentar alterar banco!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
                 print('UPDATE slide_show_wallpaper SET arquivos="%s", segundos=%s WHERE id=%s' % (files, seg, id_slideshow))
 
     
     selecionado = banco.executarConsultaVetor("select valor from config where id = 'wallpaper_show_id'")[0]
-    lista_wallpapers = banco.executarConsulta("select id, descricao, arquivos, segundos, CASE WHEN id == %s THEN 'selected' ELSE '' END AS selected from slide_show_wallpaper order by id" % selecionado)
+    lista_wallpapers = banco.executarConsulta("select id, descricao, arquivos, segundos, CASE WHEN id == %s THEN 'selected' ELSE '' END AS selected from slide_show_wallpaper order by descricao" % selecionado)
 
     arquivos_selecionados = banco.executarConsulta('select arquivos, segundos from slide_show_wallpaper where id = %s' % selecionado)[0]
 
@@ -3051,7 +3090,7 @@ def wallpaper_new():
             lista_final.append({'nome':item, 'class':'shadow-sm', 'check':''})
 
 
-    return render_template('wallpaper_new.jinja', lista=lista_final, status=status, lista_wallpapers=lista_wallpapers, segundos=arquivos_selecionados['segundos'])
+    return render_template('wallpaper_new.jinja', selecionado=selecionado, lista=lista_final, status=status, lista_wallpapers=lista_wallpapers, segundos=arquivos_selecionados['segundos'])
 
 @app.route('/wallpaper', methods=['GET', 'POST'])
 def wallpaper():
@@ -3369,8 +3408,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False, port=80)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run(debug=True, use_reloader=False, port=80)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

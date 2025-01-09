@@ -118,7 +118,9 @@
 
           {{status}}
 
-          
+            <form id="form-delete-id" method="POST" action="{{url_for('wallpaper_new')}}">
+              <input type="hidden" name="val_delete_id" id="val_delete_id" >
+            </form>
 
             <div class="row"> 
               
@@ -178,11 +180,11 @@
                     <option value="{{item['id']}}" {{item['selected']}}>{{item['descricao']}}</option>
                     {% endfor %}
                   </select>
-                  <button class="btn btn-danger"><i class="fa-solid fa-trash"></i></button>
+                  <button type="button" id="btn_delete" class="btn btn-danger" disabled><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
               <div class="col-sm-3 d-flex align-items-end">
-                <button type="button" class="btn btn-warning">Definir SlideShow</button>
+                <button id="btn_define" type="button" class="btn btn-secondary" disabled>SELECIONADO</button>
               </div>
 
             </div>
@@ -225,14 +227,57 @@
   
   <script>
 
+    var selected_id = {{selecionado}};
+
+    $("#btn_delete").on('click', function() {
+      $("#val_delete_id").val($("#cb_slide_show").val());
+      $("#form-delete-id").submit();
+    });
+
+    $("#btn_define").on('click', function() {
+      $.ajax({
+          type: "POST",
+          url: "wallpaper_new",
+          contentType: "application/json",
+          data: JSON.stringify({'destino':1, 'id':$("#cb_slide_show").val()}),
+          dataType: "json",
+          success: function(data) {
+            if (data) {
+              selected_id = $("#cb_slide_show").val();
+              $("#btn_delete").attr('disabled', '');
+              $("#btn_define").attr('disabled', '');
+              $("#btn_define").text('SELECIONADO');
+              $("#btn_define").removeClass('btn-warning');
+              $("#btn_define").addClass('btn-secondary');                
+            }
+          },
+      });      
+    });
+
     $("#cb_slide_show").on('change', function() {
       $("#row_images_list").empty();
+
+      let id = $(this).val();
+
+      if (selected_id != id) {
+        $("#btn_delete").removeAttr('disabled');
+        $("#btn_define").removeAttr('disabled');
+        $("#btn_define").text('Definir SlideShow');
+        $("#btn_define").removeClass('btn-secondary');
+        $("#btn_define").addClass('btn-warning');        
+      } else {
+        $("#btn_delete").attr('disabled', '');
+        $("#btn_define").attr('disabled', '');
+        $("#btn_define").text('SELECIONADO');
+        $("#btn_define").removeClass('btn-warning');
+        $("#btn_define").addClass('btn-secondary');           
+      }
 
       $.ajax({
           type: "POST",
           url: "wallpaper_new",
           contentType: "application/json",
-          data: JSON.stringify($(this).val()),
+          data: JSON.stringify({'destino':0, 'id':$(this).val()}),
           dataType: "json",
           success: function(data) {
               $("#txt_segundos").val(data['seg']);
@@ -256,7 +301,7 @@
                 }
 
                 item += "</div></div></div></div>";
-                console.log(item);
+
                 $("#row_images_list").append(item);
               }
           },

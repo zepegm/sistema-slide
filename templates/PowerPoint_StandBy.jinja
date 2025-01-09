@@ -1,0 +1,155 @@
+<html lang="pt-BR">
+    <head>
+        <title>SlideShow</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+        <style>
+
+            body {
+                background-color: black;
+                overflow: hidden;
+            }
+
+
+            .slide {
+                background-size: contain;
+                background-repeat: no-repeat;
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                background-size: 100% 100%;
+                top:0%;    
+                left:0%;            
+            }     
+            
+            .first-in {
+                animation-name: fade-in;
+                animation-duration: 4s;                
+            }
+
+            .in {
+                animation-name: fade-in;
+                animation-duration: 3.0s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 3.0s;
+                opacity: 0;
+            }
+
+            .hide {
+                opacity: 0;
+            }
+            
+            .final-out {
+                animation-name: fade-final;
+                animation-duration: 4s;
+                opacity: 0;
+            }
+
+			#fim {
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+			}
+
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            } 
+
+            @keyframes fade-final {
+                0% {
+                    opacity: 0;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            @keyframes notes {
+              0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 0;
+              }
+              50% {
+                opacity: 1;
+                transform: scale(1.5) translate(50%, -50%);
+              }
+              80% {
+                opacity: 0;
+                transform: scale(1.5) translate(100%, -100%);
+              }
+              100% {
+                transform: scale(1.5) translate(100%, -100%);
+                opacity: 0;
+              }
+            }             
+        </style>
+    </head>
+    <body>
+
+    {% for item in fundo %}
+        <div id="sld-{{loop.index - 1}}" class="slide {{item['class']}}" style="background-image: url('/static/images/Wallpaper/{{item['image']}}');"></div>
+    {% endfor %}
+
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script>
+        var socket = io();
+        var id = {{id}};
+        var limite = {{limite}};
+        var segundos = {{segundos}};
+
+        socket.on('refresh', function(result) {
+            location.reload();
+        });
+
+        socket.on('pix', function(result) {
+            window.location.replace("/slide_pix");
+        });
+
+        socket.on('wait_pptx', function(result) {
+            window.location.replace("/wait_pptx");
+        }); 
+
+        socket.on('change_wallpaper', function(result) {
+            location.reload();
+        }); 
+
+        function changeWallpaper() {
+
+            $("#sld-" + id).removeClass('in');
+            $("#sld-" + id).addClass('out');
+
+            if (id == limite) {
+                id = 0;
+            } else {
+                id++;
+            }
+
+            $("#sld-" + id).addClass('in');
+            $("#sld-" + id).removeClass('out');
+            $("#sld-" + id).removeClass('hide');
+
+        }
+
+        if (segundos > 0) {
+            setInterval(changeWallpaper, segundos * 1000);
+        }
+
+    </script>
+
+    </body>    
+</html>
