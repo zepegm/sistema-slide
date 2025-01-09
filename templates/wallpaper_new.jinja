@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Plano de Fundo</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+
+      .mini-box {
+        height: 30vh;
+        font-family: Arial, Helvetica, sans-serif;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+      }
+
+      #txt_filtro {
+        border: solid;
+        border-color: rgb(0, 0, 0, 0.3);
+      }
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+      }      
+
+      .form-text {
+        border: solid 1px #E3E7EA;
+        /*padding: 0;
+        margin-top: 0;
+        padding-left: 0.5vw;*/
+      }
+
+      .form-text-2 {
+        border: solid 1px #E3E7EA;
+        padding: 0;
+        margin-top: 0;
+        padding-left: 0.5vw;
+      }
+
+      .form-text-2:focus,
+      .form-text:focus {
+        display: block;
+        border: solid 1px #E3E7EA;
+        color: black;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+      }      
+
+      .delete-file {
+        cursor: pointer;
+      }
+
+    </style>
+  </head>
+
+  <body>
+
+
+    <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmar Ação</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Você tem certeza que deseja excluir o arquivo <b id="lb_file_name"></b>?
+          </div>
+          <div class="modal-footer">
+            <form action="{{url_for('wallpaper_new')}}" method="POST">
+              <input type="hidden" name="nome_arquivo_del" id="nome_arquivo_del">
+              <button type="submit" class="btn btn-danger">Sim</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>      
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+    
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <section class="container">
+
+          {{status}}
+
+          
+
+            <div class="row"> 
+              
+              <div class="col-sm-12">
+                <form method="POST" action="{{url_for('wallpaper_new')}}" enctype="multipart/form-data">
+                <h2 class="fw-bold text-center">Alterar Plano de Fundo Padrão</h2>
+              </div>
+
+              <div class="col-sm-4 mb-3 d-flex align-items-start">
+                <input class="form-control form-control-lg form-text" type="file" id="file_upload" name="upload" accept="image/png, image/jpeg" required />
+              </div>
+
+              <div class="col-sm-3 mb-3 d-flex align-items-start">
+                <button class="btn btn-primary">Enviar Arquivo para Pasta</button>
+                </form>
+              </div>
+              
+              <div class="col-sm-5">
+                <form method="POST" action="{{url_for('wallpaper_new')}}">
+                <div class="input-group mb-3">
+                  <input name="txt_new_slide_show" type="text" class="form-control form-text-2" placeholder="Digite o Título do Novo Esquema de SlideShow" required>
+                  <button type="submit" class="btn btn-success"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                </form>
+              </div>              
+
+            </div>
+          
+
+          <div class="row">
+
+          </div>
+
+          <div class="row">
+            <div class="col-sm-12 mb-3">
+              <hr>
+            </div>
+          </div>
+
+          <!-- Lista dos segundos -->
+          <form id="form_alterar" action="{{url_for('wallpaper_new')}}" method="POST">
+            <div class="row mb-3">
+              <div class="col-sm-2">
+                  <label for="txt_segundos">Segundos:</label>
+                  <input id="txt_segundos" name="txt_segundos" type="number" class="form-control form-text-2" value="{{segundos}}" placeholder="0 para desabilitar" required>
+                  <input type="hidden" name="arquivos" id="val_arquivos">
+                  <input type="hidden" name="val_id_update" id="val_id_update">
+              </div>
+              <div class="col-sm-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Salvar Config.</button>
+              </div>
+
+              <div class="col-sm-4 d-flex align-items-end">
+                <div class="input-group">
+                  <select id="cb_slide_show" class="form-select">
+                    {% for item in lista_wallpapers %}
+                    <option value="{{item['id']}}" {{item['selected']}}>{{item['descricao']}}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-danger"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+              <div class="col-sm-3 d-flex align-items-end">
+                <button type="button" class="btn btn-warning">Definir SlideShow</button>
+              </div>
+
+            </div>
+          </form>
+
+            <!-- Listar as imagens no formato horizontal -->
+            <div id="row_images_list" class="row">
+
+              {% for item in lista %}
+              <div class="col-sm-4 mb-3">
+                <div class="big-box card {{item['class']}}">
+                  <div class="mini-box" style='background-image: url("/static/images/wallpaper/{{item['nome']}}");'></div>
+                  <div class="card-body">
+                    <div class="card-text text-center">
+                      <p class="fw-bold">{{item['nome']}}</p>
+                      <input class="form-check-input" type="checkbox" value="{{item['nome']}}" id="item-{{loop.index}}" {{item['check']}}>
+                      <label class="form-check-label" for="item-{{loop.index}}">
+                        Selecionar Wallpaper...
+                      </label>
+                      {% if item['class'] != 'box-index' %}
+                      <p><i class="fa-solid fa-trash delete-file" data-file="{{item['nome']}}"></i>&nbsp;Deletar Wallpaper</p>
+                      {% endif %}
+                    </div>
+                  </div>                  
+                </div>             
+              </div>
+              {% endfor %}
+            </div>
+
+            </div>
+        </section>
+      </div>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  
+  <script>
+
+    $("#cb_slide_show").on('change', function() {
+      $("#row_images_list").empty();
+
+      $.ajax({
+          type: "POST",
+          url: "wallpaper_new",
+          contentType: "application/json",
+          data: JSON.stringify($(this).val()),
+          dataType: "json",
+          success: function(data) {
+              $("#txt_segundos").val(data['seg']);
+              for (let i = 0; i < data['lista'].length; i++) {
+                let item = '<div class="col-sm-4 mb-3">';
+
+                item += `<div class="big-box card ${data['lista'][i]['class']}">`;
+
+                item += `<div class="mini-box" style='background-image: url("/static/images/wallpaper/${data['lista'][i]['nome']}");'></div>`;
+
+                item += '<div class="card-body"><div class="card-text text-center">';
+
+                item += `<p class="fw-bold">${data['lista'][i]['nome']}</p>`;
+
+                item += `<input class="form-check-input" type="checkbox" value="${data['lista'][i]['nome']}" id="item-${i}" ${data['lista'][i]['check']}>`;
+
+                item += `<label class="form-check-label" for="item-${i}">&nbsp;Selecionar Wallpaper...</label>`
+
+                if (data['lista'][i]['class'] != 'box-index') {
+                  item += `<p><i class="fa-solid fa-trash delete-file" data-file="${data['lista'][i]['nome']}"></i>&nbsp;Deletar Wallpaper</p>`
+                }
+
+                item += "</div></div></div></div>";
+                console.log(item);
+                $("#row_images_list").append(item);
+              }
+          },
+      });
+
+    });
+
+    $(".delete-file").on('click', function() {
+      $("#lb_file_name").text('"' + $(this).attr('data-file') + '"');
+      $("#nome_arquivo_del").val($(this).attr('data-file'));
+      $("#modalConfirm").modal('show');
+    });
+
+    $('#txt_filtro').on('keyup', function (e) {
+      var value = $(this).val().toLowerCase();
+      $("#lista_geral a").toggleClass('toggled', true);
+      $("#lista_geral a").filter(function() {
+        if ($(this).text().toLowerCase().indexOf(value) > -1) {
+          $(this).removeClass('toggled');
+        }
+        //console.log($(this).find("label").find("input").data("pasta"))
+      });
+    });
+
+    $("#form_alterar").on('submit', function() {
+
+      var lista = "[";
+
+      $(".form-check-input").each(function(index, element) {
+        if (element.checked) {
+          lista += "'" + element.value + "', ";
+        }
+      });
+
+      lista = lista.slice(0, -2) + "]";
+
+      $("#val_arquivos").val(lista);
+      $("#val_id_update").val($("#cb_slide_show").val());
+    });
+
+  </script>
+      
+  </body>
+</html>
