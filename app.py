@@ -2966,6 +2966,46 @@ def alterar_fundo():
     return 'yes'
 
 
+@app.route('/open_window_slide', methods=['GET', 'POST'])
+def open_window_slide():
+
+    if request.method == 'POST': # significa que precisa mandar abrir a janela
+
+        path = os.path.dirname(os.path.realpath(__file__)) + "\\Desktop_Version.py"
+
+        # Verifica se o processo está em execução usando o comando `pgrep`.
+        proc = subprocess.run(['pgrep', '-f', 'Desktop_Version.py'], capture_output=True, text=True)
+
+        if proc.stdout:
+            # O `pgrep` retorna os IDs do processo em execução.
+            pid = int(proc.stdout.strip())
+            print(f"Encerrando o processo existente de PID {pid}")
+
+            # Encerra o processo existente.
+            os.kill(pid, signal.SIGTERM)
+        else: 
+            print("Nenhum processo existente foi encontrado.")        
+
+        try:
+            # Call the form_interaction.py script with parameters
+            result = subprocess.run(
+                ['python', path],
+                capture_output=True,
+                text=True
+            )    
+            
+            # Check if the script ran successfully
+            if result.returncode == 0:
+                return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip(), "result":True}), 200
+            else:
+                print(result.stderr)
+                return jsonify({"message": "Script execution failed.", "error": result.stderr, "result":False}), 500
+        except Exception as e:
+            return jsonify({"message": "An error occurred.", "error": str(e), "result":False}), 500
+
+
+
+
 @app.route('/slide_pix', methods=['GET', 'POST'])
 def slide_pix():
 

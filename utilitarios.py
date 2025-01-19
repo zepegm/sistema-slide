@@ -50,7 +50,10 @@ def pegarLicoes(data):
     inicio = 1
     fim = 3
 
-    if mes > 3 and mes < 7:
+    if mes < 4:
+        inicio = 1
+        fim = 3
+    elif mes > 3 and mes < 7:
         inicio = 3
         fim = 6
     elif mes > 6 and mes < 10:
