@@ -37,6 +37,7 @@ index = 0
 pause_index = 0
 roteiro = []
 temp_pdf = None
+window_browser = None
 
 musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
 harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\HARPA' + '\\'
@@ -2972,35 +2973,21 @@ def open_window_slide():
     if request.method == 'POST': # significa que precisa mandar abrir a janela
 
         path = os.path.dirname(os.path.realpath(__file__)) + "\\Desktop_Version.py"
+        global window_browser
 
-        # Verifica se o processo está em execução usando o comando `pgrep`.
-        proc = subprocess.run(['pgrep', '-f', 'Desktop_Version.py'], capture_output=True, text=True)
-
-        if proc.stdout:
-            # O `pgrep` retorna os IDs do processo em execução.
-            pid = int(proc.stdout.strip())
-            print(f"Encerrando o processo existente de PID {pid}")
-
-            # Encerra o processo existente.
-            os.kill(pid, signal.SIGTERM)
-        else: 
-            print("Nenhum processo existente foi encontrado.")        
+        if window_browser is not None:
+            window_browser.kill()
 
         try:
             # Call the form_interaction.py script with parameters
-            result = subprocess.run(
+            window_browser = subprocess.Popen(
                 ['python', path],
-                capture_output=True,
-                text=True
-            )    
-            
-            # Check if the script ran successfully
-            if result.returncode == 0:
-                return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip(), "result":True}), 200
-            else:
-                print(result.stderr)
-                return jsonify({"message": "Script execution failed.", "error": result.stderr, "result":False}), 500
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
         except Exception as e:
+            print("An exception occurred:", e) # An exception occurred: division by zero
             return jsonify({"message": "An error occurred.", "error": str(e), "result":False}), 500
 
 
@@ -3448,8 +3435,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run(debug=True, use_reloader=False, port=80)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run(debug=True, use_reloader=True, port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

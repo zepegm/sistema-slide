@@ -6,7 +6,7 @@
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
           <li class="nav-item">
-            <a class="nav-link" href="../slide"><i class="fa-solid fa-display">&nbsp;</i>Abrir Slide</a>
+            <a class="nav-link" href="javascript:open_window_slide();"><i class="fa-solid fa-display">&nbsp;</i>Abrir Slide</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="../subtitle"><i class="fa-solid fa-closed-captioning">&nbsp;</i>Abrir Legenda</a>
@@ -20,6 +20,16 @@
   </nav>
 
   <script>
+
+    function open_window_slide() {
+      const xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+        //document.getElementById("demo").innerHTML = this.responseText;
+        console.log(this.responseText);
+        }
+      xhttp.open("POST", "/open_window_slide", true);
+      xhttp.send();
+    }
 
     function call_func() {
       const xhttp = new XMLHttpRequest();
