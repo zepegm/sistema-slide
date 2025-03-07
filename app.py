@@ -2213,7 +2213,10 @@ def enviarDadosNovoHino():
                 aux = texto + '<br>'
             elif texto[0:18] == '<span class="red">':
                 blocks.append({'type':'paragraph', 'data':{'text':aux}})
-                aux = texto + '<br>'
+                if texto[18:19].isdigit():
+                    aux = texto.replace('<span class="red">', '<span class="cdx-num"><b>') + '<br>'
+                else:
+                    aux = texto + '<br>'
 
             else:
                 aux += texto + '<br>'

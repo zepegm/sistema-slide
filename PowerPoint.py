@@ -2,6 +2,14 @@ from pptx import Presentation
 import win32com.client
 import pythoncom
 import os
+import re
+
+def substituir_quebra_linha(texto):
+    # Expressão regular para encontrar \u000b
+    padrao = re.compile(r'\u000b([A-Z]?)')
+    # Substituir \u000b por <br> se seguido por uma letra maiúscula, ou por um espaço caso contrário
+    texto_modificado = padrao.sub(lambda m: '<br>' + m.group(1) if m.group(1) else ' ', texto)
+    return texto_modificado
 
 def getListText(dir):
     file = open(f'{dir}', 'rb')
@@ -118,8 +126,6 @@ def getListTextHarpa(dir):
         if slide_pos == 1:
             continue
 
-        key_c = False
-
         text_slide = "<b>"
         plain_text = ""
         
@@ -128,35 +134,28 @@ def getListTextHarpa(dir):
                 continue
   
             for paragraph in shape.text_frame.paragraphs:
-                for run in paragraph.runs:
-                    try:
-                        if str(run.font.color.rgb) == '0070C0':
-                            text_slide += '<span class="cdx-num">' + run.text.lstrip() + ' </span>'
-                        elif str(run.font.color.rgb) == 'FF0000':
-                            if run.text[0:1].isdigit():
-                                text_slide += '<span class="red">' + run.text.lstrip() + ' </span>'
-                            else:
-                                if not key_c:
-                                    text_slide += '<span class="red">' + run.text.lstrip()
-                                    key_c = True
-                                else:
-                                    text_slide += run.text.lstrip()
-                        else:
-                            text_slide += run.text.lstrip()
-                    except:
-                        text_slide += run.text.lstrip()
 
-                    plain_text += run.text
+                try:
+                    if str(paragraph.runs[0].font.color.rgb) == '0070C0':
+                        text_slide += '<span class="cdx-num">' + paragraph.runs[0].text + '</span>' + paragraph.text.replace(paragraph.runs[0].text, ' ', 1).replace('\u000b', '<br>').rstrip()
+                    elif str(paragraph.runs[0].font.color.rgb) == 'FF0000':
+                        if paragraph.text[0:1].isdigit():
+                            text_slide += '<span class="red">' + paragraph.runs[0].text + '</span>' + paragraph.text.replace(paragraph.runs[0].text, ' ', 1).replace('\u000b', '<br>').rstrip()
+                        else:
+                            text_slide += '<span class="red">' + paragraph.text.replace('\u000b', '<br>').lstrip() + '</span>'
+                    else:
+                        text_slide += paragraph.text.replace('\u000b', '<br>').lstrip()
+                except:
+                    text_slide += paragraph.text.replace('\u000b', '<br>').lstrip()
+
+                plain_text += substituir_quebra_linha(paragraph.text)
 
                 if (text_slide != '<b>'):
                     text_slide += "<br>"
                     plain_text += "<br>"
-        
-        if key_c:
-            text_slide += '</span>'    
-            key_c = False
 
         text_slide += '</b>'
+
         text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text, 'anotacao':anotacao})
     
     file.close()
