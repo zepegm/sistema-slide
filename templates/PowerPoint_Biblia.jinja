@@ -6,7 +6,8 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">     
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">    
+    <script src="{{ url_for('static', filename='Hyphenopoly-master/Hyphenopoly.js') }}"></script>    
 
         <style>
             body {
@@ -33,9 +34,9 @@
                 font-size: 7vmax;
                 text-align: justify;
                 line-height: 1.31;
-                -webkit-hyphens: auto;
+                /*-webkit-hyphens: auto;
                 -ms-hyphens: auto;
-                hyphens: auto;
+                hyphens: auto;*/
                 color: {{config['letra']}};
             }
 
@@ -122,6 +123,17 @@
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>    
     <script>
+
+        Hyphenopoly.config({
+            require: {
+                "pt": "auto"
+            },
+            setup: {
+                selectors: {
+                    "p": {}
+                }
+            }
+        });
 
         var posicao = 0;
 
@@ -236,6 +248,8 @@
             limite_scroll = document.documentElement.scrollHeight - window.innerHeight;
             posicao = 0;
             $(window).scrollTop(posicao);
+
+            //Hyphenator.run();
 
             //key = counter;
 
