@@ -2198,8 +2198,9 @@ def enviarDadosNovoHino():
         blocks_2 = []
         texto = ''
         aux = ''
+
         for item in info['slides']:
-            texto = item['text-slide'].replace('<b>', '').replace('</b>', '').replace('<br>', ' ') # retirando o negrito e os espaços
+            texto = item['text-slide'].replace('<b>', '').replace('</b>', '').replace('<br>', ' ').replace('style="font-weight: bold;"', '') # retirando o negrito e os espaços
             
 
             # inserindo negrito na numeração
@@ -2214,14 +2215,20 @@ def enviarDadosNovoHino():
             elif texto[0:18] == '<span class="red">':
                 blocks.append({'type':'paragraph', 'data':{'text':aux}})
                 if texto[18:19].isdigit():
-                    aux = texto.replace('<span class="red">', '<span class="cdx-num"><b>') + '<br>'
+                    aux = '<b>' + texto.replace('<span class="red">', '<span class="cdx-num">')
+                    pos = aux.find('</span>')
+
+                    aux = aux[:pos] + '</b>' + aux[pos:]
+                    aux += '<br>'                    
                 else:
-                    aux = texto + '<br>'
+                    aux = '<i>' + texto + '</i><br>'
 
             else:
                 aux += texto + '<br>'
 
-        blocks.append({'type':'paragraph', 'data':{'text':aux}})    
+        blocks.append({'type':'paragraph', 'data':{'text':aux}})
+
+        print(blocks)
 
 
         destino = request.form.getlist('destino')[0]
