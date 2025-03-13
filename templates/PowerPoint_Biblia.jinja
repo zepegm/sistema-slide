@@ -7,7 +7,6 @@
     <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">    
-    <script src="{{ url_for('static', filename='Hyphenopoly-master/Hyphenopoly.js') }}"></script>    
 
         <style>
             body {
@@ -34,10 +33,13 @@
                 font-size: 7vmax;
                 text-align: justify;
                 line-height: 1.31;
-                /*-webkit-hyphens: auto;
+                -webkit-hyphens: auto;
                 -ms-hyphens: auto;
-                hyphens: auto;*/
+                hyphens: auto;
                 color: {{config['letra']}};
+                white-space: normal;
+                word-wrap: break-word;
+                overflow-wrap: break-word;                
             }
 
             #arrow_pointer {
@@ -115,25 +117,28 @@
     </head>
     <body>
         <div id="head">{{head['nome']}} {{head['cap']}}:<span id="lb_versiculo">{{versiculo}}</span> - {{head['versao']}}</div>
-        <div class="slide" id="slide" lang="pt-br">{{lista[index]|safe}}<i class="fa-solid fa-feather-pointed"></i></div>
+        <div class="slide" id="slide" lang="pt-BR">{{lista[index]|safe}}<i class="fa-solid fa-feather-pointed"></i></div>
 
         <div id="arrow_pointer"><i class="fa-solid fa-circle-chevron-up"></i></div>
 
     <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>    
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hypher@0.2.5/hypher.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hyphenation-patterns@0.2.2/pt.js"></script>    
+
     <script>
 
-        Hyphenopoly.config({
-            require: {
-                "pt": "auto"
-            },
-            setup: {
-                selectors: {
-                    "p": {}
-                }
+        // Fallback para navegadores que não suportam hyphens
+        document.querySelectorAll('#slide').forEach(el => {
+            if (window.getComputedStyle(el).hyphens !== 'auto') {
+                console.warn('O navegador não suporta hifenização automática.');
+                //el.style.textAlign = 'center';
+                const hyphenator = new Hypher(HyphenationPatternsPt);
+                const element = document.querySelector('#slide');
+                element.innerHTML = hyphenator.hyphenateText(element.innerText);                
             }
-        });
+        });   
 
         var posicao = 0;
 
@@ -248,8 +253,6 @@
             limite_scroll = document.documentElement.scrollHeight - window.innerHeight;
             posicao = 0;
             $(window).scrollTop(posicao);
-
-            //Hyphenator.run();
 
             //key = counter;
 

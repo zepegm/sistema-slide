@@ -2996,6 +2996,8 @@ def open_window_slide():
                 stderr=subprocess.PIPE
             )
 
+            return jsonify({"message": "Janela aberta com sucesso!", "result":True})
+
         except Exception as e:
             print("An exception occurred:", e) # An exception occurred: division by zero
             return jsonify({"message": "An error occurred.", "error": str(e), "result":False}), 500
