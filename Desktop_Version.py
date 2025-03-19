@@ -13,11 +13,11 @@ class BrowserWindow(QMainWindow):
         self.browser.setUrl(QUrl(url))  # Converte a string em um QUrl  
 
         # Abrir a ferramenta de desenvolvedor
-        self.dev_tools = QWebEngineView()
-        self.dev_tools_page = QWebEnginePage(self)
-        self.dev_tools.setPage(self.dev_tools_page)
-        self.browser.page().setDevToolsPage(self.dev_tools_page)
-        self.dev_tools.show()          
+        #self.dev_tools = QWebEngineView()
+        #self.dev_tools_page = QWebEnginePage(self)
+        #self.dev_tools.setPage(self.dev_tools_page)
+        #self.browser.page().setDevToolsPage(self.dev_tools_page)
+        #self.dev_tools.show()
 
         central_widget = QWidget()
         layout = QVBoxLayout()
@@ -46,8 +46,8 @@ def main():
 
     window = BrowserWindow(url)
     window.setGeometry(second_screen_geometry)  # Define a posição e tamanho baseados no segundo monitor
-    #window.showFullScreen()  # Abre em tela cheia
-    window.show()  # Abre a janela
+    window.showFullScreen()  # Abre em tela cheia
+    #window.show()  # Abre a janela
 
     sys.exit(app.exec_())
 
