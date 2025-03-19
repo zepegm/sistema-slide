@@ -36,7 +36,7 @@
                 -webkit-hyphens: auto;
                 -ms-hyphens: auto;
                 hyphens: auto;
-                color: {{config['letra']}};
+                color: {{config['fundo']}};
                 white-space: normal;
                 word-wrap: break-word;
                 overflow-wrap: break-word;                
@@ -124,19 +124,24 @@
     <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/hypher/0.2.5/hypher.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/bramstein/hyphenation-patterns@master/patterns/pt.js"></script>
+    <script src="{{ url_for('static', filename='hyphen/hyphen.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='hyphen/pt.js') }}"></script>
 
     <script>
+
+        var key_hyphen_manual = false;
 
         // Fallback para navegadores que não suportam hyphens
         document.querySelectorAll('#slide').forEach(el => {
             if (window.getComputedStyle(el).hyphens !== 'auto') {
                 console.warn('O navegador não suporta hifenização automática.');
-                //el.style.textAlign = 'center';
-                const hyphenator = new Hypher(HyphenationPatternsPt);
-                const element = document.querySelector('#slide');
-                element.innerHTML = hyphenator.hyphenateText(element.innerText);                
+                var hyphenate = createHyphenator(hyphenationPatternsPt);
+                const texto = document.getElementById('slide');
+                texto.innerHTML = hyphenate(texto.innerHTML);
+                el.style.color = "{{config['letra']}}";
+                key_hyphen_manual = true;
+            } else {
+                el.style.color = "{{config['letra']}}";
             }
         });   
 
@@ -254,6 +259,11 @@
             posicao = 0;
             $(window).scrollTop(posicao);
 
+            if (key_hyphen_manual) {
+                var hyphenate = createHyphenator(hyphenationPatternsPt);
+                const texto = document.getElementById('slide');
+                texto.innerHTML = hyphenate(texto.innerHTML);
+            }
             //key = counter;
 
         }
