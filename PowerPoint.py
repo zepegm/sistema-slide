@@ -40,23 +40,37 @@ def getListText(dir):
 
         key_b = False
         key_u = False
+        key_m = False
 
 
         for shape in slide.shapes:
             if not shape.has_text_frame:
                 continue
             cont = 0
+            
             for paragraph in shape.text_frame.paragraphs:
                 for run in paragraph.runs:
 
-                    if (not key_b and run.font.bold):
+                    try:
+                        if not key_m and str(run.font.color.theme_color) == 'ACCENT_4 (8)':
+                            text_slide +='<mark class="cdx-marker">'
+                            key_m = True
+                        elif key_m and str(run.font.color.theme_color) != 'ACCENT_4 (8)': 
+                            text_slide += "</mark>"
+                            key_m = False
+                    except:
+                        if key_m:
+                            text_slide += "</mark>"
+                            key_m = False
+
+                    if (not key_b and run.font.bold and not key_m):
                         text_slide +="<b>"
                         key_b = True
                     elif (key_b and not run.font.bold):
                         text_slide += "</b>"
                         key_b = False
 
-                    if (not key_u and run.font.underline):
+                    if (not key_u and run.font.underline and not key_m):
                         text_slide +='<u class="cdx-underline">'
                         key_u = True
                     elif (key_u and not run.font.underline):
@@ -64,7 +78,7 @@ def getListText(dir):
                         key_u = False
 
                     if cont > 0:
-                        text_slide += " " + run.text.strip()
+                        text_slide += "<br>" + run.text.strip()
                         plain_text += " " + run.text.strip()
                     else:
                         text_slide += run.text.strip()
@@ -83,7 +97,7 @@ def getListText(dir):
         text_slide = text_slide.replace('  ', ' ')
         plain_text = plain_text.replace('  ', ' ')
 
-        text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text, 'anotacao':anotacao})
+        text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide.replace(" </mark> ", "</mark>"), 'subtitle':plain_text, 'anotacao':anotacao})
 
 
     # antes de retornar o texto extrair a capa do slide e converter em jpg
