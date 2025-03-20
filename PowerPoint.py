@@ -86,7 +86,6 @@ def getListText(dir):
                         cont += 1
 
                 if (text_slide != '<b>'):
-                    text_slide += "<br>"
                     plain_text += "<br>"
 
         if key_b:
