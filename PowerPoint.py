@@ -49,6 +49,9 @@ def getListText(dir):
             cont = 0
             
             for paragraph in shape.text_frame.paragraphs:
+
+                total_runs = len(paragraph.runs)
+
                 for run in paragraph.runs:
 
                     try:
@@ -85,18 +88,23 @@ def getListText(dir):
                         plain_text += run.text.strip()
                         cont += 1
 
-                if (text_slide != '<b>'):
-                    plain_text += "<br>"
+                if (text_slide != '<b>' and run.text != paragraph.runs[total_runs -1].text):
+                    text_slide += "<br>"
+
+                plain_text += "<br>"
+
 
         if key_b:
             text_slide += "</b>"
         if key_u:
             text_slide += "</u>"
 
-        text_slide = text_slide.replace('  ', ' ')
+        text_slide = text_slide.replace('  ', ' ').replace(" </mark> ", "</mark>")
         plain_text = plain_text.replace('  ', ' ')
 
-        text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide.replace(" </mark> ", "</mark>"), 'subtitle':plain_text, 'anotacao':anotacao})
+        print(text_slide)
+
+        text_runs.append({'pos':slide_pos - 1, 'text-slide':text_slide, 'subtitle':plain_text, 'anotacao':anotacao})
 
 
     # antes de retornar o texto extrair a capa do slide e converter em jpg
