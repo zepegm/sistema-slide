@@ -2263,7 +2263,7 @@ def enviarDadosNovaMusica():
         blocks = []
         blocks_2 = []
         for item in info['slides']:
-            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide']}})
+            blocks.append({'type':'paragraph', 'data':{'text':item['text-slide'].replace('<br>', ' ')}})
 
         destino = request.form.getlist('destino')[0]
         if destino != '0': # significa que é edição e não acréscimo
