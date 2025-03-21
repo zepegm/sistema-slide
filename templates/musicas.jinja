@@ -473,11 +473,13 @@
         dataType: "json",
         success: function(data) {
 
-          let pdfWindow = window.open("")
-          pdfWindow.document.write(
-            "<iframe width='100%' height='100%' src='data:application/pdf;base64, " +
-            encodeURI(data['output']) + "'></iframe>"
-          )
+          fetch(data['output'], { method: 'GET' })
+              .then(response => response.blob()) // Converte a resposta para Blob
+              .then(blob => {
+                  const pdfUrl = window.URL.createObjectURL(blob);
+                  window.location.href = `/view-pdf?pdf=${encodeURIComponent(pdfUrl)}`;
+              })
+              .catch(error => console.error('Erro ao gerar PDF:', error));
 
           $("#loading").attr('hidden', '');
           $("#btn_gerar_pdf").removeAttr('disabled');

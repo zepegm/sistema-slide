@@ -15,7 +15,9 @@ def run(playwright, source):
     
     # gerar PDF
     if info['tipo'] == 'hinario':
-        pdf_bytes = page.pdf(format='A5', print_background=True, scale=1.95, margin={'top':'18px'})
+        #pdf_bytes = page.pdf(format='A5', print_background=True, scale=1.95, margin={'top':'18px'})
+        page.pdf(path='static/docs/output_hinario.pdf', format="A5", print_background=True, scale=1.95, margin={'top':'18px'})
+        return 'static/docs/output_hinario.pdf'
     elif info['tipo'] == 'slide':
         page.set_viewport_size({"width": 1280, "height": 720})
         pdf_bytes = page.pdf(print_background=True, width="1280px", height="720px")
