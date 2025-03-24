@@ -20,7 +20,8 @@ def run(playwright, source):
         return 'static/docs/output_hinario.pdf'
     elif info['tipo'] == 'slide':
         page.set_viewport_size({"width": 1280, "height": 720})
-        pdf_bytes = page.pdf(print_background=True, width="1280px", height="720px")
+        page.pdf(path='static/docs/output_slide.pdf', print_background=True, width="1280px", height="720px")
+        return 'static/docs/output_slide.pdf'
     elif info['tipo'] == 'capa':
         page.set_viewport_size({"width": 1366, "height": 768})
         pdf_bytes = page.screenshot(full_page=True)

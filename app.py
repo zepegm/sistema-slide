@@ -2705,7 +2705,8 @@ def gerar_pdf_slide():
         
         # Check if the script ran successfully
         if result.returncode == 0:
-            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+            #return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+            return send_file(result.stdout.strip(), as_attachment=True, mimetype="application/pdf"), 200
         else:
             return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
     except Exception as e:
@@ -2728,7 +2729,9 @@ def gerar_pdf():
         
         # Check if the script ran successfully
         if result.returncode == 0:
-            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+            #return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+            return send_file(result.stdout.strip(), as_attachment=True, mimetype="application/pdf")
+
         else:
             return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
     except Exception as e:
@@ -2751,7 +2754,7 @@ def gerar_pdf_harpa():
         
         # Check if the script ran successfully
         if result.returncode == 0:
-            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
+            return send_file(result.stdout.strip(), as_attachment=True, mimetype="application/pdf"), 200
         else:
             return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
     except Exception as e:

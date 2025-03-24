@@ -465,7 +465,44 @@
     $("#loading").removeAttr('hidden');
     $("#btn_gerar_pdf").attr('disabled', '');
 
-    $.ajax({
+  $.ajax({
+      type: "POST",
+      url: "gerar_pdf",
+      contentType: "application/json",
+      data: JSON.stringify(lista),
+      xhrFields: {
+          responseType: 'blob'  // Define a resposta como um arquivo binário (PDF)
+      },
+      success: function(response) {
+          // Criar um objeto Blob a partir da resposta
+          var blob = new Blob([response], { type: "application/pdf" });
+
+          /* Criar um link temporário para download
+          var link = document.createElement("a");
+          link.href = window.URL.createObjectURL(blob);
+          link.download = "hinario.pdf"; // Nome do arquivo para download
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);*/
+
+          // Criar uma URL temporária para o Blob
+          var blobUrl = URL.createObjectURL(blob);
+
+          // Abrir o PDF em uma nova aba
+          window.open(blobUrl, "_blank");
+
+
+          $("#loading").attr('hidden', '');
+          $("#btn_gerar_pdf").removeAttr('disabled');          
+      },
+      error: function(xhr, status, error) {
+          $("#loading").attr('hidden', '');
+          $("#btn_gerar_pdf").removeAttr('disabled');
+          console.error("Erro ao baixar o PDF:", error);
+      }
+  });    
+
+    /*$.ajax({
         type: "POST",
         url: "gerar_pdf",
         contentType: "application/json",
@@ -473,18 +510,13 @@
         dataType: "json",
         success: function(data) {
 
-          fetch(data['output'], { method: 'GET' })
-              .then(response => response.blob()) // Converte a resposta para Blob
-              .then(blob => {
-                  const pdfUrl = window.URL.createObjectURL(blob);
-                  window.location.href = `/view-pdf?pdf=${encodeURIComponent(pdfUrl)}`;
-              })
-              .catch(error => console.error('Erro ao gerar PDF:', error));
+          console.log('teste')
+          console.log(data);
 
           $("#loading").attr('hidden', '');
           $("#btn_gerar_pdf").removeAttr('disabled');
         },
-    });
+    });*/
 
   });
 
@@ -554,17 +586,25 @@
         url: "gerar_pdf_slide",
         contentType: "application/json",
         data: JSON.stringify(info),
-        dataType: "json",
-        success: function(data) {
-          let pdfWindow = window.open("")
-          pdfWindow.document.write(
-            "<iframe width='100%' height='100%' src='data:application/pdf;base64, " +
-            encodeURI(data['output']) + "'></iframe>"
-          )
+        xhrFields: {
+            responseType: 'blob'  // Recebe o PDF como um arquivo binário
+        },
+        success: function(response) {
+          // Criar um objeto Blob a partir da resposta
+          var blob = new Blob([response], { type: "application/pdf" });
+
+          // Criar uma URL temporária para o Blob
+          var blobUrl = URL.createObjectURL(blob);
+
+          // Abrir o PDF em uma nova aba
+          window.open(blobUrl, "_blank");
 
           $(".btn_exportar_slide").removeAttr('disabled');
           $(".btn_exportar_slide").html('Exportar Slide como PDF');
         },
+        error: function(xhr, status, error) {
+            console.error("Erro ao carregar o PDF:", error);
+        }        
     });
 
   });
