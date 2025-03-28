@@ -15,8 +15,14 @@
                 bottom: 0;
                 left: 1vw;
                 animation-name: fade-in;
-                animation-duration: 0.5s;
+                animation-duration: 1s;
+                opacity: 1;
+                transition: opacity 0.25s ease-in-out;
             }
+
+            .hidden {
+                opacity: 0;
+            }            
             
             .head {
                 text-align: center;
@@ -42,6 +48,7 @@
                 left: 0; 
                 /*background: rgb(0, 0, 0, 0.8);*/
                 background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.14) 100%);
+                transition: opacity 0.25s ease-in-out;                
 
             }
 
@@ -81,7 +88,7 @@
                 }                
             }
         </style>
-        <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+        <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
         <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     </head>
@@ -94,23 +101,26 @@
 
             {% if legenda[index] == '' %}
                 <div class="retangulo" style="height:0vh"></div>
-                <div class="text" style="height:0vh"></div>
+                <div id="text" class="text" style="height:0vh"></div>
             {% else %}
                 <div class="retangulo" style="height:{{tamanho|safe}}vh"></div>
-                <div class="text" style="height:{{tamanho|safe}}vh">{{ legenda[index]|safe }}</div>
+                <div id="text" class="text" style="height:{{tamanho|safe}}vh">{{ legenda[index]|safe }}</div>
             {% endif %}
         
         {% else %}
             <div class="retangulo" style="height:0vh"></div>
-            <div class="text" style="height:0vh"></div>
+            <div id="text" class="text" style="height:0vh"></div>
         {% endif %}
 
         <script>
             var legenda = {{legenda}};
+            const textElement = document.getElementById("text");
+            const retanguloElement = document.querySelector(".retangulo");
+            const headElement = document.querySelector(".head");
 
             if ({{index}} < legenda.length) {
                 try {
-                    textFit($('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
+                    textFit(document.querySelectorAll('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
                 } catch (error) {
                     console.log(error);
                 }
@@ -122,31 +132,51 @@
             socket.on('update', function(index) {
                 
                 if (index < legenda.length) {
-                    $('.text').html(legenda[index]);
 
-                    if ($('.text').text() == '') {
-                        tamanho = 0;
-                    } else if ($('.text').text().length < 100) {
+                    if (legenda[index] == '') {
+                        textElement.classList.add("hidden");
+                        retanguloElement.classList.add("hidden");
+                        return;
+                    } else if (legenda[index].length < 199) {
                         tamanho = 20;
-                    } else {
+                    } else if (legenda[index].length < 499) {
                         tamanho = 30;
+                    } else {
+                        tamanho = 60;
                     }
 
-                    $('.text').attr('style', "height:" + tamanho + "vh");
-                    $('.retangulo').attr('style', "height:" + tamanho + "vh");
-                    $('.head').attr('style', "bottom:" + tamanho + "vh");
-                    $("#txt_versiculo").text(index + 1);
+                    // Adiciona a classe para iniciar o fade-out
+                    textElement.classList.add("hidden");
 
-                    if (tamanho > 0) {
-                        textFit($('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
-                    }
+                    setTimeout(() => {
+                        // Troca o texto após o fade-out
+                        textElement.innerHTML = legenda[index];
 
-                    var el = $('.text');
-                    el.before( el.clone(true) ).remove();      
+                        // Ajusta a altura do elemento de texto
+                        textElement.style.height = tamanho + "vh";
+                        retanguloElement.style.height = tamanho + "vh";
+
+                        if (tamanho > 0) {
+                            textFit(textElement, {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
+                        }
+
+                        // Remove a classe para iniciar o fade-in
+                        textElement.classList.remove("hidden");
+                        retanguloElement.classList.remove("hidden");
+
+                        
+                        if (headElement) {
+                            headElement.style.bottom = tamanho + "vh";
+                        }
+
+                        document.getElementById("txt_versiculo").textContent = index + 1;
+                    }, 250); // O tempo deve ser igual ao da transição CSS                    
+
                 } else {
-                    $('.text').empty();
-                    $('.text').attr('style', "height:0vh");
-                    $('.retangulo').attr('style', "height:0vh");                    
+                    textElement.classList.add("hidden");
+                    retanguloElement.classList.add("hidden");
+                    //$('.text').attr('style', "height:0vh");
+                    //$('.retangulo').attr('style', "height:0vh");                    
                 }
             });
 

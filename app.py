@@ -1879,10 +1879,12 @@ def subtitle():
         if (index + 1) > len(lista):
             index = len(lista) - 1  
 
-        if len(lista[index]) > 199:
+        if len(lista[index]) < 199:
+            tamanho = 20
+        elif len(lista[index]) < 499:
             tamanho = 30
         else:
-            tamanho = 20  
+            tamanho = 60
 
         align = 'justify'
         
