@@ -12,6 +12,14 @@
                 overflow: hidden;
             }
 
+            #myVideo {
+                position: fixed;
+                right: 0;
+                bottom: 0;
+                min-width: 100%;
+                min-height: 100%;
+            }
+
             .glow {
                 text-shadow: rebeccapurple 0 0 10px;
             }
@@ -46,13 +54,8 @@
                 min-height: 100%;
                 background-size: 100% 100%;
                 top:0%;    
-                left:0%;
-                transition: opacity 0.25s ease-in-out;          
-            }  
-
-            .hidden {
-                opacity: 0;
-            }               
+                left:0%;            
+            }     
             
             .first-in {
                 animation-name: fade-in;
@@ -175,6 +178,9 @@
         </style>
     </head>
     <body>
+        <!-- <video autoplay muted loop id="myVideo">
+            <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
+        </video> -->
 
         <div id="notas" class="muzieknootjes">
             {% if lista_slides|length > 0 and index < lista_slides|length %}
@@ -214,48 +220,15 @@
 
         var key_final = false;
 
-        const slide1 = document.getElementById("slide1");
-        /*const slide2 = document.getElementById("slide2");*/
+        /*const slide1 = document.getElementById("slide1");
+        const slide2 = document.getElementById("slide2");*/
 
         const vetor_slides = [document.getElementById("slide1"), document.getElementById("slide2")];
 
         const notas = document.getElementById("notas");
+        //const source = document.getElementById("myVideo");
 
        textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});
-
-       function newChangeComponent(index) {
-
-            // Adiciona a classe para iniciar o fade-out
-            slide1.classList.add("hidden");
-
-            if (index == 0) {
-                slide1.classList.remove('letra');
-                slide1.classList.add('capa');
-                slide1.innerHTML = '';
-
-                setTimeout(() => {
-                    slide1.innerHTML = '';
-                    slide1.classList.remove("hidden");
-
-                }, 250); // O tempo deve ser igual ao da transição CSS   
-
-            } else {
-                slide1.classList.remove('capa');
-                slide1.classList.add('letra'); 
-
-                setTimeout(() => {
-                    // Troca o texto após o fade-out
-                    slide1.innerHTML = slides[index - 1]['text-slide'];
-
-                    textFit(slide1, {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 1000});
-
-                    // Remove a classe para iniciar o fade-in
-                    slide1.classList.remove("hidden");
-
-                }, 250); // O tempo deve ser igual ao da transição CSS                    
-            }          
-            
-       }
 
 
         function changeComponent(slide1, slide2, index) {
@@ -307,8 +280,7 @@
             if (key_final == true) {
                 location.reload();
             } else {
-                newChangeComponent(index);
-                /*changeComponent(vetor_slides[key1], vetor_slides[key2], index);
+                changeComponent(vetor_slides[key1], vetor_slides[key2], index);
 
                 if (key1 == 0) {
                     key1 = 1;
@@ -316,7 +288,7 @@
                 } else {
                     key1 = 0;
                     key2 = 1;
-                }*/
+                }
             }
         });        
      
