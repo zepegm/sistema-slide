@@ -22,6 +22,8 @@ import subprocess
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
 from utilitarios import pegarListaSemanas, pegarTrimestre, pegarLicoes
+from playwright.sync_api import sync_playwright
+from playwright_pdf_generator import run_pdf_generation
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -141,13 +143,13 @@ def render_slide_pdf():
         hostname = request.headers.get('Host')
         info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, harpa_id), 'tipo':'capa'}
 
-        result = subprocess.run(
-            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-            capture_output=True,
-            text=True
-        )
+        try:
+            with sync_playwright() as playwright:
+                capa = run_pdf_generation(playwright, info).replace('\\', '/')
 
-        capa = result.stdout.strip()
+        except Exception as e:
+            print({"message": "Erro ao gerar PDF", "error": str(e)}), 500
+
 
     for item in slides:
         item['categoria'] = 'cat-' + str(item['categoria']) + '-' + classe
@@ -2742,21 +2744,13 @@ def gerar_pdf_slide():
     web_info = {'url':'http://%s/render_slide_pdf?id=%s&destino=%s&id_name=%s&classe=%s' % (hostname, info['id'], info['destino'], info['id_name'], info['classe']), 'tipo':'slide'}
 
     try:
-        # Call the form_interaction.py script with parameters
-        result = subprocess.run(
-            ['python', 'playwright_pdf_generator.py', json.dumps(web_info)],
-            capture_output=True,
-            text=True
-        )
-        
-        # Check if the script ran successfully
-        if result.returncode == 0:
-            #return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
-            return send_file(result.stdout.strip(), as_attachment=True, mimetype="application/pdf"), 200
-        else:
-            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+        with sync_playwright() as playwright:
+            pdf_path = run_pdf_generation(playwright, web_info)
+
+        return send_file(pdf_path, as_attachment=True, mimetype="application/pdf")
+
     except Exception as e:
-        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
+        return jsonify({"message": "Erro ao gerar PDF", "error": str(e)}), 500
 
 @app.route('/gerar_pdf', methods=['GET', 'POST'])
 def gerar_pdf():
@@ -2765,25 +2759,16 @@ def gerar_pdf():
 
     print('http://%s/render_pdf?ls=%s' % (hostname, ls))
 
-    info = {'url':'http://%s/render_pdf?ls=%s' % (hostname, ls), 'tipo':'hinario'}
+    info = {'url':'http://%s/render_pdf?ls=%s' % (hostname, ls), 'tipo':'hinario', 'ls':ls}
 
     try:
-        # Call the form_interaction.py script with parameters
-        result = subprocess.run(
-            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-            capture_output=True,
-            text=True
-        )
-        
-        # Check if the script ran successfully
-        if result.returncode == 0:
-            #return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
-            return send_file(result.stdout.strip(), as_attachment=True, mimetype="application/pdf")
+        with sync_playwright() as playwright:
+            pdf_path = run_pdf_generation(playwright, info)
 
-        else:
-            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+        return send_file(pdf_path, as_attachment=True, mimetype="application/pdf")
+
     except Exception as e:
-        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
+        return jsonify({"message": "Erro ao gerar PDF", "error": str(e)}), 500
 
 @app.route('/gerar_pdf_harpa', methods=['GET', 'POST'])
 def gerar_pdf_harpa():
@@ -2793,20 +2778,13 @@ def gerar_pdf_harpa():
     info = {'url':'http://%s/render_pdf_harpa?tipo=%s' % (hostname, info['tipo']), 'tipo':'hinario'}
 
     try:
-        # Call the form_interaction.py script with parameters
-        result = subprocess.run(
-            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-            capture_output=True,
-            text=True
-        )
-        
-        # Check if the script ran successfully
-        if result.returncode == 0:
-            return send_file(result.stdout.strip(), as_attachment=True, mimetype="application/pdf"), 200
-        else:
-            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+        with sync_playwright() as playwright:
+            pdf_path = run_pdf_generation(playwright, info)
+
+        return send_file(pdf_path, as_attachment=True, mimetype="application/pdf")
+
     except Exception as e:
-        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
+        return jsonify({"message": "Erro ao gerar PDF", "error": str(e)}), 500
 
 
 @app.route('/pesquisarBiblia', methods=['GET', 'POST'])
