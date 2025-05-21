@@ -26,9 +26,16 @@
                 height: 580px;
                 border: solid;
                 border-width: 1px;
-                border-color: rgb(255, 0, 0, 0);
+                border-color: rgb(0, 0, 0, 0);
                 margin-bottom: 40px;
+                page-break-inside: avoid;
             }
+
+            .pagina::after {
+                content: "";
+                display: block;
+                break-after: page;
+            }            
 
             .pagina:last-of-type {
                 margin-bottom: 0px;
@@ -135,6 +142,29 @@
                 font-family: Helvetica, Arial, sans-serif;
             }
 
+            .coluna-1 {
+                position: relative;
+                left:17px;
+                margin-top: 35px;
+                font-size: 8px;
+                width: 200px;
+                font-family: Helvetica, Arial, sans-serif;
+            } 
+
+            .coluna-2,
+            .coluna-2-extra {
+                position: absolute;
+                left: 220px;
+                top: 55px;
+                font-size: 8px;
+                width: 200px;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+
+            .coluna-2-extra {
+                top:5px !important; 
+            }
+
             .sumario-extra {
                 margin-top: 13px;
             }
@@ -150,6 +180,16 @@
 
                 margin-right: 35px;
             }
+
+            .coluna-1 p,
+            .coluna-2 p,
+            .coluna-2-extra p {
+                background-image: url("data:image/svg+xml,%3csvg height='25' width='800' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' stroke='black' stroke-width='3'%3e%3cpath stroke-dasharray='2%2c10' d='M5 20 2000 20'/%3e%3c/g%3e%3c/svg%3e");
+                background-position: bottom;
+                background-size: 500px 10px;
+                margin-right: 35px;
+                margin-bottom: -1px;                
+            }            
 
             .lista {
                 font-size:10px;
@@ -245,23 +285,42 @@
                     </p>
                 </div>
             </div>
+
+            <!-- Primeira página do sumário -->
             <div id="sumario" class="pagina">
                 <div class="titulo-info">Sumário</div>
-                <div class="content-sumario">
-                    {% set vars = namespace(limite=32) %}
-                    {% for item in lista %}
-                    <p><a href="#pag{{item['cont']}}"><span class="titulo-sumario">{{item['cont']}}. {{item['titulo']}}</span><span class="pag">{{item['pag']}}</span></a></p>
-                        {% if vars.limite == item['cont']|int %}
-                </div>
-            </div>
-            <div class="pagina">
-                <div class="content-sumario sumario-extra">
-                        {% set vars.limite = vars.limite + 35 %}
-                        {% endif %}
+                <div class="coluna-1">
+                    {% for n in range(start_sumario_pages['start_1'], start_sumario_pages['end_1']) %}
+                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
                     {% endfor %}
                 </div>
+                <div class="coluna-2">
+                    {% for n in range(start_sumario_pages['start_2'], start_sumario_pages['end_2']) %}
+                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
+                    {% endfor %}
+                </div>                
             </div>
+
+            {% for pagina in pages_sumario %}
+            <!-- Página extras do sumário -->
+            <div class="pagina">
+                <div class="coluna-1 sumario-extra">
+                    {% for n in range(pagina['start_1'], pagina['end_1']) %}
+                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
+                    {% endfor %}
+                </div>
+
+                <div class="coluna-2-extra">
+                    {% for n in range(pagina['start_2'], pagina['end_2']) %}
+                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
+                    {% endfor %}
+                </div>                
+            </div>
+            {% endfor %}
+
             {% endif %}
+
+            <!-- Lista de músicas -->
             {% for item in lista %}
             <div id="pag{{item['cont']}}" class="pagina">
                 <div class="paginacao"><a href="#sumario">{{item['pag']}}</a></div>
@@ -278,8 +337,8 @@
             </div>
 
             {% if item['letras_2']|length > 0 %}
-            <div id="pag{{item['cont'] + 1|string}}" class="pagina">
-                <div class="paginacao">{{item['pag']|int + 1}}</div>
+            <div id="pag{{item['cont']|int + 1}}" class="pagina">
+                <div class="paginacao"><a href="#sumario">{{item['pag']|int + 1}}</a></div>
                 <div class="content pagina2">
                     {% for par in item['letras_2'] %}
                     <p>{{par['texto']|safe}}</p>

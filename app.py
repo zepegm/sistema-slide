@@ -206,27 +206,70 @@ def render_pdf():
         descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
         lista_categoria.append({'descricao':descricao, 'cats':aux})
 
-        lista_musicas = banco.executarConsulta('select ' + \
-                                               'musicas.id, musicas.titulo ' + \
-                                               'from musicas inner join vinculos_x_musicas ' + \
-                                               'on vinculos_x_musicas.id_musica = musicas.id ' + \
-                                               'where vinculos_x_musicas.id_vinculo IN (%s) ' % ls[:-1] + \
-                                               'group by (titulo) order by titulo')
+        lista_musicas = banco.executarConsulta('SELECT DISTINCT musicas.id, musicas.titulo ' + \
+                                               'FROM musicas ' + \
+                                               'INNER JOIN vinculos_x_musicas ON vinculos_x_musicas.id_musica = musicas.id ' + \
+                                               'WHERE vinculos_x_musicas.id_vinculo IN (%s) ' % ls[:-1] + \
+                                               'ORDER BY musicas.titulo')
     
 
     # ordenar
     lista_musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
 
-    #montar o sumário
-    if (len(lista_musicas) > 30):
-        page = math.ceil((len(lista_musicas) - 32) / 35) + 4
+    pages_sumario = []
+
+    start_sumario_pages = {'start_1':0, 'end_1':32, 'start_2':32, 'end_2':64}
+
+    #montar o sumário e pegar as letras das músicas
+    if (len(lista_musicas) > 64):
+        page = math.ceil((len(lista_musicas) - 64) / 70) + 4
+        count_pages_sumario = math.ceil((len(lista_musicas) - 64) / 70)
+
+        # criar um array rápido para dividir as páginas do sumário
+        count_musica = 64
+        for n in range(0, count_pages_sumario):
+            pages_sumario.append({'start_1':count_musica, 'end_1': count_musica + 35, 'start_2': count_musica + 35, 'end_2':count_musica + 70})
+            count_musica += 70
+
+        pages_sumario[-1]['end_2'] = len(lista_musicas)
+
+        if len(lista_musicas) < pages_sumario[-1]['end_1']:
+            pages_sumario[-1]['end_1'] = len(lista_musicas)
+            pages_sumario[-1]['start_2'] = 0
+            pages_sumario[-1]['end_2'] = 0
+
     else:
         page = 4
 
+        start_sumario_pages['end_2'] = len(lista_musicas)
+
+        if len(lista_musicas) < start_sumario_pages['end_1']:
+            start_sumario_pages['end_1'] = len(lista_musicas)
+            start_sumario_pages['start_2'] = 0
+            start_sumario_pages['end_2'] = 0
+
+    # Buscar todas as letras antes do loop principal
+    todas_letras = banco.executarConsulta(
+        'SELECT id_musica, pagina, paragrafo, ' +
+        'replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto ' +
+        'FROM letras ORDER BY id_musica, pagina, paragrafo'
+    )
+
+    # Indexar por música e página
+    letras_indexadas = {}
+    for linha in todas_letras:
+        key = (linha['id_musica'], linha['pagina'])
+        letras_indexadas.setdefault(key, []).append({'texto': linha['texto']})    
+
     for item in lista_musicas:
-        letras = banco.executarConsulta('select replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto from letras where id_musica = %s and pagina = 1 order by paragrafo' % item['id'])
-        letras_2 = banco.executarConsulta('select replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto from letras where id_musica = %s and pagina = 2 order by paragrafo' % item['id'])
-        lista_final.append({'titulo':item['titulo'], 'letras':letras, 'letras_2':letras_2, 'cont':'{:02d}'.format(cont), 'pag':page})
+        letras = letras_indexadas.get((item['id'], 1), [])
+        letras_2 = letras_indexadas.get((item['id'], 2), [])
+        
+        titulo_sumario = item['titulo']
+        if len(titulo_sumario) > 26:
+            titulo_sumario = titulo_sumario[:23] + "..."
+        
+        lista_final.append({'titulo':item['titulo'], 'titulo_sumario':titulo_sumario, 'letras':letras, 'letras_2':letras_2, 'cont':'{:02d}'.format(cont), 'pag':page})
         
         if (len(letras_2) > 0):
             page += 1
@@ -234,7 +277,7 @@ def render_pdf():
         cont += 1
         page += 1
 
-    return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje)
+    return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje, pages_sumario=pages_sumario, start_sumario_pages=start_sumario_pages)
 
 
 @app.route('/render_pdf_harpa', methods=['GET', 'POST'])
@@ -2719,6 +2762,8 @@ def gerar_pdf_slide():
 def gerar_pdf():
     ls = request.json
     hostname = request.headers.get('Host')
+
+    print('http://%s/render_pdf?ls=%s' % (hostname, ls))
 
     info = {'url':'http://%s/render_pdf?ls=%s' % (hostname, ls), 'tipo':'hinario'}
 
