@@ -164,6 +164,7 @@ def render_pdf():
     lista_final = []
     cont = 1
     now = datetime.date.today()
+    where_query = ''
 
     # convert to string
     hoje = now.strftime("%d/%m/%Y") 
@@ -193,6 +194,7 @@ def render_pdf():
         supercategoria = 0
         aux = []
 
+        where_query = " WHERE id_subcategoria in (%s)" % ls[:-1]
 
         for item in lista:
             cat = banco.executarConsulta('select * from subcategoria_departamentos where id = %s' % item)[0]
@@ -200,13 +202,13 @@ def render_pdf():
             if cat['supercategoria'] != supercategoria:
                 
                 if len(aux) > 0:
-                    descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
+                    descricao = banco.executarConsulta('select id, descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
                     lista_categoria.append({'descricao':descricao, 'cats':aux})
                     aux = []
 
                 supercategoria = cat['supercategoria']
 
-            aux.append((cats['id'], cats['descricao']))
+            aux.append((cat['id'], cat['descricao']))
 
         descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
         lista_categoria.append({'descricao':descricao, 'cats':aux})
@@ -293,7 +295,7 @@ def render_pdf():
     FROM musicas m
     JOIN vinculos_x_musicas vm ON vm.id_musica = m.id
     JOIN subcategoria_departamentos sd ON sd.id = vm.id_vinculo
-    JOIN categoria_departamentos cd ON cd.id = sd.supercategoria
+    JOIN categoria_departamentos cd ON cd.id = sd.supercategoria""" + where_query + """
     ORDER BY cd.id, sd.id, m.titulo
     """
 
