@@ -18,12 +18,13 @@ import re
 import datetime
 import random
 import calendar
-import subprocess
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
 from utilitarios import pegarListaSemanas, pegarTrimestre, pegarLicoes
 from playwright.sync_api import sync_playwright
 from playwright_pdf_generator import run_pdf_generation
+import base64
+import subprocess
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -145,10 +146,11 @@ def render_slide_pdf():
 
         try:
             with sync_playwright() as playwright:
-                capa = run_pdf_generation(playwright, info).replace('\\', '/')
+                capa = run_pdf_generation(playwright, info)
+                capa = base64.b64encode(capa).decode('utf-8')
 
         except Exception as e:
-            print({"message": "Erro ao gerar PDF", "error": str(e)}), 500
+            print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
 
 
     for item in slides:
@@ -757,14 +759,13 @@ def controlador():
                 hostname = request.headers.get('Host')
                 info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
 
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
 
-                result = subprocess.run(
-                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-                    capture_output=True,
-                    text=True
-                )
-
-                capa = result.stdout.strip()                
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
 
                 lista_final.append({'tipo':'capa_base64', 'url':capa})
                 
@@ -774,13 +775,13 @@ def controlador():
                 info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
 
 
-                result = subprocess.run(
-                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-                    capture_output=True,
-                    text=True
-                )
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
 
-                capa = result.stdout.strip()                
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
 
                 lista_final.append({'tipo':'capa_base64', 'url':capa})                
 
@@ -1272,27 +1273,30 @@ def musical():
                             hostname = request.headers.get('Host')
                             info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
 
-                            result = subprocess.run(
-                                ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-                                capture_output=True,
-                                text=True
-                            )
+                            try:
+                                with sync_playwright() as playwright:
+                                    capa = run_pdf_generation(playwright, info)
+                                    capa = base64.b64encode(capa).decode('utf-8')
 
-                            item['capa_base64l'] = result.stdout.strip()
+                            except Exception as e:
+                                print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
+
+                            item['capa_base64l'] = capa
 
                         elif item['capa_url'] == '[SEM_CAPA_POESIA]':
 
                             hostname = request.headers.get('Host')
                             info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
 
+                            try:
+                                with sync_playwright() as playwright:
+                                    capa = run_pdf_generation(playwright, info)
+                                    capa = base64.b64encode(capa).decode('utf-8')
 
-                            result = subprocess.run(
-                                ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-                                capture_output=True,
-                                text=True
-                            )
+                            except Exception as e:
+                                print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
 
-                            item['capa_base64l'] = result.stdout.strip()             
+                            item['capa_base64l'] = capa
 
 
                     return render_template('result_musical.jinja', capa=capa, roteiro_musical=roteiro_musical)
@@ -1681,13 +1685,15 @@ def slide():
                 hostname = request.headers.get('Host')
                 info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
 
-                result = subprocess.run(
-                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-                    capture_output=True,
-                    text=True
-                )
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
 
-                lista_final.append({'tipo':'capa_base64', 'url':result.stdout.strip()})
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
+
+                lista_final.append({'tipo':'capa_base64', 'url':capa})
 
             elif item['capa_url'] == '[SEM_CAPA_POESIA]':
 
@@ -1695,13 +1701,13 @@ def slide():
                 info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
 
 
-                result = subprocess.run(
-                    ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-                    capture_output=True,
-                    text=True
-                )
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
 
-                capa = result.stdout.strip()                
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
 
                 lista_final.append({'tipo':'capa_base64', 'url':capa})
 
@@ -2410,21 +2416,13 @@ def converto_to_pdf_list():
     info = {'url':'http://%s/render_pdf?ls=render_preview' % (hostname), 'tipo':'hinario'}
 
     try:
-        # Call the form_interaction.py script with parameters
-        result = subprocess.run(
-            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-            capture_output=True,
-            text=True
-        )
-        
-        # Check if the script ran successfully
-        if result.returncode == 0:
-            #return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
-            return send_file(result.stdout.strip(), as_attachment=True, mimetype="application/pdf"), 200
-        else:
-            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+        with sync_playwright() as playwright:
+            pdf_path = run_pdf_generation(playwright, info)
+
+        return send_file(pdf_path, as_attachment=True, mimetype="application/pdf")
+
     except Exception as e:
-        return jsonify({"message": "An error occurred.", "error": str(e)}), 500
+        return jsonify({"message": "Erro ao gerar PDF", "error": str(e)}), 500
 
 
 @app.route('/get_info_harpa', methods=['GET', 'POST'])
@@ -2690,19 +2688,12 @@ def gerar_imagem_calendario_mensal():
     info = {'url':'http://%s/render_calendario_mensal?ano=%s&mes=%s' % (hostname, info['ano'], info['mes']), 'tipo':'calendario'}
 
     try:
-        # Call the form_interaction.py script with parameters
-        result = subprocess.run(
-            ['python', 'playwright_pdf_generator.py', json.dumps(info)],
-            capture_output=True,
-            text=True
-        )
+        with sync_playwright() as playwright:
+            result = run_pdf_generation(playwright, info)
+            result = base64.b64encode(result).decode('utf-8')
         
-        # Check if the script ran successfully
-        if result.returncode == 0:
-            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
-        else:
-            print(result.stderr)
-            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+            return jsonify({"message": "Script executed successfully!", "output": result}), 200
+        
     except Exception as e:
         return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
@@ -2716,24 +2707,14 @@ def gerar_imagem_calendario():
 
     info = {'url':'http://%s/render_calendario?semana=%s' % (hostname, info['data']), 'tipo':'calendario'}
 
-    print(json.dumps(info))
-
     try:
-        # Call the form_interaction.py script with parameters
-        result = subprocess.run(
-            ['python', 'playwright_pdf_generator.py', json.dumps(info), '--browser-channel msedge'],
-            capture_output=True,
-            text=True
-        )
+        with sync_playwright() as playwright:
+            result = run_pdf_generation(playwright, info)
+            result = base64.b64encode(result).decode('utf-8')
         
-        # Check if the script ran successfully
-        if result.returncode == 0:
-            return jsonify({"message": "Script executed successfully!", "output": result.stdout.strip()}), 200
-        else:
-            print(result.stderr)
-            return jsonify({"message": "Script execution failed.", "error": result.stderr}), 500
+            return jsonify({"message": "Script executed successfully!", "output": result}), 200
+        
     except Exception as e:
-        print(str(e))
         return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
 @app.route('/gerar_pdf_slide', methods=['GET', 'POST'])

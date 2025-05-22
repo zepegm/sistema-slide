@@ -31,7 +31,11 @@
                 background-repeat: no-repeat;
                 background-position: center;
                 background-size: cover;
+                {% if tipo == 'musica' %}
                 background-image: url('{{capa}}');
+                {% else %}
+                background-image: url('data:image/png;base64,{{capa}}');
+                {% endif %}
                 margin-top: -8px;
             }
 

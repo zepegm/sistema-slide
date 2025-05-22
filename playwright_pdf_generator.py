@@ -38,12 +38,12 @@ def run_pdf_generation(playwright: Playwright, info: dict) -> str:
     elif tipo == 'capa' or tipo == 'calendario':
         # Em ambos, estamos usando screenshot
         page.wait_for_timeout(500)  # tempo mínimo para evitar render incompleto
-        screenshot_bytes = page.screenshot(full_page=True)
+        path = page.screenshot(full_page=True)
         #filename = f"{tipo}_{uuid.uuid4().hex}.png"
-        filename = f"{tipo}.png"
-        path = os.path.join(output_dir, filename)
-        with open(path, "wb") as f:
-            f.write(screenshot_bytes)
+        #filename = f"{tipo}.png"
+        #path = os.path.join(output_dir, filename)
+        #with open(path, "wb") as f:
+            #f.write(screenshot_bytes)
     else:
         browser.close()
         raise ValueError(f"Tipo desconhecido: {tipo}")
