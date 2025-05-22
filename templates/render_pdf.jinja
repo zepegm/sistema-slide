@@ -142,6 +142,16 @@
                 font-family: Helvetica, Arial, sans-serif;
             }
 
+            .content-final {
+                font-size: 12px;
+                font-family: Arial, Helvetica, sans-serif;
+                margin-bottom: 4px;
+            }
+
+            .lista-final {
+                margin-top: -10px;
+            }
+
             .coluna-1 {
                 position: relative;
                 left:17px;
@@ -249,6 +259,12 @@
 
             .red{color:#FF0000}
 
+            .subcat {
+                font-size: 18px;
+                font-family: Helvetica, Arial, sans-serif;
+                text-align: center;
+            }
+
         </style>
     </head>
     <body>
@@ -277,7 +293,7 @@
                             {{item['descricao']}}
                                 <ul class="lista">
                                 {% for cat in item['cats'] %}
-                                    <li>{{cat}}</li>
+                                    <li><a href="#subcat-{{cat[0]}}">{{cat[1]}}</a></li>
                                 {% endfor %}
                                 </ul>
                             </ul>
@@ -291,12 +307,12 @@
                 <div class="titulo-info">Sumário</div>
                 <div class="coluna-1">
                     {% for n in range(start_sumario_pages['start_1'], start_sumario_pages['end_1']) %}
-                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
+                    <p><a href="#musica-{{lista[n]['id']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
                     {% endfor %}
                 </div>
                 <div class="coluna-2">
                     {% for n in range(start_sumario_pages['start_2'], start_sumario_pages['end_2']) %}
-                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
+                    <p><a href="#musica-{{lista[n]['id']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
                     {% endfor %}
                 </div>                
             </div>
@@ -306,13 +322,13 @@
             <div class="pagina">
                 <div class="coluna-1 sumario-extra">
                     {% for n in range(pagina['start_1'], pagina['end_1']) %}
-                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
+                    <p><a href="#musica-{{lista[n]['id']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
                     {% endfor %}
                 </div>
 
                 <div class="coluna-2-extra">
                     {% for n in range(pagina['start_2'], pagina['end_2']) %}
-                    <p><a href="#pag{{lista[n]['cont']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
+                    <p><a href="#musica-{{lista[n]['id']}}"><span class="titulo-sumario">{{lista[n]['cont']}}. {{lista[n]['titulo_sumario']}}</span><span class="pag">{{lista[n]['pag']}}</span></a></p>
                     {% endfor %}
                 </div>                
             </div>
@@ -322,7 +338,7 @@
 
             <!-- Lista de músicas -->
             {% for item in lista %}
-            <div id="pag{{item['cont']}}" class="pagina">
+            <div id="musica-{{item['id']}}" class="pagina">
                 <div class="paginacao"><a href="#sumario">{{item['pag']}}</a></div>
                 {% if completo == 'true' %}
                 <p class="titulo">{{item['cont']}}. {{item['titulo']}}</p>
@@ -337,7 +353,7 @@
             </div>
 
             {% if item['letras_2']|length > 0 %}
-            <div id="pag{{item['cont']|int + 1}}" class="pagina">
+            <div class="pagina">
                 <div class="paginacao"><a href="#sumario">{{item['pag']|int + 1}}</a></div>
                 <div class="content pagina2">
                     {% for par in item['letras_2'] %}
@@ -347,7 +363,42 @@
             </div>
             {% endif %}
 
-            {% endfor %}        
+            {% endfor %}
+
+            {% set pagina = namespace(cont=pagina_final) %}
+
+            <!-- Sumário Final -->
+            {% for categoria, subcats in sumario_final.items() %}
+                {% for (subcat, subcat_id), musicas in subcats.items() %}
+                <div id="subcat-{{subcat_id}}" class="pagina">
+                    <div class="paginacao"><a href="#info">{{pagina.cont}}</a></div>
+                    {% set pagina.cont = pagina.cont + 1 %}
+                    <div class="titulo-info">{{ categoria }}</div>
+                    <p class="subcat"><b>{{ subcat }}</b></p>
+                    <ul class="lista lista-final">
+                    {% set vars = namespace(cont=1) %}
+                    {% for musica in musicas %}
+
+            {% if vars.cont == 23 %}
+                {% set vars.cont = 1 %}
+                    </ul>
+                </div>
+                <div class="pagina">
+                    <div class="paginacao"><a href="#info">{{pagina.cont}}</a></div>
+                    {% set pagina.cont = pagina.cont + 1 %}
+                    <div class="titulo-info">{{ categoria }}</div>
+                    <p class="subcat"><b>{{ subcat }}</b></p>
+                    <ul class="lista lista-final">
+            {% endif %}
+
+                        <li class="content-final"><a href="#musica-{{musica['id']}}">{{ "%02d"|format(loop.index) }} - {{ musica['titulo'] }}</a></li>
+                        {% set vars.cont = vars.cont + 1 %}
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            {% endfor %}
+
         </div>
     </body>
 </html>

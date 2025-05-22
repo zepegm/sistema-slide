@@ -18,13 +18,14 @@ import re
 import datetime
 import random
 import calendar
+import base64
+import subprocess
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
 from utilitarios import pegarListaSemanas, pegarTrimestre, pegarLicoes
 from playwright.sync_api import sync_playwright
 from playwright_pdf_generator import run_pdf_generation
-import base64
-import subprocess
+from collections import defaultdict
 
 app=Flask(__name__)
 app.secret_key = "abc123"
@@ -181,8 +182,8 @@ def render_pdf():
 
         for item in banco.executarConsulta('select * from categoria_departamentos order by id'):
             aux = []
-            for cats in banco.executarConsulta('select descricao from subcategoria_departamentos where supercategoria = %s order by id' % item['id']):
-                aux.append(cats['descricao'])
+            for cats in banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s order by id' % item['id']):
+                aux.append((cats['id'], cats['descricao']))
 
             lista_categoria.append({'descricao':item['descricao'], 'cats':aux})
     else: # fazer o processo reverso pra pegar isso daqui
@@ -205,7 +206,7 @@ def render_pdf():
 
                 supercategoria = cat['supercategoria']
 
-            aux.append(cat['descricao'])
+            aux.append((cats['id'], cats['descricao']))
 
         descricao = banco.executarConsulta('select descricao from categoria_departamentos where id = %s' % supercategoria)[0]['descricao']
         lista_categoria.append({'descricao':descricao, 'cats':aux})
@@ -263,7 +264,7 @@ def render_pdf():
     letras_indexadas = {}
     for linha in todas_letras:
         key = (linha['id_musica'], linha['pagina'])
-        letras_indexadas.setdefault(key, []).append({'texto': linha['texto']})    
+        letras_indexadas.setdefault(key, []).append({'texto': linha['texto']})
 
     for item in lista_musicas:
         letras = letras_indexadas.get((item['id'], 1), [])
@@ -273,7 +274,7 @@ def render_pdf():
         if len(titulo_sumario) > 26:
             titulo_sumario = titulo_sumario[:23] + "..."
         
-        lista_final.append({'titulo':item['titulo'], 'titulo_sumario':titulo_sumario, 'letras':letras, 'letras_2':letras_2, 'cont':'{:02d}'.format(cont), 'pag':page})
+        lista_final.append({'id':item['id'], 'titulo':item['titulo'], 'titulo_sumario':titulo_sumario, 'letras':letras, 'letras_2':letras_2, 'cont':'{:02d}'.format(cont), 'pag':page})
         
         if (len(letras_2) > 0):
             page += 1
@@ -281,7 +282,38 @@ def render_pdf():
         cont += 1
         page += 1
 
-    return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje, pages_sumario=pages_sumario, start_sumario_pages=start_sumario_pages)
+    # Criar Sumário Final
+    query = """
+    SELECT
+        m.id as id_musica,
+        m.titulo,
+        cd.descricao as categoria,
+        sd.descricao as subcategoria,
+        sd.id AS id_subcategoria
+    FROM musicas m
+    JOIN vinculos_x_musicas vm ON vm.id_musica = m.id
+    JOIN subcategoria_departamentos sd ON sd.id = vm.id_vinculo
+    JOIN categoria_departamentos cd ON cd.id = sd.supercategoria
+    ORDER BY cd.id, sd.id, m.titulo
+    """
+
+    vinculos = banco.executarConsulta(query)
+
+    sumario_categorico = defaultdict(lambda: defaultdict(list))
+
+    for item in vinculos:
+        categoria = item['categoria']
+        subcat_nome = item['subcategoria']
+        subcat_id = item['id_subcategoria']
+        musica = {'id': item['id_musica'], 'titulo': item['titulo']}
+
+        sumario_categorico[categoria][(subcat_nome, subcat_id)].append(musica)
+
+    for categoria, subcats in sumario_categorico.items():
+        for subcat_key in subcats:
+            subcats[subcat_key].sort(key=lambda m: locale.strxfrm(m['titulo']))        
+
+    return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje, pages_sumario=pages_sumario, start_sumario_pages=start_sumario_pages, sumario_final=sumario_categorico, pagina_final=page)
 
 
 @app.route('/render_pdf_harpa', methods=['GET', 'POST'])
