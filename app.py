@@ -39,6 +39,7 @@ estado = 0
 current_presentation = {'id':0, 'tipo':''}
 index = 0
 pause_index = 0
+ponteiro_musical = 0
 roteiro = []
 temp_pdf = None
 window_browser = None
@@ -772,7 +773,27 @@ def controlador():
         return render_template('controlador_ebd.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total)
 
     elif estado == 9: # musical
-        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]' ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+
+        global ponteiro_musical
+
+        query = '''SELECT
+                    id_origem,
+                    `tabela-origem`,
+                    CASE WHEN capa_url IS NULL THEN 
+                        CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename
+                        WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]'
+                        ELSE '[SEM_CAPA_HARPA]' END
+                    ELSE capa_url END as capa_url,
+                    CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo
+                        WHEN `tabela-origem` = 'harpa' THEN harpa.descricao
+                        WHEN `tabela-origem` = 'harpa_versionada' THEN (SELECT descricao FROM harpa WHERE id = (SELECT id_harpa FROM harpa_versionada WHERE id = id_origem)) 
+                    END AS titulo
+                FROM roteiro_musical
+                LEFT JOIN musicas ON musicas.id = id_origem
+                LEFT JOIN harpa ON harpa.id = id_origem
+                LEFT JOIN capas ON capas.id_musica = musicas.id'''
+
+        roteiro_musical = banco.executarConsulta(query)
 
         lista_final = []
 
@@ -780,74 +801,75 @@ def controlador():
         capa_padrao = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
         lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
 
-        # rodando o loop de cada música
-        for item in roteiro_musical:
-            # adicionando capa
-            if item['capa_url'] == '[SEM_CAPA_HARPA]':
-
-                id_harpa = item['id_origem']
-
-                if item['tabela-origem'] == 'harpa_versionada':
-                    id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
-
-                hostname = request.headers.get('Host')
-                info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
-
-                try:
-                    with sync_playwright() as playwright:
-                        capa = run_pdf_generation(playwright, info)
-                        capa = base64.b64encode(capa).decode('utf-8')
-
-                except Exception as e:
-                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
-
-                lista_final.append({'tipo':'capa_base64', 'url':capa})
-                
-            elif item['capa_url'] == '[SEM_CAPA_POESIA]':
-
-                hostname = request.headers.get('Host')
-                info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
+        item_atual = roteiro_musical[ponteiro_musical]
 
 
-                try:
-                    with sync_playwright() as playwright:
-                        capa = run_pdf_generation(playwright, info)
-                        capa = base64.b64encode(capa).decode('utf-8')
+        # adicionando capa
+        if item_atual['capa_url'] == '[SEM_CAPA_HARPA]':
 
-                except Exception as e:
-                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
+            id_harpa = item_atual['id_origem']
 
-                lista_final.append({'tipo':'capa_base64', 'url':capa})                
+            if item_atual['tabela-origem'] == 'harpa_versionada':
+                id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
 
-            else:
-                lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
+            hostname = request.headers.get('Host')
+            info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
 
-            # adicionando slides
-            if item['tabela-origem'] == 'musicas':
-                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item['id_origem'])
-                for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
-            elif item['tabela-origem'] == 'harpa_versionada':
-                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem'])
-                for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
-            elif item['tabela-origem'] == 'poesia':
-                letras = banco.executarConsulta('select `text-slide`, ifnull(anotacao, "") as anotacao from slide_poesia where id_poesia = %s' % item['id_origem'])
-                for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
-            else:
-                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
-                for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+            try:
+                with sync_playwright() as playwright:
+                    capa = run_pdf_generation(playwright, info)
+                    capa = base64.b64encode(capa).decode('utf-8')
 
-            # adicionando capa inicial no final da música
-            lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
+            except Exception as e:
+                print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
+
+            lista_final.append({'tipo':'capa_base64', 'url':capa})
+            
+        elif item_atual['capa_url'] == '[SEM_CAPA_POESIA]':
+
+            hostname = request.headers.get('Host')
+            info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item_atual['id_origem']), 'tipo':'capa'}
+
+
+            try:
+                with sync_playwright() as playwright:
+                    capa = run_pdf_generation(playwright, info)
+                    capa = base64.b64encode(capa).decode('utf-8')
+
+            except Exception as e:
+                print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
+
+            lista_final.append({'tipo':'capa_base64', 'url':capa})                
+
+        else:
+            lista_final.append({'tipo':'capa_img', 'url':item_atual['capa_url']})
+
+        # adicionando slides
+        if item_atual['tabela-origem'] == 'musicas':
+            letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item_atual['id_origem'])
+            for sld in letras:
+                lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+        elif item_atual['tabela-origem'] == 'harpa_versionada':
+            letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item_atual['id_origem'])
+            for sld in letras:
+                lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+        elif item_atual['tabela-origem'] == 'poesia':
+            letras = banco.executarConsulta('select `text-slide`, ifnull(anotacao, "") as anotacao from slide_poesia where id_poesia = %s' % item_atual['id_origem'])
+            for sld in letras:
+                lista_final.append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+        else:
+            letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item_atual['id_origem'])
+            for sld in letras:
+                lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+
+        # adicionando capa inicial no final da música
+        lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
 
         
         # adicionando cores
         cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
 
-        return render_template('controlador_musical.jinja', lista_final=lista_final, cores=cores, index=index)
+        return render_template('controlador_musical.jinja', lista_final=lista_final, cores=cores, index=index, roteiro_musical=roteiro_musical, ponteiro_musical=ponteiro_musical)
 
     elif estado == 10: # poesia
 
@@ -1277,6 +1299,9 @@ def calendario():
 @app.route('/musical', methods=['GET', 'POST'])
 def musical():
 
+    global pause_index
+    global ponteiro_musical
+
     msg = ''
 
     if request.method == 'POST':
@@ -1287,6 +1312,9 @@ def musical():
             banco.insertOrUpdate({'id':"'titulo_musical'", 'valor':"'" + titulo + "'"}, 'id', 'config')
 
             if banco.inserirRoteiroMusical(lista):
+
+                pause_index = 0
+                ponteiro_musical = 0
 
                 capa = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
 
@@ -1698,16 +1726,17 @@ def slide():
         return render_template('PowerPoint_EBD.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total, trimestre=trimestre, capa=capa)
 
     elif estado == 9: # musical 
-        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]' WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+        global ponteiro_musical
 
-        lista_final = []
+        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]' WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
 
         # adicionado capa principal
         capa_padrao = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
-        lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
 
         # rodando o loop de cada música
         for item in roteiro_musical:
+            item['lista_final'] = []
+            item['lista_final'].append({'tipo':'capa_img', 'url':capa_padrao})
             # adicionando capa
             if item['capa_url'] == '[SEM_CAPA_HARPA]':
 
@@ -1727,7 +1756,7 @@ def slide():
                 except Exception as e:
                     print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
 
-                lista_final.append({'tipo':'capa_base64', 'url':capa})
+                item['lista_final'].append({'tipo':'capa_base64', 'url':capa})
 
             elif item['capa_url'] == '[SEM_CAPA_POESIA]':
 
@@ -1743,37 +1772,39 @@ def slide():
                 except Exception as e:
                     print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
 
-                lista_final.append({'tipo':'capa_base64', 'url':capa})
+                item['lista_final'].append({'tipo':'capa_base64', 'url':capa})
 
             else:
-                lista_final.append({'tipo':'capa_img', 'url':item['capa_url']})
+                item['lista_final'].append({'tipo':'capa_img', 'url':item['capa_url']})
 
             # adicionando slides
             if item['tabela-origem'] == 'musicas':
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item['id_origem'])
                 for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+                    item['lista_final'].append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
             elif item['tabela-origem'] == 'harpa_versionada':
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem'])
                 for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
+                    item['lista_final'].append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
             elif item['tabela-origem'] == 'poesia':
                 letras = banco.executarConsulta('select `text-slide`, ifnull(anotacao, "") as anotacao from slide_poesia where id_poesia = %s' % item['id_origem'])
                 for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
+                    item['lista_final'].append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
             else:
                 letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
                 for sld in letras:
-                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+                    item['lista_final'].append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
 
             # adicionando capa inicial no final da música
-            lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
+            item['lista_final'].append({'tipo':'capa_img', 'url':capa_padrao})
 
         
         # adicionando cores
         cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
 
-        return render_template('PowerPoint_Musical.jinja', lista_final=lista_final, cores=cores, index=index)
+        print(roteiro_musical[0]['lista_final'][0]['tipo'])
+
+        return render_template('PowerPoint_Musical.jinja', lista_final=roteiro_musical, cores=cores, index=index, ponteiro_musical=ponteiro_musical)
 
     elif estado == 10: # Poesia
         # estabelecer configuração da música
@@ -1794,10 +1825,14 @@ def updateSlide():
 
     
             global index
+            global ponteiro_musical
 
             index = int(request.json)
 
-            socketio.emit('update', index)
+            if estado == 9:
+                socketio.emit('update', {'index':index, 'ponteiro':ponteiro_musical})
+            else:
+                socketio.emit('update', index)
           
             return jsonify(True)
 
@@ -1996,46 +2031,47 @@ def subtitle():
             tamanho = 20
 
     elif (estado == 9): # Musical
-        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+        global ponteiro_musical
 
-        lista = [banco.executarConsulta('select valor from config where id = "titulo_musical"')[0]['valor']]
-
+        lista = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+        titulo = banco.executarConsulta('select valor from config where id = "titulo_musical"')[0]['valor']
         tamanho = 20
 
-        for item in roteiro_musical:
-            if item['tabela-origem'] == 'harpa':
-                lista.append(banco.executarConsulta('select descricao from harpa where id = %s' % item['id_origem'])[0]['descricao'])
+        for slide in lista:
+            slide['lista'] = [titulo]
+            if slide['tabela-origem'] == 'harpa':
+                slide['lista'].append(banco.executarConsulta('select descricao from harpa where id = %s' % slide['id_origem'])[0]['descricao'])
 
-                for item in banco.executarConsulta('select `text-legenda` from slides_harpa where id_harpa = %s' % item['id_origem']):
-                    lista.append(item['text-legenda'])
+                for item in banco.executarConsulta('select `text-legenda` from slides_harpa where id_harpa = %s' % slide['id_origem']):
+                    slide['lista'].append(item['text-legenda'])
                 
-                lista.append('')
+                slide['lista'].append('')
 
-            elif item['tabela-origem'] == 'musicas':
-                lista.append(banco.executarConsulta('select titulo from musicas where id = %s' % item['id_origem'])[0]['titulo'])
+            elif slide['tabela-origem'] == 'musicas':
+                slide['lista'].append(banco.executarConsulta('select titulo from musicas where id = %s' % slide['id_origem'])[0]['titulo'])
 
-                for item in banco.executarConsulta('select `text-legenda` from slides where id_musica = %s' % item['id_origem']):
-                    lista.append(item['text-legenda'])
+                for item in banco.executarConsulta('select `text-legenda` from slides where id_musica = %s' % slide['id_origem']):
+                    slide['lista'].append(item['text-legenda'])
                 
-                lista.append('')
+                slide['lista'].append('')
 
-            elif item['tabela-origem'] == 'harpa_versionada':
-                lista.append(banco.executarConsulta('select id_harpa, harpa.descricao as titulo from harpa_versionada inner join harpa on harpa.id = harpa_versionada.id_harpa where harpa_versionada.id = %s' % item['id_origem'])[0]['titulo'])
+            elif slide['tabela-origem'] == 'harpa_versionada':
+                slide['lista'].append(banco.executarConsulta('select id_harpa, harpa.descricao as titulo from harpa_versionada inner join harpa on harpa.id = harpa_versionada.id_harpa where harpa_versionada.id = %s' % slide['id_origem'])[0]['titulo'])
                 
-                for item in banco.executarConsulta('select `text-legenda` from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem']):
-                    lista.append(item['text-legenda'])
+                for item in banco.executarConsulta('select `text-legenda` from slides_harpa_versionada where id_harpa_versionada = %s' % slide['id_origem']):
+                    slide['lista'].append(item['text-legenda'])
                 
-                lista.append('')
+                slide['lista'].append('')
 
-            elif item['tabela-origem'] == 'poesia':
-                lista.append(banco.executarConsulta('select titulo from poesia where id = %s' % item['id_origem'])[0]['titulo'])
+            elif slide['tabela-origem'] == 'poesia':
+                slide['lista'].append(banco.executarConsulta('select titulo from poesia where id = %s' % slide['id_origem'])[0]['titulo'])
                 
-                for item in banco.executarConsulta('select `text-legenda` from slide_poesia where id_poesia = %s' % item['id_origem']):
-                    lista.append(item['text-legenda'])
+                for item in banco.executarConsulta('select `text-legenda` from slide_poesia where id_poesia = %s' % slide['id_origem']):
+                    slide['lista'].append(item['text-legenda'])
                 
-                lista.append('')
+                slide['lista'].append('')
 
-            print(lista)
+        return render_template('subtitle_musical.jinja', legenda=lista, index=index, tamanho=tamanho, head=head, estado=estado, align=align, ponteiro_musical=ponteiro_musical)
 
     elif (estado == 10): # poesia
         legenda = banco.executarConsulta('select `text-legenda` from slide_poesia where id_poesia = %s order by pos' % current_presentation['id'])
@@ -3322,6 +3358,7 @@ def iniciar_apresentacao():
     global index
     global roteiro
     global pause_index
+    global ponteiro_musical
 
     if request.method == 'POST':
         if request.is_json:
@@ -3385,6 +3422,110 @@ def iniciar_apresentacao():
 
             return redirect('/')
 
+@app.route('/alterar_roteiro_musical', methods=['GET', 'POST'])
+def alterar_roteiro_musical():      
+
+    global index
+    global ponteiro_musical
+
+    if request.method == 'POST':
+        if request.is_json:
+            ponteiro_musical = request.json
+            index = 0
+            #socketio.emit('update', {'index':index, 'ponteiro':ponteiro_musical})
+
+            query = '''SELECT
+                        id_origem,
+                        `tabela-origem`,
+                        CASE WHEN capa_url IS NULL THEN 
+                            CASE WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename
+                            WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]'
+                            ELSE '[SEM_CAPA_HARPA]' END
+                        ELSE capa_url END as capa_url,
+                        CASE WHEN `tabela-origem` = 'musicas' THEN musicas.titulo
+                            WHEN `tabela-origem` = 'harpa' THEN harpa.descricao
+                            WHEN `tabela-origem` = 'harpa_versionada' THEN (SELECT descricao FROM harpa WHERE id = (SELECT id_harpa FROM harpa_versionada WHERE id = id_origem)) 
+                        END AS titulo
+                    FROM roteiro_musical
+                    LEFT JOIN musicas ON musicas.id = id_origem
+                    LEFT JOIN harpa ON harpa.id = id_origem
+                    LEFT JOIN capas ON capas.id_musica = musicas.id'''
+
+            roteiro_musical = banco.executarConsulta(query)
+            item_atual = roteiro_musical[ponteiro_musical]
+
+            lista_final = []
+
+            # adicionado capa principal
+            capa_padrao = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
+            lista_final.append({'tipo':'capa_img', 'url':capa_padrao})            
+
+            # adicionando capa
+            if item_atual['capa_url'] == '[SEM_CAPA_HARPA]':
+
+                id_harpa = item_atual['id_origem']
+
+                if item_atual['tabela-origem'] == 'harpa_versionada':
+                    id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
+
+                hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
+
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
+
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
+
+                lista_final.append({'tipo':'capa_base64', 'url':capa})
+                
+            elif item_atual['capa_url'] == '[SEM_CAPA_POESIA]':
+
+                hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item_atual['id_origem']), 'tipo':'capa'}
+
+
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
+
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500             
+
+                lista_final.append({'tipo':'capa_base64', 'url':capa})                
+
+            else:
+                lista_final.append({'tipo':'capa_img', 'url':item_atual['capa_url']})
+
+            # adicionando slides
+            if item_atual['tabela-origem'] == 'musicas':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item_atual['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+            elif item_atual['tabela-origem'] == 'harpa_versionada':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item_atual['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+            elif item_atual['tabela-origem'] == 'poesia':
+                letras = banco.executarConsulta('select `text-slide`, ifnull(anotacao, "") as anotacao from slide_poesia where id_poesia = %s' % item_atual['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+            else:
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item_atual['id_origem'])
+                for sld in letras:
+                    lista_final.append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+
+            # adicionando capa inicial no final da música
+            lista_final.append({'tipo':'capa_img', 'url':capa_padrao})
+
+            # adicionando cores
+            cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]            
+
+            return jsonify({'lista':lista_final, 'cores':cores})
+
 @app.route('/proxima_prs', methods=['GET', 'POST'])
 def proxima_prs():
 
@@ -3430,6 +3571,7 @@ def encerrar_apresentacao():
     global estado
     global index
     global pause_index
+    global ponteiro_musical
 
 
     if request.method == 'POST':
@@ -3438,7 +3580,8 @@ def encerrar_apresentacao():
                 estado = 0
                 current_presentation = {'id':0, 'tipo':''}
                 index = 0
-                pause_index = index                
+                pause_index = index
+                ponteiro_musical = 0
 
                 socketio.emit('refresh', 1)
                 socketio.emit('update_roteiro', 1)

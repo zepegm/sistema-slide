@@ -54,23 +54,25 @@
     }
 
     #slidePrincipal {
-      width: 640px; /* or whatever width you want. */
-      height: 360px; /* or whatever width you want. */
+      width: 100%; /* or whatever width you want. */
+      height: 20vh; /* or whatever width you want. */
       line-height: normal;
     }
 
     #slideProx {
-      width: 426; /* or whatever width you want. */
-      height: 240px; /* or whatever width you want. */
+      width: 100%; /* or whatever width you want. */
+      height: 20vh; /* or whatever width you want. */
       line-height: normal;
     }
 
     #card_principal {
-      width: 641px; /* or whatever width you want. */
+      width: 100%; /* or whatever width you want. */
+      height: 25vh; /* or whatever width you want. */
     }
 
     #card_prox {
-      width: 428px; /* or whatever width you want. */
+      width: 100%; /* or whatever width you want. */
+      height: 25vh; /* or whatever width you want. */
     }
 
     .mini-box {
@@ -197,7 +199,19 @@
           <div class="row">
             <h1 class="fw-light">Apresentador de Slides</h1>
               <p class="lead text-muted">Abaixo você vê o slide atual e prévia do próximo.</p>
-              <div class="col-sm-7">
+
+              <!-- Lista de Slides -->
+              <div class="col-sm-4">
+                <h3 class="fw-light">Roteiro:</h3>
+                <div id="lista_slides" class="list-group">
+                  {% for item in roteiro_musical %}
+                    <a href="#" class="list-group-item list-group-item-action text-left {{ 'active' if (loop.index - 1) == ponteiro_musical else '' }}" data-id="{{loop.index - 1}}">{{item['titulo']}}</a>
+                  {% endfor %}                
+                </div>                
+              </div>
+ 
+              <div class="col-sm-4">
+                <h3 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h3>
                 <div id="card_principal" class="card shadow-sm">
                     {% if lista_final[index]['tipo'] == 'capa_img' %}
                       <div class="capa" id="slidePrincipal">
@@ -210,19 +224,20 @@
                     {% else %}
                       <div class="{{lista_final[index]['categoria']}} letra" id="slidePrincipal">{{lista_final[index]['texto']}}</div>
                     {% endif %}
-                  <div class="card-body">
-                    <h1 class="card-text text-center" id="slideAtual">Slide Atual: {{index + 1}}</h1>
-                        {% if lista_final[index]['anotacao'] != '' %}
-                        <p id="anotacao"><strong>Anotação: </strong>{{lista_final[index]['anotacao']}}</p>
-                        {% endif %}
-                        {% if lista_final[index]['cat'] == 3 or lista_final[index - 1]['cat'] == 4 %}
-                        <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
-                        {% endif %}
-                  </div>
                 </div>        
+                <div class="card-body">
+                      {% if lista_final[index]['anotacao'] != '' %}
+                      <p id="anotacao"><strong>Anotação: </strong>{{lista_final[index]['anotacao']}}</p>
+                      {% endif %}
+                      {% if lista_final[index]['cat'] == 3 or lista_final[index - 1]['cat'] == 4 %}
+                      <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
+                      {% endif %}
+                </div>                
               </div>
+
             {% if index + 1 < lista_final|length  %}
-            <div class="col-sm-5">
+            <div class="col-sm-4">
+            <h3 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 1}}</h3>             
               <div id="card_prox" class="card shadow-sm">
 
               {% if lista_final[index + 1]['tipo'] == 'capa_img' %}
@@ -236,10 +251,6 @@
               {% else %}
                 <div class="{{lista_final[index + 1]['categoria']}} letra" id="slideProx">{{lista_final[index + 1]['texto']}}</div>
               {% endif %}
-
-                <div class="card-body">
-                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 1}}</h4>
-                </div>
               </div> 
                 <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
                 <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
@@ -248,12 +259,10 @@
                 <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Finalizar</button>
             </div> 
             {% else %} 
-            <div class="col-sm-5">
+            <div class="col-sm-4">
+              <h3 class="card-text text-center" id="proximoSlide">Próximo Slide: -</h3>
               <div id="card_prox" class="card shadow-sm">
                 <div id="slideProx" class="letra" style="color:white !important; background-color:black !important;"><b>Fim</b></div>
-                <div class="card-body">
-                  <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: -</h4>
-                </div>
               </div>        
                 <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
                 <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button> 
@@ -262,9 +271,10 @@
                 <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Finalizar</button>
             </div>       
             {% endif %} 
+
           </div>
           <div class="row"><div class="col-sm-12"><hr></div></div>
-          <div class="row">
+          <div id="painel_quadros" class="row">
             {% for sld in lista_final %}
               <div class="col-sm-3">
                 {% if (index + 1) == loop.index %}
@@ -308,6 +318,8 @@
     var index = {{index}};
     var slides = {{lista_final}};
     var chave = true;
+    var ponteiro = {{ponteiro_musical}};
+    var total_roteiro = {{roteiro_musical|length}};
 
     var socket = io();
     socket.on('refresh', function(result) {
@@ -414,7 +426,7 @@
     }
 
 
-    $(".big-box").on('click', function() {
+    $('#painel_quadros').on('click', '.big-box', function() {
       index = parseInt($(this).attr('data-index'));
 
       changeSlides();
@@ -476,6 +488,72 @@
       });      
     }
 
+    function trocar_apresentacao(ponteiro) {
+
+      $("#painel_quadros").empty();
+      $("#content section").append('<div id="loading"><div class="loader"></div></div>');
+
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('alterar_roteiro_musical') }}",
+        contentType: "application/json",
+        data: JSON.stringify(ponteiro),
+        dataType: "json",
+        success: function(response) {
+          index = 0;
+          slides = response['lista'];
+
+          if (response) {
+            $("#slideAtual").text("Slide Atual: 1");
+            $("#proximoSlide").text('Próximo Slide: 2');
+            $("#slidePrincipal").attr('class', 'capa'); 
+            $("#slideProx").attr('class', 'capa');
+            $("#slidePrincipal").html('<img src="static/' + response['lista'][0]['url'] + '">');
+            
+            if (response['lista'][1]['tipo'] == 'capa_base64') {
+              $("#slideProx").html('<img src="data:image/png;base64,' + response['lista'][1]['url'] + '">');
+            } else {
+              $("#slideProx").html('<img src="static/' + response['lista'][1]['url'] + '">');
+            }
+
+            for (let i = 0; i < response['lista'].length; i++) {
+              let sld = response['lista'][i];
+              if (i == 0) {
+                $("#painel_quadros").append('<div class="col-sm-3"><div id="box' + i + '" data-index="' + i + '" class="big-box card box-index"><div class="capa mini-box"><img src="static/' + sld['url'] + '"></div><div class="card-body"><h4 class="card-text text-center">Slide: ' + (i + 1) + '</h4></div></div><br></div>');
+              } else {
+                if (sld['tipo'] == 'capa_base64') {
+                  $("#painel_quadros").append('<div class="col-sm-3"><div id="box' + i + '" data-index="' + i + '" class="big-box card shadow-sm"><div class="capa mini-box"><img src="data:image/png;base64,' + sld['url'] + '"></div><div class="card-body"><h4 class="card-text text-center">Slide: ' + (i + 1) + '</h4></div></div><br></div>');
+                } else if (sld['tipo'] == 'capa_img') {
+                  $("#painel_quadros").append('<div class="col-sm-3"><div id="box' + i + '" data-index="' + i + '" class="big-box card shadow-sm"><div class="capa mini-box"><img src="static/' + sld['url'] + '"></div><div class="card-body"><h4 class="card-text text-center">Slide: ' + (i + 1) + '</h4></div></div><br></div>');
+                } else {
+                  $("#painel_quadros").append('<div class="col-sm-3"><div id="box' + i + '" data-index="' + i + '" class="big-box card shadow-sm"><div class="' + sld['categoria'] + ' mini-box letra">' + sld['texto'] + '</div><div class="card-body"><h4 class="card-text text-center">Slide: ' + (i + 1) + '</h4></div></div><br></div>');
+                }
+              }
+            } 
+
+            textFit($(".letra"), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 2000})
+            
+            $("#loading").remove();
+                                    
+          }
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });      
+
+    }
+
+    $("#lista_slides").on('click', 'a', function() {
+      ponteiro = parseInt($(this).attr('data-id'));
+
+      $('#lista_slides a').removeClass('active');
+      $(this).addClass('active');
+
+      trocar_apresentacao(ponteiro);
+      
+    });
+
     $("#btn_next").on('click', function() {
       next();
     });
@@ -509,7 +587,14 @@
             if (parseInt(index) + 1 < slides.length) {
               next();
             } else {
-              proxima_PRS();
+              if (ponteiro + 1 < total_roteiro) {
+                ponteiro++;
+                $('#lista_slides a').removeClass('active');
+                $('#lista_slides a[data-id="' + ponteiro + '"]').addClass('active');
+                trocar_apresentacao(ponteiro);
+              } else {
+                proxima_PRS();
+              }
             }
         }           
     }

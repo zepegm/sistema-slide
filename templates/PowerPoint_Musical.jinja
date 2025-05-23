@@ -210,14 +210,14 @@
             }             
         </style>
     </head>
-    <body class="body-{{lista_final[index]['categoria']}}">
+    <body class="body-{{lista_final[ponteiro_musical]['lista_final'][index]['categoria']}}">
         <!-- <video autoplay muted loop id="myVideo">
             <source id="video_source" src="{{ url_for('static', filename='videos/stars_1.mp4') }}" type="video/mp4">
         </video> -->
 
         <div id="notas" class="muzieknootjes">
-            {% if lista_final|length > 0 and index < lista_final|length %}
-            {% if lista_final[index]['cat'] == 3 or lista_final[index]['cat'] == 4 %}
+            {% if lista_final[ponteiro_musical]['lista_final']|length > 0 and index < lista_final[ponteiro_musical]['lista_final']|length %}
+            {% if lista_final[ponteiro_musical]['lista_final'][index]['cat'] == 3 or lista_final[ponteiro_musical]['lista_final'][index]['cat'] == 4 %}
             <div class="noot-1">&#9835; &#9833;</div>
             <div class="noot-2">&#9833;</div>
             <div class="noot-3">&#9839; &#9834;</div>
@@ -226,12 +226,12 @@
             {% endif %}
         </div>
 
-        {% if lista_final[index]['tipo'] == 'capa_img' %}
-            <div class="slide capa first-in" id="slide1" style="background-image: url('{{ url_for('static', filename=lista_final[index]['url']) }}');"></div>
-        {% elif lista_final[index]['tipo'] == 'capa_base64' %}
-            <div class="slide capa first-in" id="slide1" style="background-image: url('data:image/png;base64,{{lista_final[index]['url']}}');"></div>
+        {% if lista_final[ponteiro_musical]['lista_final'][index]['tipo'] == 'capa_img' %}
+            <div class="slide capa first-in" id="slide1" style="background-image: url('{{ url_for('static', filename=lista_final[ponteiro_musical]['lista_final'][index]['url']) }}');"></div>
+        {% elif lista_final[ponteiro_musical]['lista_final'][index]['tipo'] == 'capa_base64' %}
+            <div class="slide capa first-in" id="slide1" style="background-image: url('data:image/png;base64,{{lista_final[ponteiro_musical]['lista_final'][index]['url']}}');"></div>
         {% else %}
-            <div class="slide first-in {{lista_final[index]['categoria']}} letra" id="slide1">{{lista_final[index]['texto']}}</div>
+            <div class="slide first-in {{lista_final[ponteiro_musical]['lista_final'][index]['categoria']}} letra" id="slide1">{{lista_final[ponteiro_musical]['lista_final'][index]['texto']}}</div>
         {% endif %}
 
         <div class="slide" id="slide2"></div>      
@@ -245,7 +245,7 @@
     <script>
 
         const slides = {{lista_final}}
-        //console.log(slides);
+        console.log(slides);
 
         var key1 = 0;
         var key2 = 1;
@@ -263,39 +263,40 @@
        textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
 
 
-        function changeComponent(slide1, slide2, index) {
+        function changeComponent(slide1, slide2, index, ponteiro) {
             slide1.classList.add('out');
             
-            if ((index + 1) == slides.length) { // final
+            if ((ponteiro + 1) == slides.length && (index + 1) == slides[ponteiro]['lista_final'].length) { // final
+                console.log('yes');
                 slide2.innerHTML = '';
                 slide2.setAttribute('class', 'slide capa');
-                slide2.setAttribute('style', "background-image: url('static/" + slides[0]['url'] + "');");
+                slide2.setAttribute('style', "background-image: url('static/" + slides[0]['lista_final'][0]['url'] + "');");
                 slide2.classList.add('final-out');
                 vara.draw("draw");
 
                 key_final = true;
             } else {
                 // definir slide principal
-                if (slides[index]['tipo'] == 'capa_img') {
+                if (slides[ponteiro]['lista_final'][index]['tipo'] == 'capa_img') {
                     slide2.innerHTML = '';
                     slide2.setAttribute('class', 'slide capa');
-                    slide2.setAttribute('style', "background-image: url('static/" + slides[index]['url'] + "');");
+                    slide2.setAttribute('style', "background-image: url('static/" + slides[ponteiro]['lista_final'][index]['url'] + "');");
                     slide2.classList.add('in');
-                } else if (slides[index]['tipo'] == 'capa_base64') {
+                } else if (slides[ponteiro]['lista_final'][index]['tipo'] == 'capa_base64') {
                     slide2.innerHTML = '';
                     slide2.setAttribute('class', 'slide capa');
-                    slide2.setAttribute('style', "background-image: url('data:image/png;base64," + slides[index]['url'] + "');");
+                    slide2.setAttribute('style', "background-image: url('data:image/png;base64," + slides[ponteiro]['lista_final'][index]['url'] + "');");
                     slide2.classList.add('in');
                 } else {
-                    slide2.innerHTML = slides[index]['texto'];
+                    slide2.innerHTML = slides[ponteiro]['lista_final'][index]['texto'];
                     slide2.removeAttribute("style");
-                    slide2.setAttribute('class', 'slide letra ' + slides[index]['categoria']);
-                    document.body.setAttribute('class', 'body-' + slides[index]['categoria']);
+                    slide2.setAttribute('class', 'slide letra ' + slides[ponteiro]['lista_final'][index]['categoria']);
+                    document.body.setAttribute('class', 'body-' + slides[ponteiro]['lista_final'][index]['categoria']);
                     textFit(document.getElementsByClassName('letra'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 2000});
                     slide2.classList.add('in');
                 }   
 
-                if (slides[index]['cat'] == 3 || slides[index]['cat'] == 4) {
+                if (slides[ponteiro]['lista_final'][index]['cat'] == 3 || slides[ponteiro]['lista_final'][index]['cat'] == 4) {
                     notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
                     /*notas.classList.remove('hidden');*/
                 } else {
@@ -303,7 +304,7 @@
                     /*notas.classList.add('hidden');*/
                 }
 
-                if (slides[index]['cat'] == 2 || slides[index]['cat'] == 4) {
+                if (slides[ponteiro]['lista_final'][index]['cat'] == 2 || slides[ponteiro]['lista_final'][index]['cat'] == 4) {
                     slide2.classList.add('coro'); 
                 }
             }
@@ -315,7 +316,7 @@
             if (key_final == true) {
                 location.reload();
             } else {
-                changeComponent(vetor_slides[key1], vetor_slides[key2], index);
+                changeComponent(vetor_slides[key1], vetor_slides[key2], index['index'], index['ponteiro']);
 
                 if (key1 == 0) {
                     key1 = 1;

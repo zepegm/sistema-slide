@@ -1,0 +1,185 @@
+<html lang="pt-BR">
+    <head>
+        <title>Legenda</title>
+        <style>
+
+            .text {
+                text-align: {{align}};
+                font-family: 'Arial';
+                width: 98vw;
+                /*margin: 0 auto;*/
+                /*height: 20%; peguei na tag com o ninja*/
+                /*background: rgb(0, 0, 0, 0.8);*/
+                color: white;
+                position: fixed;
+                bottom: 0;
+                left: 1vw;
+                animation-name: fade-in;
+                animation-duration: 1s;
+                opacity: 1;
+                transition: opacity 0.25s ease-in-out;
+            }
+
+            .hidden {
+                opacity: 0;
+            }            
+            
+            .head {
+                text-align: center;
+                font-family: 'Arial';
+                width: 98vw;
+                height: 8vh;
+                /*background: rgb(0, 0, 0, 0.8);*/
+                text-shadow: 1px 1px 2px black, 0 0 1em black, 0 0 0.2em black;
+                color: white;
+                /*animation-name: fade-inhead;
+                animation-duration: 0.5s;
+                /* mudança pedida pelo Felipe */
+                position: fixed;
+                /*bottom: 20%; peguei na tag com o ninja*/
+                left: 1vw;
+                text-align: left;
+            }
+
+            .retangulo {
+                width: 100vw;
+                position: fixed;
+                bottom: 0;
+                left: 0; 
+                /*background: rgb(0, 0, 0, 0.8);*/
+                background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.14) 100%);
+                transition: opacity 0.25s ease-in-out;                
+
+            }
+
+            .nd {
+                font-variant: small-caps;
+            }
+
+            .add {
+                font-style: italic;
+            }
+
+            .sc {
+                font-variant: small-caps;
+            }
+
+            .heading {
+                font-weight: bold;
+            }
+
+            .wj {
+                color: yellow;
+            }            
+
+            @keyframes fade-in {
+                from {color: rgba(255, 255, 255, 0);}
+                to {color: rgba(255, 255, 255, 1);}
+            }
+
+            @keyframes fade-inhead {
+                from {
+                    color: rgba(255, 255, 255, 0);
+                    text-shadow: 0px 0px 0px black;
+                }
+                to {
+                    color: rgba(255, 255, 255, 1);
+                    text-shadow: 1px 1px 2px black;
+                }                
+            }
+        </style>
+        <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
+        <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    </head>
+    <body>
+        {% if index < legenda[ponteiro_musical]['lista']|length %}
+
+            {% if legenda[ponteiro_musical]['lista'][index] == '' %}
+                <div class="retangulo" style="height:0vh"></div>
+                <div id="text" class="text" style="height:0vh"></div>
+            {% else %}
+                <div class="retangulo" style="height:{{tamanho|safe}}vh"></div>
+                <div id="text" class="text" style="height:{{tamanho|safe}}vh">{{ legenda[ponteiro_musical]['lista'][index]|safe }}</div>
+            {% endif %}
+        
+        {% else %}
+            <div class="retangulo" style="height:0vh">{{ponteiro_musical}}</div>
+            <div id="text" class="text" style="height:0vh">{{legenda[0]['lista']|length}}</div>
+        {% endif %}
+
+        <script>
+            var legenda = {{legenda}};
+            const textElement = document.getElementById("text");
+            const retanguloElement = document.querySelector(".retangulo");
+            const headElement = document.querySelector(".head");
+
+            if ({{index}} < legenda.length) {
+                try {
+                    textFit(document.querySelectorAll('div'), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
+                } catch (error) {
+                    console.log(error);
+                }
+                
+            }
+            
+            var socket = io()
+
+            socket.on('update', function(index) {
+                
+                if (index.index < legenda[index.ponteiro]['lista'].length) {
+
+                    if (legenda[index.ponteiro]['lista'][index.index] == '') {
+                        textElement.classList.add("hidden");
+                        retanguloElement.classList.add("hidden");
+                        return;
+                    } else if (legenda[index.ponteiro]['lista'][index.index].length < 199) {
+                        tamanho = 20;
+                    } else if (legenda[index.ponteiro]['lista'][index.index].length < 499) {
+                        tamanho = 30;
+                    } else {
+                        tamanho = 60;
+                    }
+
+                    // Adiciona a classe para iniciar o fade-out
+                    textElement.classList.add("hidden");
+
+                    setTimeout(() => {
+                        // Troca o texto após o fade-out
+                        textElement.innerHTML = legenda[index.ponteiro]['lista'][index.index];
+
+                        // Ajusta a altura do elemento de texto
+                        textElement.style.height = tamanho + "vh";
+                        retanguloElement.style.height = tamanho + "vh";
+
+                        if (tamanho > 0) {
+                            textFit(textElement, {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100});
+                        }
+
+                        // Remove a classe para iniciar o fade-in
+                        textElement.classList.remove("hidden");
+                        retanguloElement.classList.remove("hidden");
+
+                        
+                        if (headElement) {
+                            headElement.style.bottom = tamanho + "vh";
+                        }
+
+                    }, 250); // O tempo deve ser igual ao da transição CSS                    
+
+                } else {
+                    textElement.classList.add("hidden");
+                    retanguloElement.classList.add("hidden");
+                    //$('.text').attr('style', "height:0vh");
+                    //$('.retangulo').attr('style', "height:0vh");                    
+                }
+            });
+
+            socket.on('refresh', function(a) {
+                if (a == 1) {
+                    location.reload();
+                }
+            });
+        </script>
+    </body>
+</html>
