@@ -103,6 +103,10 @@
                 text-decoration: underline;                
             }
 
+            .titulo-info-end {
+                top: 0px !important;
+            }
+
             #logo {
                 margin-top: 40px;
                 position: relative;
@@ -149,7 +153,7 @@
             }
 
             .lista-final {
-                margin-top: -10px;
+                margin-top: -5px;
             }
 
             .coluna-1 {
@@ -263,6 +267,7 @@
                 font-size: 18px;
                 font-family: Helvetica, Arial, sans-serif;
                 text-align: center;
+                margin-top: 0px;
             }
 
         </style>
@@ -375,20 +380,20 @@
                 <div id="subcat-{{subcat_id}}" class="pagina">
                     <div class="paginacao"><a href="#info">{{pagina.cont}}</a></div>
                     {% set pagina.cont = pagina.cont + 1 %}
-                    <div class="titulo-info">{{ categoria }}</div>
+                    <div class="titulo-info titulo-info-end">{{ categoria }}</div>
                     <p class="subcat"><b>{{ subcat }}</b></p>
                     <ul class="lista lista-final">
                     {% set vars = namespace(cont=1) %}
                     {% for musica in musicas %}
 
-            {% if vars.cont == 23 %}
+            {% if vars.cont == 24 %}
                 {% set vars.cont = 1 %}
                     </ul>
                 </div>
                 <div class="pagina">
                     <div class="paginacao"><a href="#info">{{pagina.cont}}</a></div>
                     {% set pagina.cont = pagina.cont + 1 %}
-                    <div class="titulo-info">{{ categoria }}</div>
+                    <div class="titulo-info titulo-info-end">{{ categoria }}</div>
                     <p class="subcat"><b>{{ subcat }}</b></p>
                     <ul class="lista lista-final">
             {% endif %}
