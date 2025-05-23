@@ -365,6 +365,8 @@
 
             {% endfor %}
 
+            {% if completo == 'true' %}
+
             {% set pagina = namespace(cont=pagina_final) %}
 
             <!-- Sumário Final -->
@@ -400,5 +402,6 @@
             {% endfor %}
 
         </div>
+        {% endif %}
     </body>
 </html>
