@@ -550,6 +550,114 @@ def render_calendario():
 
     return render_template('render_calendario_semanal.jinja', slides=slides, inicio='%s/%s' % (slides[0]['dia'], request.args.get('semana')[5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"))
 
+@app.route('/add_historico', methods=['GET', 'POST'])
+def add_historico():
+
+    feedback = ''
+
+    data_atual = datetime.datetime.now()
+
+    if request.method == 'POST':
+        if 'data_reload' in request.form:
+            data_atual = datetime.datetime.strptime(request.form['data_reload'], '%Y-%m-%d')
+
+        if 'lista' in request.form:
+            dia = "'" + request.form['data'] + "'"
+            tema = request.form['tipo']
+            obs = "'" + request.form['obs'] + "'" if request.form['obs'] != '' else 'null'
+            url = "'" + request.form['url'] + "'" if request.form['url'] != '' else 'null'
+
+            lista = json.loads(request.form['lista'])
+            
+            if banco.inserirHistorico(dia, tema, obs, url, lista):
+                tem_data = datetime.datetime.strptime(request.form['data'], '%Y-%m-%d')
+                feedback = f'<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Evento do dia <b>{tem_data.strftime('%d/%m/%Y')}</b> criado com sucesso! <a href= "/historico">Clique aqui</a> para ver os eventos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+            else:
+                feedback = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Falha na operação!</strong>Erro de banco de dados! Não foi possível inserir registro de evento.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+
+
+    tipos = banco.executarConsulta("select * from Historico_Tema order by descricao")
+    query = f'''SELECT DISTINCT
+                    CASE WHEN tipo = 1 THEN 1 WHEN tipo = 2 THEN 3 WHEN tipo = 3 THEN 2 END AS tipo_evento,
+                    CASE 
+                        WHEN tipo = 1 THEN (SELECT descricao FROM Historico_Evento WHERE Historico_Evento.id = 1)
+                        WHEN tipo = 2 THEN (SELECT descricao FROM Historico_Evento WHERE Historico_Evento.id = 3)
+                        WHEN tipo = 3 THEN (SELECT descricao FROM Historico_Evento WHERE Historico_Evento.id = 2)
+                    END AS descricao_evento,
+                    CASE
+                        WHEN tipo = 1 THEN livro_biblia
+                        WHEN tipo = 2 THEN id_musica
+                        WHEN tipo = 3 THEN id_harpa
+                    END AS id_item,
+                    CASE
+                        WHEN tipo = 1 THEN (SELECT descricao FROM livro_biblia WHERE id = livro_biblia)
+                        WHEN tipo = 2 THEN (SELECT titulo FROM musicas WHERE id = id_musica)
+                        WHEN tipo = 3 THEN id_harpa || ' - ' || (SELECT descricao FROM harpa WHERE id = id_harpa)
+                    END AS descricao_item,
+                    capitulo,
+                    CASE
+                        WHEN tipo = 1 THEN 'table-warning'
+                        WHEN tipo = 2 THEN 'table-primary'
+                        ELSE 'table-success' END AS cor
+                FROM log
+                WHERE data_hora LIKE '{data_atual.strftime('%Y-%m-%d')}%' AND atividade IN (5, 6, 7, 8, 9) AND tipo in (1, 2, 3) ORDER BY data_hora'''
+    
+    items = banco.executarConsulta(query)
+    tipos_items = banco.executarConsulta("select id, descricao from Historico_Evento order by id")
+    livros = banco.executarConsulta("select id, descricao from livro_biblia order by id")
+    musicas = banco.executarConsulta("select id, titulo from musicas order by titulo")
+    harpas = banco.executarConsulta("select id, descricao from harpa order by id")
+    departamentos = banco.executarConsulta("select id, descricao from Historico_Departamentos order by id")
+    forma_musical = banco.executarConsulta("select id, descricao from Historico_Evento_Musica_Cat order by id")
+    tipos_leitura = banco.executarConsulta("select id, descricao from Historico_Evento_Biblia_Cat order by id")
+
+    return render_template('add_historico.jinja', data=data_atual.strftime('%Y-%m-%d'), tipos=tipos, items=items, tipos_items=tipos_items, musicas=musicas, livros=livros, harpas=harpas, departamentos=departamentos, forma_musical=forma_musical, tipos_leitura=tipos_leitura, feedback=feedback)
+
+@app.route('/historico', methods=['GET', 'POST'])
+def historico():
+
+    query = '''SELECT 
+                id_roteiro,
+                Historico_Evento.descricao AS tipo,
+                CASE
+                    WHEN id_tipo_evento = 1 THEN livro_biblia.descricao || ', ' || cap_biblia
+                    WHEN id_tipo_evento = 2 THEN harpa.id || ' - ' || harpa.descricao
+                    WHEN id_tipo_evento = 3 THEN musicas.titulo
+                END AS desc_item,
+                CASE
+                    WHEN id_tipo_evento = 1 THEN Historico_Evento_Biblia_Cat.descricao
+                    ELSE Historico_Departamentos.descricao
+                END as departamento,
+                CASE
+                    WHEN id_tipo_evento = 1 THEN iif(id_livro_biblia < 40,'AT','NT')
+                    ELSE Historico_Evento_Musica_Cat.descricao
+                END as formato,
+                CASE
+                    WHEN id_tipo_evento = 1 THEN 'table-warning'
+                    WHEN id_tipo_evento = 2 THEN 'table-primary'
+                    ELSE 'table-success' END AS cor       
+            FROM Historico_Registro_Eventos
+            INNER JOIN Historico_Evento ON Historico_Evento.id = Historico_Registro_Eventos.id_tipo_evento
+            LEFT JOIN livro_biblia ON livro_biblia.id = Historico_Registro_Eventos.id_livro_biblia
+            LEFT JOIN harpa ON harpa.id = Historico_Registro_Eventos.id_harpa
+            LEFT JOIN musicas ON musicas.id = Historico_Registro_Eventos.id_musica
+            LEFT JOIN Historico_Evento_Biblia_Cat ON Historico_Evento_Biblia_Cat.id = Historico_Registro_Eventos.id_cat_biblia
+            LEFT JOIN Historico_Departamentos ON Historico_Departamentos.id = Historico_Registro_Eventos.id_departamento
+            LEFT JOIN Historico_Evento_Musica_Cat ON Historico_Evento_Musica_Cat.id = Historico_Registro_Eventos.id_cat_musica'''
+
+    eventos = banco.executarConsulta(r"SELECT Historico_Roteiro.id, STRFTIME('%d/%m/%Y', Dia) as desc_dia, Historico_Tema.descricao as tipo, IFNULL(OBS, '') as OBS, IFNULL(URL, '#') as URL FROM Historico_Roteiro INNER JOIN Historico_Tema ON Historico_Tema.id = Historico_Roteiro.Tema ORDER BY Dia DESC")
+    items = banco.executarConsulta(query)
+
+
+    itens_indexados = {}
+    for item in items:
+        key = (item['id_roteiro'])
+        itens_indexados.setdefault(key, []).append({'tipo':item['tipo'], 'desc_item':item['desc_item'], 'departamento':item['departamento'], 'formato':item['formato'], 'cor':item['cor']})
+
+    for evento in eventos:
+        evento['itens'] = itens_indexados.get((evento['id']), [])
+
+    return render_template('historico.jinja', eventos=eventos)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():

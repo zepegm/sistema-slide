@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Adicionar Registro de Evento</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+      .form-custom {
+        border: solid;
+        border-color: rgb(0, 0, 0, 0.3);     
+      }
+
+      .loader {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        bottom: 0;
+        margin: auto;
+        border: 20px solid #EAF0F6;
+        border-radius: 50%;
+        border-top: 20px solid #FF7A59;
+        width: 200px;
+        height: 200px;
+        animation: spinner 4s linear infinite;
+      }
+      @keyframes spinner {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }       
+
+      #loading {
+        background-color: white;
+        height: 100%;
+        left: 0;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 9999;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+
+
+    <script>
+      if (window.innerWidth < 1367) {
+        var sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("active");
+      }
+    </script>
+    
+
+        <!-- Page Content  -->
+      <form id="form_add_historico" method="POST" action="/add_historico">
+      <input type="hidden" name="lista" id="send_lista">        
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <div id="loading"><div class="loader"></div></div>
+        <section class="container">
+
+          <div class="row">
+            <div class="col-sm-12">{{feedback}}</div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-12">
+              <h2 class="fw-bold">Adicionar Registro de Evento</h2>
+            </div>
+            <div class="col-sm-2">
+              <label for="txt_data" class="form-label">Data do Evento</label>
+              <input id="txt_data" name="data" type="date" class="form-control form-custom" value="{{data}}">
+            </div>
+            <div class="col-sm-4">
+              <label for="cb_tipo" class="form-label">Tipo de Evento</label>
+              <select class="form-select form-custom" id="cb_tipo" name="tipo">
+                {% for tipo in tipos %}
+                  <option value="{{tipo.id}}">{{tipo.descricao}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label for="txt_url" class="form-label">URL do Vídeo</label>
+              <input id="txt_url" name="url" type="text" class="form-control form-custom" placeholder="URL do Vídeo">
+            </div>
+            <div class="col-sm-12 mt-3">
+              <label for="txt_obs" class="form-label">Observações</label>
+              <input type="text" id="txt_obs" name="obs" class="form-control form-custom" placeholder="Observações">
+            </div>
+            <div class="col-sm-12 mt-3">
+              <hr>
+            </div>
+            <div class="col-sm-12">
+              <table id="tb-principal" class="table table-hover table-bordered">
+                <thead>
+                  <tr>
+                    <th scope="col">Tipo</th>
+                    <th scope="col" style="width:20vw">Item</th>
+                    <th scope="col">Departamento/Tipo Leitura</th>
+                    <th scope="col">Forma Musical/Capítulo</th>
+                    <th class="text-center" scope="col">Excluir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in items %}
+                    <tr class="{{item.cor}}">
+                      <td> <!-- Tipo do Evento -->
+                        <select class="form-select cb-tipo-evento">
+                          {% for tipo_item in tipos_items %}
+                            <option value="{{tipo_item.id}}" {% if tipo_item.id == item.tipo_evento %}selected{% endif %}>{{tipo_item.descricao}}</option>
+                          {% endfor %}
+                        </select>
+                      </td>
+                      <td> <!-- Item do Evento -->
+                        <select class="form-select">
+                          {% if item.tipo_evento == 1 %}
+                            {% for livro in livros %}
+                              <option value="{{livro.id}}" {% if livro.id == item.id_item %}selected{% endif %}>{{livro.descricao}}</option>
+                            {% endfor %}
+                          {% elif item.tipo_evento == 2 %}
+                            {% for musica in harpas %}
+                              <option value="{{musica.id}}" {% if musica.id == item.id_item %}selected{% endif %}>{{musica.id}} - {{musica.descricao}}</option>
+                            {% endfor %}                          
+                          {% elif item.tipo_evento == 3 %}
+                            {% for musica in musicas %}
+                              <option value="{{musica.id}}" {% if musica.id == item.id_item %}selected{% endif %}>{{musica.titulo}}</option>
+                            {% endfor %}                          
+                          {% endif %}                          
+                        </select>
+                      </td>
+                      <td> <!-- Departamento/Tipo Leitura -->
+                        {% if item.tipo_evento == 1 %}
+                        <select class="form-select">
+                          {% for tipo_leitura in tipos_leitura %}
+                            <option value="{{tipo_leitura.id}}">{{tipo_leitura.descricao}}</option>
+                          {% endfor %}
+                        </select>
+                        {% else %}
+                        <select class="form-select">
+                          {% for departamento in departamentos %}
+                            <option value="{{departamento.id}}" {% if departamento.id == item.departamento %}selected{% endif %}>{{departamento.descricao}}</option>
+                          {% endfor %}
+                        </select>
+                        {% endif %}
+                      </td>
+                      <td> <!-- Forma Musical/Capítulo -->
+                        {% if item.tipo_evento == 1 %}
+                        <input type="number" class="form-control form-custom" placeholder="Capítulo" value="{{item.capitulo}}">
+                        {% else %}
+                        <select class="form-select">
+                          {% for forma in forma_musical %}
+                            <option value="{{forma.id}}">{{forma.descricao}}</option>
+                          {% endfor %}
+                        </select>
+                        {% endif %}
+                      </td>
+                      <td class="text-center"> <!-- Excluir -->
+                        <button type="button" class="btn btn-danger btn-sm">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              
+              </table>
+            </div>
+            <div class="col-sm-12 mt-3">
+              <button type="button" class="btn btn-primary" id="btn-add-item">
+                <i class="fa-solid fa-plus"></i> Adicionar Item
+              </button>
+              <button type="button" class="btn btn-success" id="btn-salvar">
+                <i class="fa-solid fa-save"></i> Salvar Registro
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+      </form>
+		</div>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/Sortable.min.js') }}"></script>
+  
+  <script>
+
+    const musicas = {{ musicas|tojson }};
+    const harpas = {{ harpas|tojson }};
+    const livros = {{ livros|tojson }};
+    const tipos_leitura = {{ tipos_leitura|tojson }};
+    const departamentos = {{ departamentos|tojson }};
+    const forma_musical = {{ forma_musical|tojson }};
+    const tipos_items = {{ tipos_items|tojson }};
+
+    window.onload = function() {
+      $("#loading").remove();
+
+      new Sortable(document.querySelector("#tb-principal tbody"), {
+        animation: 150,
+        handle: 'tr', // ou use uma classe específica se quiser arrastar só um elemento
+        onEnd: function(evt) {
+          console.log("Nova ordem:", evt.oldIndex, "=>", evt.newIndex);
+          // Aqui você pode enviar para o servidor a nova ordem!
+        }
+      });      
+    };
+
+    $("#btn-salvar").on('click', function() {
+      const data = $("#txt_data").val();
+      const tipo = $("#cb_tipo").val();
+      const url = $("#txt_url").val();
+      const items = [];
+
+      $("#tb-principal tbody tr").each(function() {
+        const item = {};
+        
+        const row = $(this);
+        item.id_tipo_evento = row.find('.cb-tipo-evento').val();
+        
+        if (item.id_tipo_evento == 1) { // Livro
+          item.id_departamento = 'null'; // Livro não tem departamento
+          item.id_cat_biblia = row.find('select').eq(2).val(); // Item do Evento (Livro) 
+          item.id_cat_musica = 'null'; // Livro não tem música
+          item.id_musica = 'null'; // Livro não tem música
+          item.id_harpa = 'null'; // Livro não tem harpa
+          item.id_livro_biblia = row.find('select').eq(1).val(); // Item do Evento (Livro)
+          item.cap_biblia = row.find('input').val(); // Capítulo
+        } else if (item.id_tipo_evento == 2) { // Harpa
+          item.id_departamento = row.find('select').eq(2).val(); // Departamento/Tipo Leitura
+          item.id_cat_biblia = 'null'; // Harpa não tem Bíblia
+          item.id_cat_musica = row.find('select').eq(3).val(); // Forma Musical
+          item.id_musica = 'null'; // Harpa não é música
+          item.id_harpa = row.find('select').eq(1).val(); // Item do Evento (Harpa)
+          item.id_livro_biblia = 'null'; // Harpa não é livro
+          item.cap_biblia = 'null'; // Harpa não tem capítulo
+        } else if (item.id_tipo_evento == 3) { // Música
+          item.id_departamento = row.find('select').eq(2).val(); // Departamento/Tipo Leitura
+          item.id_cat_biblia = 'null'; // Música não tem Bíblia
+          item.id_cat_musica = row.find('select').eq(3).val(); // Forma Musical
+          item.id_musica = row.find('select').eq(1).val(); // Item do Evento (Música)
+          item.id_harpa = 'null'; // Música não é harpa
+          item.id_livro_biblia = 'null'; // Música não é livro
+          item.cap_biblia = 'null'; // Música não tem capítulo
+        }
+
+        if (item.id_tipo_evento) {
+          items.push(item);
+        }
+      });
+
+      $("#send_lista").val(JSON.stringify(items));
+
+      const form = document.getElementById('form_add_historico');
+      form.submit();
+    });
+
+    $("#btn-add-item").on('click', function() {
+      const newRow = `
+        <tr class="table-secondary">
+          <td>
+            <select class="form-select cb-tipo-evento">
+              <option value="" selected disabled>Selecione o Tipo</option>
+              ${tipos_items.map(tipo => `<option value="${tipo.id}">${tipo.descricao}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="form-select"></select>
+          </td>
+          <td>
+            <select class="form-select"></select>
+          </td>
+          <td></td>
+          <td class="text-center">
+            <button type="button" class="btn btn-danger btn-sm">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>`;
+      $("#tb-principal tbody").append(newRow);
+    });
+
+    $("#tb-principal").on('change', '.cb-tipo-evento', function() {
+      const row = $(this).closest('tr');
+      const tipoEvento = $(this).val();
+      const itemSelect_item = row.find('select').eq(1); // Seleciona o segundo select (Item do Evento)
+      itemSelect_item.empty(); // Limpa as opções existentes
+      const itemSelect_departamento = row.find('select').eq(2); // Seleciona o terceiro select (Departamento/Tipo Leitura)
+      itemSelect_departamento.empty(); // Limpa as opções existentes
+
+      if (tipoEvento == 1) { // Livro
+        livros.forEach(function(livro) {
+          itemSelect_item.append(new Option(livro.descricao, livro.id));
+        });
+        tipos_leitura.forEach(function(tipo_leitura) {
+          itemSelect_departamento.append(new Option(tipo_leitura.descricao, tipo_leitura.id));
+        });
+
+        row.find('td').eq(3).html('<input type="number" class="form-control form-custom" placeholder="Capítulo" value="1">'); // Atualiza a coluna Capítulo
+
+        row.attr('class', 'table-warning'); // Atualiza a cor da linha para indicar que é um Livro
+
+      } else if (tipoEvento == 2) { // Harpa
+        harpas.forEach(function(musica) {
+          itemSelect_item.append(new Option(musica.id + ' - ' + musica.descricao, musica.id));
+        });
+        departamentos.forEach(function(departamento) {
+          itemSelect_departamento.append(new Option(departamento.descricao, departamento.id));
+        });
+
+        let options = '';
+        forma_musical.forEach(function(forma) { 
+          options += `<option value="${forma.id}">${forma.descricao}</option>`;
+        });
+
+        row.find('td').eq(3).html(`<select class="form-select">${options}</select>`); // Atualiza a coluna Forma Musical
+
+        row.attr('class', 'table-success'); // Atualiza a cor da linha para indicar que é um Livro
+
+      } else if (tipoEvento == 3) { // Música
+        musicas.forEach(function(musica) {
+          itemSelect_item.append(new Option(musica.titulo, musica.id));
+        });
+        departamentos.forEach(function(departamento) {
+          itemSelect_departamento.append(new Option(departamento.descricao, departamento.id));
+        });
+
+        let options = '';
+        forma_musical.forEach(function(forma) { 
+          options += `<option value="${forma.id}">${forma.descricao}</option>`;
+        });
+
+        row.find('td').eq(3).html(`<select class="form-select">${options}</select>`); // Atualiza a coluna Forma Musical  
+
+        row.attr('class', 'table-primary'); // Atualiza a cor da linha para indicar que é um Livro      
+      }      
+    });
+    
+
+    $("#tb-principal").on('click', '.btn-danger', function() {
+      const row = $(this).closest('tr');
+      row.remove();
+    });
+
+    $("#txt_data").on('change', function() {
+
+      const form = document.createElement('form');
+      form.action = '/add_historico';
+      form.method = 'POST';
+
+      const inputNome = document.createElement('input');
+      inputNome.type = 'hidden';
+      inputNome.name = 'data_reload';
+      inputNome.value = $("#txt_data").val();
+      form.appendChild(inputNome); 
+
+      document.body.appendChild(form);
+      form.submit();
+
+    });
+
+  </script>
+      
+  </body>
+</html>

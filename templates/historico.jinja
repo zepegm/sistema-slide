@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Adicionar Registro de Evento</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/navbar-top-fixed.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/fontawesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Simular original -->
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: black;
+      }
+
+      .box-index {
+        box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
+        color: blue;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+      .form-custom {
+        border: solid;
+        border-color: rgb(0, 0, 0, 0.3);     
+      }
+
+      .loader {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        bottom: 0;
+        margin: auto;
+        border: 20px solid #EAF0F6;
+        border-radius: 50%;
+        border-top: 20px solid #FF7A59;
+        width: 200px;
+        height: 200px;
+        animation: spinner 4s linear infinite;
+      }
+      @keyframes spinner {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }       
+
+      #loading {
+        background-color: white;
+        height: 100%;
+        left: 0;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 9999;
+      }
+
+      .fa-youtube {
+        color: #ff0000;
+      }
+
+      .fa-youtube:hover {
+        color: #74C0FC;;
+      }      
+
+    </style>
+  </head>
+
+  <body>
+    
+    {% block menu_superior %}
+      {% include 'menu_superior.html' %}
+    {% endblock %}    
+
+		<div class="wrapper d-flex align-items-stretch">
+    {% block menu_lateral %}
+      {% include 'menu_lateral.html' %}
+    {% endblock %}    
+
+
+    <script>
+      if (window.innerWidth < 1367) {
+        var sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("active");
+      }
+    </script>
+    
+
+        <!-- Page Content  -->    
+      <div id="content" class="p-4 p-md-5 pt-5">
+        <div id="loading"><div class="loader"></div></div>
+        <section class="container">
+
+          <div class="row">
+            <div class="col-sm-12">{{feedback}}</div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-12">
+              <table class="table">
+                <thead>
+                  <tr class="table-warning table-bordered">
+                    <th>Dia</th>
+                    <th>Tipo:</th>
+                    <th>OBS:</th>
+                    <th class="text-center">Link YouTube</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in eventos %}
+                  <tr class="table-bordered">
+                    <td>{{item['desc_dia']}}</td>
+                    <td>{{item['tipo']}}</td>
+                    <td>{{item['OBS']}}</td>
+                    <td class="text-center"><a href="{{item['URL']}}"><i class="fa-brands fa-youtube fa-2xl"></i></a></td>
+                  </tr>
+                  <tr>
+                    <td class="table-bordered" colspan="4">
+                      <table class="table table-hover">
+                        <tbody>
+                          {% for evt in item['itens']%}
+                          <tr class="{{evt['cor']}}">
+                            <td>{{evt['tipo']}}</td>
+                            <td>{{evt['desc_item']}}</td>
+                            <td>{{evt['departamento']}}</td>
+                            <td>{{evt['formato']}}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+      </div>
+		</div>
+
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <script>
+
+      window.onload = function() {
+        $("#loading").remove();    
+      };
+
+    </script>
+      
+  </body>
+</html>

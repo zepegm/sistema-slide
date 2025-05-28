@@ -55,24 +55,24 @@
 
     #slidePrincipal {
       width: 100%; /* or whatever width you want. */
-      height: 20vh; /* or whatever width you want. */
+      height: 30vh; /* or whatever width you want. */
       line-height: normal;
     }
 
     #slideProx {
       width: 100%; /* or whatever width you want. */
-      height: 20vh; /* or whatever width you want. */
+      height: 30vh; /* or whatever width you want. */
       line-height: normal;
     }
 
     #card_principal {
       width: 100%; /* or whatever width you want. */
-      height: 25vh; /* or whatever width you want. */
+      height: 30vh; /* or whatever width you want. */
     }
 
     #card_prox {
       width: 100%; /* or whatever width you want. */
-      height: 25vh; /* or whatever width you want. */
+      height: 30vh; /* or whatever width you want. */
     }
 
     .mini-box {
@@ -224,15 +224,14 @@
                     {% else %}
                       <div class="{{lista_final[index]['categoria']}} letra" id="slidePrincipal">{{lista_final[index]['texto']}}</div>
                     {% endif %}
-                </div>        
-                <div class="card-body">
-                      {% if lista_final[index]['anotacao'] != '' %}
-                      <p id="anotacao"><strong>Anotação: </strong>{{lista_final[index]['anotacao']}}</p>
-                      {% endif %}
-                      {% if lista_final[index]['cat'] == 3 or lista_final[index - 1]['cat'] == 4 %}
-                      <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
-                      {% endif %}
-                </div>                
+                </div> 
+
+                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
+                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
+                <br>
+                <button id="btn_pausar" class="btn btn-warning"><i class="fa-solid fa-circle-pause"></i> Pausar</button>                
+                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Finalizar</button>
+
               </div>
 
             {% if index + 1 < lista_final|length  %}
@@ -252,11 +251,7 @@
                 <div class="{{lista_final[index + 1]['categoria']}} letra" id="slideProx">{{lista_final[index + 1]['texto']}}</div>
               {% endif %}
               </div> 
-                <button id="btn_previous" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-left"></i></button>
-                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button>
-                <br>
-                <button id="btn_pausar" class="btn btn-warning"><i class="fa-solid fa-circle-pause"></i> Pausar</button>                
-                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Finalizar</button>
+
             </div> 
             {% else %} 
             <div class="col-sm-4">
@@ -264,11 +259,16 @@
               <div id="card_prox" class="card shadow-sm">
                 <div id="slideProx" class="letra" style="color:white !important; background-color:black !important;"><b>Fim</b></div>
               </div>        
-                <button id="btn_previous" class="btn btn-light arrow"><i class="fa-solid fa-circle-arrow-left"></i></button>
-                <button id="btn_next" class="btn btn-light arrow" disabled><i class="fa-solid fa-circle-arrow-right"></i></button> 
-                <br>
-                <button id="btn_pausar" class="btn btn-warning"><i class="fa-solid fa-circle-pause"></i> Pausar</button>                
-                <button id="btn_encerrar" class="btn btn-dark"><i class="fa-solid fa-circle-xmark"></i> Finalizar</button>
+
+              <div class="card-body">
+                {% if lista_final[index]['anotacao'] != '' %}
+                <p id="anotacao"><strong>Anotação: </strong>{{lista_final[index]['anotacao']}}</p>
+                {% endif %}
+                {% if lista_final[index]['cat'] == 3 or lista_final[index - 1]['cat'] == 4 %}
+                <p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>
+                {% endif %}
+              </div>
+
             </div>       
             {% endif %} 
 
