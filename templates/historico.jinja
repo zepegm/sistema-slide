@@ -83,12 +83,21 @@
       }
 
       .fa-youtube {
-        color: #ff0000;
+        color: white;
       }
 
       .fa-youtube:hover {
         color: #74C0FC;;
-      }      
+      }     
+
+      .table-dark {
+        background-color: black !important;
+        font-size: larger;
+      } 
+
+      #tb-principal {
+        border: solid 1px black;
+      }
 
     </style>
   </head>
@@ -124,25 +133,17 @@
 
           <div class="row">
             <div class="col-sm-12">
-              <table class="table">
-                <thead>
-                  <tr class="table-warning table-bordered">
-                    <th>Dia</th>
-                    <th>Tipo:</th>
-                    <th>OBS:</th>
-                    <th class="text-center">Link YouTube</th>
-                  </tr>
-                </thead>
+              <table id="tb-principal" class="table">
                 <tbody>
                   {% for item in eventos %}
-                  <tr class="table-bordered">
-                    <td>{{item['desc_dia']}}</td>
-                    <td>{{item['tipo']}}</td>
-                    <td>{{item['OBS']}}</td>
-                    <td class="text-center"><a href="{{item['URL']}}"><i class="fa-brands fa-youtube fa-2xl"></i></a></td>
+                  <tr>
+                    <th class="table-dark">{{item['desc_dia']}}</th>
+                    <th class="table-dark">{{item['tipo']}}</th>
+                    <th class="table-dark">{{item['OBS']}}</th>
+                    <th class="table-dark text-center"><a href="{{item['URL']}}"><i class="fa-brands fa-youtube fa-2xl"></i></a></th>
                   </tr>
                   <tr>
-                    <td class="table-bordered" colspan="4">
+                    <td colspan="4">
                       <table class="table table-hover">
                         <tbody>
                           {% for evt in item['itens']%}
@@ -177,7 +178,7 @@
 
       window.onload = function() {
         $("#loading").remove();    
-      };
+      };     
 
     </script>
       
