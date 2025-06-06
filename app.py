@@ -616,48 +616,82 @@ def add_historico():
 @app.route('/historico', methods=['GET', 'POST'])
 def historico():
 
-    query = '''SELECT 
-                id_roteiro,
-                Historico_Evento.descricao AS tipo,
-                CASE
-                    WHEN id_tipo_evento = 1 THEN livro_biblia.descricao || ', ' || cap_biblia
-                    WHEN id_tipo_evento = 2 THEN harpa.id || ' - ' || harpa.descricao
-                    WHEN id_tipo_evento = 3 THEN musicas.titulo
-                END AS desc_item,
-                CASE
-                    WHEN id_tipo_evento = 1 THEN Historico_Evento_Biblia_Cat.descricao
-                    ELSE Historico_Departamentos.descricao
-                END as departamento,
-                CASE
-                    WHEN id_tipo_evento = 1 THEN iif(id_livro_biblia < 40,'AT','NT')
-                    ELSE Historico_Evento_Musica_Cat.descricao
-                END as formato,
-                CASE
-                    WHEN id_tipo_evento = 1 THEN 'table-warning'
-                    WHEN id_tipo_evento = 2 THEN 'table-primary'
-                    ELSE 'table-success' END AS cor       
-            FROM Historico_Registro_Eventos
-            INNER JOIN Historico_Evento ON Historico_Evento.id = Historico_Registro_Eventos.id_tipo_evento
-            LEFT JOIN livro_biblia ON livro_biblia.id = Historico_Registro_Eventos.id_livro_biblia
-            LEFT JOIN harpa ON harpa.id = Historico_Registro_Eventos.id_harpa
-            LEFT JOIN musicas ON musicas.id = Historico_Registro_Eventos.id_musica
-            LEFT JOIN Historico_Evento_Biblia_Cat ON Historico_Evento_Biblia_Cat.id = Historico_Registro_Eventos.id_cat_biblia
-            LEFT JOIN Historico_Departamentos ON Historico_Departamentos.id = Historico_Registro_Eventos.id_departamento
-            LEFT JOIN Historico_Evento_Musica_Cat ON Historico_Evento_Musica_Cat.id = Historico_Registro_Eventos.id_cat_musica'''
+    semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
 
-    eventos = banco.executarConsulta(r"SELECT Historico_Roteiro.id, STRFTIME('%d/%m/%Y', Dia) as desc_dia, Historico_Tema.descricao as tipo, IFNULL(OBS, '') as OBS, IFNULL(URL, '#') as URL FROM Historico_Roteiro INNER JOIN Historico_Tema ON Historico_Tema.id = Historico_Roteiro.Tema ORDER BY Dia DESC")
-    items = banco.executarConsulta(query)
+    if request.method == 'POST':
+        if request.is_json:
+            info = request.json
+            print(info)
+
+            if info['destino'] == 1:
+
+                id = info['id']
+
+                query = f'''SELECT 
+                            id_roteiro,
+                            Historico_Evento.descricao AS tipo,
+                            CASE
+                                WHEN id_tipo_evento = 1 THEN livro_biblia.descricao || ', ' || cap_biblia
+                                WHEN id_tipo_evento = 2 THEN harpa.id || ' - ' || harpa.descricao
+                                WHEN id_tipo_evento = 3 THEN musicas.titulo
+                            END AS desc_item,
+                            CASE
+                                WHEN id_tipo_evento = 1 THEN Historico_Evento_Biblia_Cat.descricao
+                                ELSE Historico_Departamentos.descricao
+                            END as departamento,
+                            CASE
+                                WHEN id_tipo_evento = 1 THEN iif(id_livro_biblia < 40,'AT','NT')
+                                ELSE Historico_Evento_Musica_Cat.descricao
+                            END as formato,
+                            CASE
+                                WHEN id_tipo_evento = 1 THEN 'table-warning'
+                                WHEN id_tipo_evento = 2 THEN 'table-primary'
+                                ELSE 'table-success' END AS cor       
+                        FROM Historico_Registro_Eventos
+                        INNER JOIN Historico_Evento ON Historico_Evento.id = Historico_Registro_Eventos.id_tipo_evento
+                        LEFT JOIN livro_biblia ON livro_biblia.id = Historico_Registro_Eventos.id_livro_biblia
+                        LEFT JOIN harpa ON harpa.id = Historico_Registro_Eventos.id_harpa
+                        LEFT JOIN musicas ON musicas.id = Historico_Registro_Eventos.id_musica
+                        LEFT JOIN Historico_Evento_Biblia_Cat ON Historico_Evento_Biblia_Cat.id = Historico_Registro_Eventos.id_cat_biblia
+                        LEFT JOIN Historico_Departamentos ON Historico_Departamentos.id = Historico_Registro_Eventos.id_departamento
+                        LEFT JOIN Historico_Evento_Musica_Cat ON Historico_Evento_Musica_Cat.id = Historico_Registro_Eventos.id_cat_musica
+                        WHERE Historico_Registro_Eventos.id_roteiro = {id}'''
+
+                detalhes = banco.executarConsulta(f"SELECT Historico_Roteiro.id, Tema, STRFTIME('%d/%m/%Y', Dia) as desc_dia, STRFTIME('%w', Dia) as semana, Historico_Tema.descricao as tipo, IFNULL(OBS, '-') as OBS, IFNULL(URL, '#') as URL FROM Historico_Roteiro INNER JOIN Historico_Tema ON Historico_Tema.id = Historico_Roteiro.Tema WHERE Historico_Roteiro.id = {id} ORDER BY Dia DESC")[0]
+                itens = banco.executarConsulta(query)
+
+                detalhes['semana'] = semana_sqlite[int(detalhes['semana'])]
+
+                return jsonify({'detalhes':detalhes, 'itens':itens})
+
+            elif info['destino'] == 2:
+                
+                ano = info['ano']
+
+                eventos = banco.executarConsulta(r"SELECT Historico_Roteiro.id, strftime('%m', Dia) as mes, strftime('%Y', Dia) as ano, strftime('%d/%m/%Y', Dia) as data, strftime('%w', Dia) as semana, Historico_Tema.descricao as tema, Tema as tema_id FROM Historico_Roteiro INNER JOIN Historico_Tema ON Historico_Tema.id = Historico_Roteiro.Tema WHERE strftime('%Y', Dia) = '" + ano + "' ORDER BY Date(Dia) DESC")
+
+                for evento in eventos:
+                    evento['semana'] = semana_sqlite[int(evento['semana'])]
+
+                return jsonify(eventos)
 
 
-    itens_indexados = {}
-    for item in items:
-        key = (item['id_roteiro'])
-        itens_indexados.setdefault(key, []).append({'tipo':item['tipo'], 'desc_item':item['desc_item'], 'departamento':item['departamento'], 'formato':item['formato'], 'cor':item['cor']})
+    anos = banco.executarConsultaVetor(r"select distinct strftime('%Y', Dia) as ano from Historico_Roteiro order by ano desc")
+    eventos = banco.executarConsulta(r"SELECT Historico_Roteiro.id, strftime('%m', Dia) as mes, strftime('%Y', Dia) as ano, strftime('%d/%m/%Y', Dia) as data, strftime('%w', Dia) as semana, Historico_Tema.descricao as tema, Tema as tema_id FROM Historico_Roteiro INNER JOIN Historico_Tema ON Historico_Tema.id = Historico_Roteiro.Tema WHERE strftime('%Y', Dia) = '" + anos[0] + "' ORDER BY Date(Dia) DESC")
 
-    for evento in eventos:
-        evento['itens'] = itens_indexados.get((evento['id']), [])
+    filtro_temas = banco.executarConsulta('select * from Historico_Tema order by descricao')
+    filtro_eventos = banco.executarConsulta('select * from Historico_Evento')
+    filtro_departamentos = banco.executarConsulta('select * from Historico_Departamentos')
+    filtro_cat_musicas = banco.executarConsulta("select * from Historico_Evento_Musica_Cat")
+    musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas')
+    musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
 
-    return render_template('historico.jinja', eventos=eventos)
+    for item in musicas:
+
+        if len(item['titulo']) > 26:
+            item['titulo'] = item['titulo'][:23] + "..."
+
+    return render_template('historico.jinja', anos=anos, eventos=eventos, semana_sqlite=semana_sqlite, filtro_temas=filtro_temas, filtro_eventos=filtro_eventos, filtro_departamentos=filtro_departamentos, filtro_cat_musicas=filtro_cat_musicas, musicas=musicas)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():

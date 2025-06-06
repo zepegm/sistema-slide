@@ -83,7 +83,7 @@
       }
 
       .fa-youtube {
-        color: white;
+        color: red;
       }
 
       .fa-youtube:hover {
@@ -98,6 +98,43 @@
       #tb-principal {
         border: solid 1px black;
       }
+
+      .text {
+        color: black;
+        margin-bottom: 0px;
+      }
+
+      #tb-detalhes {
+        margin-top: 20px;
+      }
+
+      .form-custom {
+        border: solid 1px black;
+        border-color: #DEE2E6;
+      }
+
+      #ls-principal a.toggled { display: none; }
+
+      .toggled { display: none; }
+
+    #selecionarMusica {
+      border: none;
+      background-color: rgb(201, 130, 0);
+      padding: 12px 48px 12px 24px;
+      border-radius: 4px;
+      color: white;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7.41' height='12' viewBox='0 0 7.41 12'%3E%3Cpath d='M10,6,8.59,7.41,13.17,12,8.59,16.59,10,18l6-6Z' transform='translate(-8.59 -6)' fill='%23fff'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 24px center;
+      margin-right: 10px;
+    }  
+
+    #txt_filtro_musica {
+      width: 90%;
+      position: relative;
+      left: 5%;
+      border: solid black;
+    }    
 
     </style>
   </head>
@@ -132,36 +169,98 @@
           </div>
 
           <div class="row">
-            <div class="col-sm-12">
-              <table id="tb-principal" class="table">
-                <tbody>
-                  {% for item in eventos %}
-                  <tr>
-                    <th class="table-dark">{{item['desc_dia']}}</th>
-                    <th class="table-dark">{{item['tipo']}}</th>
-                    <th class="table-dark">{{item['OBS']}}</th>
-                    <th class="table-dark text-center"><a href="{{item['URL']}}"><i class="fa-brands fa-youtube fa-2xl"></i></a></th>
-                  </tr>
-                  <tr>
-                    <td colspan="4">
-                      <table class="table table-hover">
-                        <tbody>
-                          {% for evt in item['itens']%}
-                          <tr class="{{evt['cor']}}">
-                            <td>{{evt['tipo']}}</td>
-                            <td>{{evt['desc_item']}}</td>
-                            <td>{{evt['departamento']}}</td>
-                            <td>{{evt['formato']}}</td>
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            <div class="col-sm-2">
+              <label for="cb_ano">Ano</label>
+              <select id="cb_ano" class="form-select">
+                {% for ano in anos %}
+                <option value="{{ano}}">{{ano}}</option>
+                {% endfor %}
+              </select>
             </div>
+            <div class="col-sm-2">
+              <label for="cb_mes">Mês</label>
+              <select id="cb_mes" class="form-select">
+                <option value="00" selected>Todos</option>
+                <option value="01">Janeiro</option>
+                <option value="02">Fevereiro</option>
+                <option value="03">Março</option>
+                <option value="04">Abril</option>
+                <option value="05">Maio</option>
+                <option value="06">Junho</option>
+                <option value="07">Julho</option>
+                <option value="08">Agosto</option>
+                <option value="09">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+              </select>
+            </div>
+            <div class="col-sm-8">
+              <label for="cb_ano">Filtro:</label>
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Evento:</span>
+                <select class="form-select" name="Tema">
+                  <option value="0">Todos</option>
+                  {% for item in filtro_temas %}
+                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  {% endfor %}
+                </select>
+                <span class="input-group-text" id="basic-addon2">Atividade:</span>
+                <select class="form-select" name="id_tipo_evento">
+                  <option value="0">Todos</option>
+                  {% for item in filtro_eventos %}
+                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  {% endfor %}
+                </select>   
+                <span class="input-group-text" id="basic-addon3">Obs:</span>             
+                <input type="text" name="OBS" class="form-control form-custom">
+              </div>
+
+              <div id="painel_filtro_musicas" class="input-group mb-3">
+
+              <div class="dropright">
+                <button class="btn btn-secondary" type="button" id="selecionarMusica" data-toggle="dropdown" aria-expanded="false">
+                  Selecione a Música
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="selecionarMusica">
+                  <input type="text" id="txt_filtro_musica">
+                  {% for item in musicas %}              
+                  <li><a class="dropdown-item item-musica" href="#" data-id="{{item['id']}}">{{item['titulo']}}</a></li>
+                  {% endfor %}
+                  <div class="dropdown-divider noResult toggled"></div>
+                  <span class="dropdown-item-text toggled noResult">Nenhum resultado</span>
+                </ul>
+              </div>
+
+                <span class="input-group-text" id="basic-addon4">Depart:</span>
+                <select class="form-select" name="id_departamento">
+                  <option value="0">Todos</option>
+                  {% for item in filtro_departamentos %}
+                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  {% endfor %}
+                </select>
+                <span class="input-group-text" id="basic-addon5">Cat:</span>
+                <select class="form-select" name="id_cat_musica">
+                  <option value="0">Todos</option>
+                  {% for item in filtro_cat_musicas %}
+                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  {% endfor %}
+                </select>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-sm-4">
+              <h3>Lista de Eventos</h3>
+              <div id="ls-principal" class="list-group">
+                {% for evento in eventos %}
+                <a href="#" class="list-group-item list-group-item-action evt-{{evento['tema_id']}}" data-id="{{evento['id']}}" data-mes="{{evento['mes']}}" data-ano="{{evento['ano']}}">{{evento['data']}} <b>({{semana_sqlite[evento['semana']|int][0:3]}})</b> - {{evento['tema']}}</a>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div id="painel_detalhes" class="col-sm-8"></div>
+
           </div>
 
         </section>
@@ -178,7 +277,184 @@
 
       window.onload = function() {
         $("#loading").remove();    
-      };     
+      };
+
+    document.onkeydown = checkKey;
+
+      function checkKey(e) {
+
+          e = e || window.event;
+
+          switch (e.keyCode) {
+            case 40:
+              e.preventDefault();
+              move_down();
+              break;
+            case 38:
+              e.preventDefault();
+              move_up();
+              break;
+          }
+      }    
+
+      function move_down() {
+        const current = document.querySelector('#ls-principal a.active');
+
+        if (current) {
+          let next = current.nextElementSibling;
+
+          // Procurar o próximo irmão que seja uma <a> e que NÃO tenha a classe 'toggled'
+          while (next && (next.tagName.toLowerCase() !== 'a' || next.classList.contains('toggled'))) {
+            next = next.nextElementSibling;
+          }
+
+          if (next) {
+            current.classList.remove('active');
+            next.classList.add('active');
+
+            const dataId = next.dataset.id;
+            carregarDetalhes(dataId);
+          }
+        }
+      }
+
+      function move_up() {
+        const current = document.querySelector('#ls-principal a.active');
+
+        if (current) {
+          let prev = current.previousElementSibling;
+
+          // Procurar o anterior que seja um <a> e que NÃO tenha a classe 'toggled'
+          while (prev && (prev.tagName.toLowerCase() !== 'a' || prev.classList.contains('toggled'))) {
+            prev = prev.previousElementSibling;
+          }
+
+          if (prev) {
+            current.classList.remove('active');
+            prev.classList.add('active');
+
+            // Pegar o valor de data-id
+            const dataId = prev.dataset.id;
+            carregarDetalhes(dataId);
+          }
+        }        
+      }
+
+
+      $("#txt_filtro_musica").on('keyup', function() {
+        val = $(this).val().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+        $(".item-musica").each(function(index) {
+          //console.log($(this).text().toLowerCase().normalize("NFD") + " - " + val);
+          if ($(this).text().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().indexOf(val) !== - 1) {
+            $(this).removeClass('toggled');
+          } else {
+            $(this).addClass('toggled');
+          }
+        });
+
+      });     
+
+      $("#cb_ano").on('change', function() {
+
+        const ano = $(this).val();
+
+        $("#ls-principal").empty();
+        $("#painel_detalhes").empty();        
+
+        $.ajax({
+          type: "POST",
+          url: "{{ url_for('historico') }}",
+          contentType: "application/json",
+          data: JSON.stringify({destino:2, ano:ano}),
+          dataType: "json",
+          success: function(response) {
+            console.log(response);
+
+            for (let i = 0; i < response.length; i++) {
+              $("#ls-principal").append(`<a href="#" class="list-group-item list-group-item-action ${response[i]['tema_id']}" data-id="${response[i]['id']}" data-mes="${response[i]['mes']}" data-ano="${response[i]['ano']}">${response[i]['data']} <b>(${response[i]['semana']})</b> - ${response[i]['tema']}</a>`);
+            }
+
+
+            filtrarMes($("#cb_mes").val());
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });          
+
+      });
+
+      function filtrarMes(mes) {
+
+        if (mes == '00') {
+          $("#ls-principal a").removeClass('toggled');
+        } else {
+          $("#ls-principal a").toggleClass('toggled', true);
+
+          $("#ls-principal a").filter(function () {
+            
+            if ($(this).attr('data-mes') == mes) {
+              $(this).removeClass('toggled');
+            }
+        
+          });
+        }
+      }
+
+      $("#cb_mes").on('change', function() {
+        filtrarMes($(this).val());
+      });
+
+      function carregarDetalhes(id) {
+        $.ajax({
+          type: "POST",
+          url: "{{ url_for('historico') }}",
+          contentType: "application/json",
+          data: JSON.stringify({destino:1, id:id}),
+          dataType: "json",
+          success: function(response) {
+            const detalhes = response['detalhes'];
+            const itens = response['itens'];
+
+            console.log(itens);
+
+            $("#painel_detalhes").empty();
+
+            $("#painel_detalhes").append("<h3>Detalhes: " + `<a href="${detalhes['URL']}"><i class="fa-brands fa-youtube fa-1x"></i></a></h3>`);
+            $("#painel_detalhes").append(`<p class="text"><b>Tipo: </b>${detalhes['tipo']}</p>`);
+            $("#painel_detalhes").append(`<p class="text"><b>Data: </b>${detalhes['desc_dia']} (${detalhes['semana']})</p>`);
+            $("#painel_detalhes").append(`<p class="text"><b>OBS: </b>${detalhes['OBS']}</p>`);
+            $("#painel_detalhes").append(`<table id="tb-detalhes" class="table table-bordered"><tbody id="tbody-detalhes"></tbody></table>`);
+
+            let tbody = "";
+
+            for (let i = 0; i < itens.length; i++) {
+              tbody += `<tr class="${itens[i]['cor']}">`;
+              tbody += `<td>${itens[i]['tipo']}</td>`;
+              tbody += `<td>${itens[i]['desc_item']}</td>`;
+              tbody += `<td>${itens[i]['departamento']}</td>`;
+              tbody += `<td>${itens[i]['formato']}</td>`;
+              tbody += "</tr>";
+            }
+
+            $("#tbody-detalhes").append(tbody);
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });  
+      }
+
+      $("#ls-principal").on('click', '.list-group-item', function() {
+
+        let id = $(this).attr('data-id');
+
+        carregarDetalhes(id);
+
+        $(".list-group-item").removeClass('active');
+        $(this).addClass('active');
+      });
 
     </script>
       
