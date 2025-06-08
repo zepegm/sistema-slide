@@ -571,7 +571,7 @@ def add_historico():
             
             if banco.inserirHistorico(dia, tema, obs, url, lista):
                 tem_data = datetime.datetime.strptime(request.form['data'], '%Y-%m-%d')
-                feedback = f'<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Evento do dia <b>{tem_data.strftime('%d/%m/%Y')}</b> criado com sucesso! <a href= "/historico">Clique aqui</a> para ver os eventos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                feedback = f'''<div class="alert alert-success alert-dismissible fade show" role="alert"><strong>Operação concluída com sucesso!</strong> Evento do dia <b>{tem_data.strftime('%d/%m/%Y')}</b> criado com sucesso! <a href= "/historico">Clique aqui</a> para ver os eventos.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'''
             else:
                 feedback = '<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Falha na operação!</strong>Erro de banco de dados! Não foi possível inserir registro de evento.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 

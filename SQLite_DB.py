@@ -476,13 +476,13 @@ class db:
             con = sqlite3.connect(caminho)
             cur = con.cursor()
 
-            sql = f'INSERT INTO Historico_Roteiro(Dia, Tema, OBS, URL) VALUES ({dia}, {tema}, {obs}, {url})'
+            sql = f"INSERT INTO Historico_Roteiro(Dia, Tema, OBS, URL) VALUES ({dia}, {tema}, {obs}, {url})"
             cur.execute(sql)
 
             id = cur.lastrowid
 
             for item in lista:
-                sql = f'INSERT INTO Historico_Registro_Eventos VALUES ({id}, {item['id_tipo_evento']}, {item['id_departamento']}, {item['id_cat_biblia']}, {item['id_cat_musica']}, {item['id_musica']}, {item['id_harpa']}, {item['id_livro_biblia']}, {item['cap_biblia']})'
+                sql = f"INSERT INTO Historico_Registro_Eventos VALUES ({id}, {item['id_tipo_evento']}, {item['id_departamento']}, {item['id_cat_biblia']}, {item['id_cat_musica']}, {item['id_musica']}, {item['id_harpa']}, {item['id_livro_biblia']}, {item['cap_biblia']})"
                 cur.execute(sql)
             
             con.commit()

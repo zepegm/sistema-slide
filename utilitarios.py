@@ -32,14 +32,9 @@ def pegarListaSemanas(ano, mes):
 def pegarTrimestre(data):
     mes = data.month
 
-    if mes > 0 and mes < 4:
-        return '1º Trimestre'
-    elif mes > 3 and mes < 7:
-        return '2º Trimestre'
-    elif mes > 6 and mes < 10:
-        return '3º Timestre'
-    else:
-        return '4º Timestre'
+    trimestre = (mes - 1) // 3 + 1
+
+    return f"{trimestre}º Timestre"
     
 def pegarLicoes(data):
     mes = data.month
@@ -47,21 +42,9 @@ def pegarLicoes(data):
 
     licoes = []
 
-    inicio = 1
-    fim = 3
-
-    if mes < 4:
-        inicio = 1
-        fim = 3
-    elif mes > 3 and mes < 7:
-        inicio = 3
-        fim = 6
-    elif mes > 6 and mes < 10:
-        inicio = 7
-        fim = 9
-    else:
-        inicio = 10
-        fim = 12
+    trimestre = (mes - 1) // 3 + 1
+    inicio = (trimestre - 1) * 3 + 1
+    fim = inicio + 2
 
     cont_licao = 1
     licao_selecionada = 0
