@@ -683,15 +683,22 @@ def historico():
     filtro_eventos = banco.executarConsulta('select * from Historico_Evento')
     filtro_departamentos = banco.executarConsulta('select * from Historico_Departamentos')
     filtro_cat_musicas = banco.executarConsulta("select * from Historico_Evento_Musica_Cat")
+    filtro_tipos_leitura = banco.executarConsulta("select * from Historico_Evento_Biblia_Cat")
     musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas')
     musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
+    harpa = banco.executarConsulta('select id, descricao as titulo from harpa order by id')
+    livros = banco.executarConsulta('select id, descricao as titulo from livro_biblia order by id')
 
     for item in musicas:
 
         if len(item['titulo']) > 26:
             item['titulo'] = item['titulo'][:23] + "..."
 
-    return render_template('historico.jinja', anos=anos, eventos=eventos, semana_sqlite=semana_sqlite, filtro_temas=filtro_temas, filtro_eventos=filtro_eventos, filtro_departamentos=filtro_departamentos, filtro_cat_musicas=filtro_cat_musicas, musicas=musicas)
+    for item in harpa:
+        if len(item['titulo']) > 26:
+            item['titulo'] = item['titulo'][:23] + "..."
+
+    return render_template('historico.jinja', anos=anos, eventos=eventos, semana_sqlite=semana_sqlite, filtro_temas=filtro_temas, filtro_eventos=filtro_eventos, filtro_departamentos=filtro_departamentos, filtro_cat_musicas=filtro_cat_musicas, musicas=musicas, harpa=harpa, filtro_tipos_leitura=filtro_tipos_leitura, livros=livros)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():

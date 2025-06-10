@@ -117,24 +117,29 @@
 
       .toggled { display: none; }
 
-    #selecionarMusica {
+    #selecionarMusica,
+    #selecionarHarpa,
+    #selecionarBiblia {
       border: none;
       background-color: rgb(201, 130, 0);
-      padding: 12px 48px 12px 24px;
+      padding: 0px 38px 0px 8px;
       border-radius: 4px;
       color: white;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7.41' height='12' viewBox='0 0 7.41 12'%3E%3Cpath d='M10,6,8.59,7.41,13.17,12,8.59,16.59,10,18l6-6Z' transform='translate(-8.59 -6)' fill='%23fff'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 24px center;
       margin-right: 10px;
+      height: 100%;
     }  
 
-    #txt_filtro_musica {
+    #txt_filtro_musica,
+    #txt_filtro_harpa,
+    #txt_filtro_biblia {
       width: 90%;
       position: relative;
       left: 5%;
       border: solid black;
-    }    
+    }  
 
     </style>
   </head>
@@ -195,21 +200,23 @@
                 <option value="12">Dezembro</option>
               </select>
             </div>
+
             <div class="col-sm-8">
+              <form action="{{ url_for('historico') }}" method="post">  
               <label for="cb_ano">Filtro:</label>
               <div class="input-group mb-3">
                 <span class="input-group-text" id="basic-addon1">Evento:</span>
                 <select class="form-select" name="Tema">
                   <option value="0">Todos</option>
                   {% for item in filtro_temas %}
-                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  <option value="{{item['id']}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>
                 <span class="input-group-text" id="basic-addon2">Atividade:</span>
-                <select class="form-select" name="id_tipo_evento">
+                <select id="cb_tipo_evento" class="form-select" name="id_tipo_evento">
                   <option value="0">Todos</option>
                   {% for item in filtro_eventos %}
-                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  <option value="{{item['id']}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>   
                 <span class="input-group-text" id="basic-addon3">Obs:</span>             
@@ -218,19 +225,21 @@
 
               <div id="painel_filtro_musicas" class="input-group mb-3">
 
-              <div class="dropright">
-                <button class="btn btn-secondary" type="button" id="selecionarMusica" data-toggle="dropdown" aria-expanded="false">
-                  Selecione a Música
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="selecionarMusica">
-                  <input type="text" id="txt_filtro_musica">
-                  {% for item in musicas %}              
-                  <li><a class="dropdown-item item-musica" href="#" data-id="{{item['id']}}">{{item['titulo']}}</a></li>
-                  {% endfor %}
-                  <div class="dropdown-divider noResult toggled"></div>
-                  <span class="dropdown-item-text toggled noResult">Nenhum resultado</span>
-                </ul>
-              </div>
+                <input id="input_musica" type="hidden" name="id_musica" value="0">
+
+                <div class="dropright">
+                  <button class="btn btn-secondary" type="button" id="selecionarMusica" data-toggle="dropdown" aria-expanded="false">
+                    Selecione a Música
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="selecionarMusica">
+                    <input type="text" id="txt_filtro_musica">
+                    {% for item in musicas %}              
+                    <li><a class="dropdown-item item-musica" href="#" data-id="{{item['id']}}">{{item['titulo']}}</a></li>
+                    {% endfor %}
+                    <div class="dropdown-divider noResult toggled"></div>
+                    <span class="dropdown-item-text toggled noResult">Nenhum resultado</span>
+                  </ul>
+                </div>
 
                 <span class="input-group-text" id="basic-addon4">Depart:</span>
                 <select class="form-select" name="id_departamento">
@@ -247,6 +256,76 @@
                   {% endfor %}
                 </select>
             </div>
+
+            <div id="painel_filtro_harpa" class="input-group mb-3">
+            
+                <input id="input_harpa" type="hidden" name="id_harpa" value="0">
+
+                <div class="dropright">
+                  <button class="btn btn-secondary" type="button" id="selecionarHarpa" data-toggle="dropdown" aria-expanded="false">
+                    Selecione a Harpa
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="selecionarHarpa">
+                    <input type="text" id="txt_filtro_harpa">
+                    {% for item in harpa %}              
+                    <li><a class="dropdown-item item-harpa" href="#" data-id="{{item['id']}}">{{ '%03d' | format(item['id']) }} - {{item['titulo']}}</a></li>
+                    {% endfor %}
+                    <div class="dropdown-divider noResult toggled"></div>
+                    <span class="dropdown-item-text toggled noResult">Nenhum resultado</span>
+                  </ul>
+                </div>
+
+                <span class="input-group-text" id="basic-addon4">Depart:</span>
+                <select class="form-select" name="id_departamento">
+                  <option value="0">Todos</option>
+                  {% for item in filtro_departamentos %}
+                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  {% endfor %}
+                </select>
+                <span class="input-group-text" id="basic-addon5">Cat:</span>
+                <select class="form-select" name="id_cat_musica">
+                  <option value="0">Todos</option>
+                  {% for item in filtro_cat_musicas %}
+                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  {% endfor %}
+                </select>
+
+            </div>
+
+            <div id="painel_filtro_biblia" class="input-group mb-3">
+            
+                <input id="input_biblia" type="hidden" name="id_livro_biblia" value="0">
+
+                <div class="dropright">
+                  <button class="btn btn-secondary" type="button" id="selecionarBiblia" data-toggle="dropdown" aria-expanded="false">
+                    Selecione o Livro da Bíblia
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="selecionarBiblia">
+                    <input type="text" id="txt_filtro_biblia">
+                    {% for item in livros %}              
+                    <li><a class="dropdown-item item-biblia" href="#" data-id="{{item['id']}}">{{item['titulo']}}</a></li>
+                    {% endfor %}
+                    <div class="dropdown-divider noResult toggled"></div>
+                    <span class="dropdown-item-text toggled noResult">Nenhum resultado</span>
+                  </ul>
+                </div>
+
+                <span class="input-group-text" id="basic-addon4">Tipo Leitura:</span>
+                <select class="form-select" name="id_cat_biblia">
+                  <option value="0">Todos</option>
+                  {% for item in filtro_tipos_leitura %}
+                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  {% endfor %}
+                </select>
+                <span class="input-group-text" id="basic-addon5">Cap:</span>
+                <input id="txt_cap" type="number" class="form-control form-custom" name="cap_biblia" placeholder="Capítulo" min="1" max="150">
+
+            </div>
+
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="reset" class="btn btn-secondary">Limpar</button>            
+
+            </form>
           </div>
 
           <div class="row mt-3">
@@ -276,6 +355,10 @@
     <script>
 
       window.onload = function() {
+        $("#painel_filtro_musicas").hide();
+        $("#painel_filtro_harpa").hide();
+        $("#painel_filtro_biblia").hide();
+
         $("#loading").remove();    
       };
 
@@ -340,6 +423,60 @@
         }        
       }
 
+      $("#cb_tipo_evento").on('change', function() {
+        const id = $(this).val();
+
+        console.log("Tipo de Evento selecionado: " + id);
+
+        $("#painel_filtro_musicas").hide();
+        $("#painel_filtro_harpa").hide();
+        $("#painel_filtro_biblia").hide();
+
+        if (id == 3) { // Música
+          console.log("Música selecionada");
+          $("#painel_filtro_musicas").show();
+          $("#input_musica").val(0);
+          $("#selecionarMusica").html('Selecione a Música <span class="caret"></span>');
+        } else if (id == 2) { // Harpa
+          $("#painel_filtro_harpa").show();
+          $("#input_harpa").val(0);
+          $("#selecionarHarpa").html('Selecione a Harpa <span class="caret"></span>');
+        } else if (id == 1) { // Bíblia
+          $("#painel_filtro_biblia").show();
+          $("#input_biblia").val(0);
+          $("#selecionarBiblia").html('Selecione o Livro da Bíblia <span class="caret"></span>');
+        }
+      });
+
+      $(".item-musica").on('click', function(e) {
+        e.preventDefault();
+
+        const id = $(this).data('id');
+        const titulo = $(this).text();
+
+        $("#input_musica").val(id);
+        $("#selecionarMusica").html(titulo + ' <span class="caret"></span>');
+
+        $(".item-musica").removeClass('active');
+        $(this).addClass('active');
+
+        $("#painel_filtro_musicas .noResult").addClass('toggled');
+      });
+
+      $(".item-harpa").on('click', function(e) {
+        e.preventDefault();
+
+        const id = $(this).data('id');
+        const titulo = $(this).text();
+
+        $("#input_harpa").val(id);
+        $("#selecionarHarpa").html(titulo + ' <span class="caret"></span>');
+
+        $(".item-harpa").removeClass('active');
+        $(this).addClass('active');
+
+        $("#painel_filtro_harpa .noResult").addClass('toggled');
+      });      
 
       $("#txt_filtro_musica").on('keyup', function() {
         val = $(this).val().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -353,7 +490,33 @@
           }
         });
 
-      });     
+        if ($(".item-musica").not('.toggled').length == 0) {
+          $("#painel_filtro_musicas .noResult").removeClass('toggled');
+        } else {
+          $("#painel_filtro_musicas .noResult").addClass('toggled');
+        }
+
+      });
+
+      $("#txt_filtro_harpa").on('keyup', function() {
+        val = $(this).val().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+        $(".item-harpa").each(function(index) {
+          //console.log($(this).text().toLowerCase().normalize("NFD") + " - " + val);
+          if ($(this).text().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().indexOf(val) !== - 1) {
+            $(this).removeClass('toggled');
+          } else {
+            $(this).addClass('toggled');
+          }
+        });
+
+        if ($(".item-harpa").not('.toggled').length == 0) {
+          $("#painel_filtro_harpa .noResult").removeClass('toggled');
+        } else {
+          $("#painel_filtro_harpa .noResult").addClass('toggled');
+        }
+
+      });
 
       $("#cb_ano").on('change', function() {
 
