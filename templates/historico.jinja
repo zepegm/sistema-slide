@@ -82,13 +82,13 @@
         z-index: 9999;
       }
 
-      .fa-youtube {
+      .btn-youtube {
         color: red;
       }
 
-      .fa-youtube:hover {
-        color: #74C0FC;;
-      }     
+      .btn-youtube:hover {
+        color: #74C0FC;
+      }
 
       .table-dark {
         background-color: black !important;
@@ -163,6 +163,29 @@
       }
     </script>
     
+
+      <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Confirmar Etapa de Digitação</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form action="verificarSenhaHistorico" method="post">
+            <div class="modal-body">
+              <label for="txt_senha" class="form-label">Digite a senha do Administrador para prosseguir:</label>
+              <input type="password" name="senha" class="form-control" id="txt_senha" placeholder="Digite a senha">
+            </div>
+            <div class="modal-footer">
+              <input type="submit" class="btn btn-primary" value="Confirmar">
+              </form>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div> 
 
         <!-- Page Content  -->    
       <div id="content" class="p-4 p-md-5 pt-5">
@@ -245,14 +268,14 @@
                 <select class="form-select" name="id_departamento">
                   <option value="0">Todos</option>
                   {% for item in filtro_departamentos %}
-                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  <option value="{{item['id']}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>
                 <span class="input-group-text" id="basic-addon5">Cat:</span>
                 <select class="form-select" name="id_cat_musica">
                   <option value="0">Todos</option>
                   {% for item in filtro_cat_musicas %}
-                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  <option value="{{item['id']}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>
             </div>
@@ -279,14 +302,14 @@
                 <select class="form-select" name="id_departamento">
                   <option value="0">Todos</option>
                   {% for item in filtro_departamentos %}
-                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  <option value="{{item['id']}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>
                 <span class="input-group-text" id="basic-addon5">Cat:</span>
                 <select class="form-select" name="id_cat_musica">
                   <option value="0">Todos</option>
                   {% for item in filtro_cat_musicas %}
-                  <option value="{{item[id]}}">{{item['descricao']}}</option>
+                  <option value="{{item['id']}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>
 
@@ -323,7 +346,8 @@
             </div>
 
               <button type="submit" class="btn btn-primary">Filtrar</button>
-              <button type="reset" class="btn btn-secondary">Limpar</button>            
+              <button id="btn_limpar" type="reset" class="btn btn-secondary">Limpar</button>            
+              <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalConfirm">Novo Registro</button>
 
             </form>
           </div>
@@ -423,6 +447,24 @@
         }        
       }
 
+      $("#btn_limpar").on('click', function() {
+        /*$("#painel_filtro_musicas").hide();
+        $("#painel_filtro_harpa").hide();
+        $("#painel_filtro_biblia").hide();*/
+
+        $("#input_musica").val(0);
+        $("#selecionarMusica").html('Selecione a Música <span class="caret"></span>');
+        $(".item-musica").removeClass('active');
+
+        $("#input_harpa").val(0);
+        $("#selecionarHarpa").html('Selecione a Harpa <span class="caret"></span>');
+        $(".item-harpa").removeClass('active');
+
+        $("#input_biblia").val(0);
+        $("#selecionarBiblia").html('Selecione o Livro da Bíblia <span class="caret"></span>');
+        $(".item-biblia").removeClass('active');
+      });
+
       $("#cb_tipo_evento").on('change', function() {
         const id = $(this).val();
 
@@ -446,6 +488,21 @@
           $("#input_biblia").val(0);
           $("#selecionarBiblia").html('Selecione o Livro da Bíblia <span class="caret"></span>');
         }
+      });
+
+      $(".item-biblia").on('click', function(e) {
+        e.preventDefault();
+
+        const id = $(this).data('id');
+        const titulo = $(this).text();
+
+        $("#input_biblia").val(id);
+        $("#selecionarBiblia").html(titulo + ' <span class="caret"></span>');
+
+        $(".item-biblia").removeClass('active');
+        $(this).addClass('active');
+
+        $("#painel_filtro_biblia .noResult").addClass('toggled');
       });
 
       $(".item-musica").on('click', function(e) {
@@ -584,7 +641,7 @@
 
             $("#painel_detalhes").empty();
 
-            $("#painel_detalhes").append("<h3>Detalhes: " + `<a href="${detalhes['URL']}"><i class="fa-brands fa-youtube fa-1x"></i></a></h3>`);
+            $("#painel_detalhes").append("<h3>Detalhes: " + `<a href="${detalhes['URL']}"><i class="fa-brands fa-youtube fa-1x btn-youtube"></i></a></h3>`);
             $("#painel_detalhes").append(`<p class="text"><b>Tipo: </b>${detalhes['tipo']}</p>`);
             $("#painel_detalhes").append(`<p class="text"><b>Data: </b>${detalhes['desc_dia']} (${detalhes['semana']})</p>`);
             $("#painel_detalhes").append(`<p class="text"><b>OBS: </b>${detalhes['OBS']}</p>`);

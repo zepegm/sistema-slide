@@ -617,6 +617,10 @@ def add_historico():
 def historico():
 
     semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+    status = ''
+
+    if request.method == 'GET':
+        status = request.args.get('status', '')
 
     if request.method == 'POST':
         if request.is_json:
@@ -675,6 +679,76 @@ def historico():
 
                 return jsonify(eventos)
 
+        elif 'Tema' in request.form:
+
+            tema = request.form['Tema']
+            id_tipo_evento = request.form['id_tipo_evento']
+            obs = request.form['OBS']
+
+            roteiros = banco.executarConsulta(r"SELECT Historico_Roteiro.id, strftime('%m', Dia) as mes, strftime('%Y', Dia) as ano, strftime('%d/%m/%Y', Dia) as data, strftime('%w', Dia) as semana, Historico_Tema.descricao as tema, Tema as tema_id, OBS, URL FROM Historico_Roteiro INNER JOIN Historico_Tema ON Historico_Tema.id = Historico_Roteiro.Tema WHERE (Tema = " + tema + " OR " + tema + " = 0) AND (OBS like '%" + obs + "%' OR '" + obs + "' = '') ORDER BY Date(Dia) DESC")
+
+            where = 'WHERE id_tipo_evento = ' + id_tipo_evento
+
+            match id_tipo_evento:
+                case '0': # Todos os tipos de evento
+                    where = ''
+                case '1': # Biblia
+                    where += f''' AND (id_livro_biblia = {request.form['id_livro_biblia']} OR {request.form['id_livro_biblia']} = 0) AND (id_cat_biblia = {request.form['id_cat_biblia']} OR {request.form['id_cat_biblia']} = 0)'''
+                    cap_biblia = request.form['cap_biblia']
+                    if cap_biblia != '':
+                        where += f' AND cap_biblia = {cap_biblia}'
+                case '2': # Harpa
+                    where += f''' AND (id_harpa = {request.form['id_harpa']} OR {request.form['id_harpa']} = 0) AND (id_departamento = {request.form['id_departamento']} OR {request.form['id_departamento']} = 0)'''                    
+                case '3': # Música
+                    where += f''' AND (id_musica = {request.form['id_musica']} OR {request.form['id_musica']} = 0) AND (id_cat_musica = {request.form['id_cat_musica']} OR {request.form['id_cat_musica']} = 0) AND (id_departamento = {request.form['id_departamento']} OR {request.form['id_departamento']} = 0)'''
+
+            query = f'''SELECT 
+                        id_roteiro,
+                        Historico_Evento.descricao AS tipo,
+                        CASE
+                            WHEN id_tipo_evento = 1 THEN livro_biblia.descricao || ', ' || cap_biblia
+                            WHEN id_tipo_evento = 2 THEN harpa.id || ' - ' || harpa.descricao
+                            WHEN id_tipo_evento = 3 THEN musicas.titulo
+                        END AS desc_item,
+                        CASE
+                            WHEN id_tipo_evento = 1 THEN Historico_Evento_Biblia_Cat.descricao
+                            ELSE Historico_Departamentos.descricao
+                        END as departamento,
+                        CASE
+                            WHEN id_tipo_evento = 1 THEN iif(id_livro_biblia < 40,'AT','NT')
+                            ELSE Historico_Evento_Musica_Cat.descricao
+                        END as formato,
+                        CASE
+                            WHEN id_tipo_evento = 1 THEN 'table-warning'
+                            WHEN id_tipo_evento = 2 THEN 'table-primary'
+                            ELSE 'table-success' END AS cor       
+                    FROM Historico_Registro_Eventos
+                    INNER JOIN Historico_Evento ON Historico_Evento.id = Historico_Registro_Eventos.id_tipo_evento
+                    LEFT JOIN livro_biblia ON livro_biblia.id = Historico_Registro_Eventos.id_livro_biblia
+                    LEFT JOIN harpa ON harpa.id = Historico_Registro_Eventos.id_harpa
+                    LEFT JOIN musicas ON musicas.id = Historico_Registro_Eventos.id_musica
+                    LEFT JOIN Historico_Evento_Biblia_Cat ON Historico_Evento_Biblia_Cat.id = Historico_Registro_Eventos.id_cat_biblia
+                    LEFT JOIN Historico_Departamentos ON Historico_Departamentos.id = Historico_Registro_Eventos.id_departamento
+                    LEFT JOIN Historico_Evento_Musica_Cat ON Historico_Evento_Musica_Cat.id = Historico_Registro_Eventos.id_cat_musica {where}'''
+
+            lista_eventos = banco.executarConsulta(query)
+            print(query)
+
+            lista_final = []
+
+            # Indexar por id do roteiro
+            eventos_indexados = {}
+            for item in lista_eventos:
+                key = (item['id_roteiro'])
+                eventos_indexados.setdefault(key, []).append({'desc_item': item['desc_item'], 'tipo': item['tipo'], 'departamento': item['departamento'], 'formato': item['formato'], 'cor': item['cor']})
+
+            for item in roteiros:
+                eventos = eventos_indexados.get((item['id']), [])
+
+                if len(eventos) > 0:
+                    lista_final.append({'id':item['id'], 'mes':item['mes'], 'ano':item['ano'], 'data':item['data'], 'semana':semana_sqlite[int(item['semana'])], 'tema':item['tema'], 'tema_id':item['tema_id'], 'obs':item['OBS'], 'url':item['URL'], 'eventos':eventos})
+
+            return render_template('resultado_pesquisa_historico.jinja', lista_final=lista_final)
 
     anos = banco.executarConsultaVetor(r"select distinct strftime('%Y', Dia) as ano from Historico_Roteiro order by ano desc")
     eventos = banco.executarConsulta(r"SELECT Historico_Roteiro.id, strftime('%m', Dia) as mes, strftime('%Y', Dia) as ano, strftime('%d/%m/%Y', Dia) as data, strftime('%w', Dia) as semana, Historico_Tema.descricao as tema, Tema as tema_id FROM Historico_Roteiro INNER JOIN Historico_Tema ON Historico_Tema.id = Historico_Roteiro.Tema WHERE strftime('%Y', Dia) = '" + anos[0] + "' ORDER BY Date(Dia) DESC")
@@ -698,7 +772,7 @@ def historico():
         if len(item['titulo']) > 26:
             item['titulo'] = item['titulo'][:23] + "..."
 
-    return render_template('historico.jinja', anos=anos, eventos=eventos, semana_sqlite=semana_sqlite, filtro_temas=filtro_temas, filtro_eventos=filtro_eventos, filtro_departamentos=filtro_departamentos, filtro_cat_musicas=filtro_cat_musicas, musicas=musicas, harpa=harpa, filtro_tipos_leitura=filtro_tipos_leitura, livros=livros)
+    return render_template('historico.jinja', anos=anos, eventos=eventos, semana_sqlite=semana_sqlite, filtro_temas=filtro_temas, filtro_eventos=filtro_eventos, filtro_departamentos=filtro_departamentos, filtro_cat_musicas=filtro_cat_musicas, musicas=musicas, harpa=harpa, filtro_tipos_leitura=filtro_tipos_leitura, livros=livros, feedback=status)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():
@@ -2898,6 +2972,19 @@ def verificarSenhaHarpa():
             return render_template('harpa.jinja', harpa=harpa, status=status)
 
     return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
+
+@app.route('/verificarSenhaHistorico', methods=['GET', 'POST'])
+def verificarSenhaHistorico():
+    if request.method == 'POST':
+        senha = encriptar(request.form.getlist('senha')[0])
+
+        if senha == banco.executarConsultaVetor("select valor from config where id = 'senha_adm'")[0]:
+            return redirect(url_for('add_historico'))
+        else:
+            return redirect(url_for('historico', status='<div class="alert alert-danger alert-dismissible fade show" role="alert"><strong>Senha incorreta!</strong> Por favor digite a senha correta para abrir a área de Cadastro e Alteração.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'))
+
+    return render_template('erro.jinja', log='Erro fatal ao tentar redirecionar para área de Administrador.')
+
 
 @app.route('/gerar_imagem_calendario_mensal', methods=['GET', 'POST'])
 def gerar_imagem_calendario_mensal():
