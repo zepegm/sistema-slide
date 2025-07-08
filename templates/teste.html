@@ -1,6 +1,7 @@
 <html>
     <head>
-        <title>Teste de Digitação</title>
+        <title>Teste de Paginação</title>
+        <link rel="stylesheet" href="https://pagination.js.org/dist/2.1.5/pagination.css">
         <style>
             .slide {
                 background-size: contain;
@@ -50,22 +51,28 @@
     </head>
     <body>
 
-        <div class="slide in texto" id="slide1">
-            <!-- Doce presença<br>És meu abrigo<br>Meu protetor<br>Em Ti confio -->
-            <!--Mesmo sem ver, <br>eu posso crer<br>Que Tua promessa está de pé -->
-            <!-- <span class="underline">Quem sou eu<br>pra questionar<br>um Deus fiel?</span> -->
-            <!-- <span class="underline">Tu és Deus e Tua palavra está de pé!</span> -->
-            <!-- És minha <span class="underline">âncora</span>,<br>A minha <span class="underline">esperança!</span> -->
-            <!-- <span class="underline">Em que minha fé firmada está!<br>Eu não temerei</span>,<span class="underline"> eu não temerei!</span> -->
-            Tudo posso em Ti<br>Fortaleza minha!<br>Eu espero em Ti<br>Firme nas promessas
-        </div>
-        <div class="slide" id="slide2"></div>        
+        <div id="data-container"></div>
+        <div id="pagination-container"></div>     
         
-    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
-    <script>
-        textFit($('#slide1'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 230});
-    </script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://pagination.js.org/dist/2.1.5/pagination.min.js"></script>
+        <script>
+            // Dados de exemplo
+            const data = [];
+            for (let i = 1; i <= 100; i++) {
+                data.push('Item ' + i);
+            }
+
+            // Inicializar a paginação
+            $('#pagination-container').pagination({
+                dataSource: data,
+                pageSize: 10,
+                callback: function (data, pagination) {
+                const html = data.map(item => `<p>${item}</p>`).join('');
+                document.getElementById('data-container').innerHTML = html;
+                }
+            });
+        </script>
 
     </body>    
 </html>

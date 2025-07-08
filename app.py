@@ -635,6 +635,11 @@ def historico():
                             id_roteiro,
                             Historico_Evento.descricao AS tipo,
                             CASE
+                                WHEN id_tipo_evento = 1 THEN id_livro_biblia || '-' || cap_biblia
+                                WHEN id_tipo_evento = 2 THEN harpa.id
+                                WHEN id_tipo_evento = 3 THEN musicas.id
+                            END AS id_item,
+                            CASE
                                 WHEN id_tipo_evento = 1 THEN livro_biblia.descricao || ', ' || cap_biblia
                                 WHEN id_tipo_evento = 2 THEN harpa.id || ' - ' || harpa.descricao
                                 WHEN id_tipo_evento = 3 THEN musicas.titulo
@@ -678,6 +683,24 @@ def historico():
                     evento['semana'] = semana_sqlite[int(evento['semana'])]
 
                 return jsonify(eventos)
+
+            elif info['destino'] == 3:
+
+                tipo = info['tipo']
+                id = info['id_item']
+
+                match tipo:
+                    case 'Harpa': # Harpa
+                        titulo = '<b>%s.</b> %s' % (id, banco.executarConsultaVetor('SELECT descricao FROM harpa WHERE id = %s' % id)[0])
+                        letras = banco.executarConsulta('SELECT pagina, paragrafo, replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span>"), "cdx-underline", "cdx-underline-view") as texto FROM letras_harpa WHERE id_harpa = %s ORDER BY pagina, paragrafo' % id)
+                        return jsonify({'titulo':titulo, 'letras':letras, 'destino':'abrir_musica'})
+                    case 'Música': # Música
+                        titulo = banco.executarConsultaVetor('SELECT titulo FROM musicas WHERE id = %s' % id)[0]
+                        letras = banco.executarConsulta('SELECT pagina, paragrafo, replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span> "), "cdx-underline", "cdx-underline-view") as texto FROM letras WHERE id_musica = %s ORDER BY pagina, paragrafo' % id)
+                        return jsonify({'titulo':titulo, 'letras':letras, 'destino':'abrir_musica'})
+                    #case 'Biblia': # Biblia
+
+                return jsonify('teste')
 
         elif 'Tema' in request.form:
 

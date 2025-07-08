@@ -19,7 +19,6 @@
     <link href="{{ url_for('static', filename='font-awesome/css/brands.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='font-awesome/css/solid.css') }}" rel="stylesheet">      
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='datatable/datatables.min.css') }}" rel="stylesheet">
 
     <!-- Simular original -->
     <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
@@ -27,6 +26,7 @@
 		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"> -->
 
     <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/Logo Colorido.png') }}">
+    <link rel="stylesheet" href="https://pagination.js.org/dist/2.1.5/pagination.css">
 
     <style>
       .bd-placeholder-img {
@@ -171,63 +171,53 @@
             <div id="status" class="col-sm-12">{{feedback}}</div>
           </div>
           <div class="row text-center">
-            <h4 class="fw-light"><span class="fw-bold">Resultado da Pesquisa: <span class="text-danger">({{ lista_final|length }} total de registros)</span></h4>
+            <h4 class="fw-light"><span class="fw-bold">Resultado da Pesquisa: <span class="text-danger">({{'sem registros' if lista_final|length == 0 else lista_final|length ~ ' registro' if lista_final|length == 1 else lista_final|length ~ ' registros' }})</span></h4>
           </div>
           <div class="row">
-            <div class="col-sm-12">
 
-              <table id="tabela_resultados" class="table">
-                {% for item in lista_final %}
-                <thead class="table-dark">
-                  <tr class="text-center">
-                    <th scope="col" class="align-middle fs-5">{{item['data']}}</th>
-                    <th scope="col" class="align-middle fs-5">{{item['semana']}}</th>
-                    <th scope="col" class="align-middle fs-5">{{item['tema']}}</th>
-                    <th scope="col" class="align-middle">{{item['OBS']}}</th>
-                    <th scope="col" class="align-middle"><a href="{{item['url']}}"><i class="fa-brands fa-youtube fa-2x btn-youtube btn-youtube"></i></a></th>
-                  </tr>                
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="5">
-                      <table class="table table-striped table-bordered table-hover">
-                        <tbody>
-                          {% for evento in item['eventos'] %}
-                          <tr class="{{evento['cor']}}">
-                            <td class="text-center">{{evento['tipo']}}</td>
-                            <td class="text-center">{{evento['desc_item']}}</td>
-                            <td class="text-center">{{evento['departamento']}}</td>
-                            <td class="text-center">{{evento['formato']}}</td>  
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-                {% endfor %}
-                <tbody>
-
-                </tbody>
-              </table>
-
+            <div class="col-sm-9 mb-3">
+              <div id="pagination-container"></div>
             </div>
-            <div class="col-sm-12"><hr></div>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
+
+            <div class="col-sm-3 mb-3 text-end">
               <a href="/historico" class="btn btn-secondary"><i class="fa-solid fa-circle-left"></i> Sair da Pesquisa</a>
             </div>
-            <div class="col-sm-12"><hr></div>
-          </div>
-          <div class="row">
-            <div class="col-sm-6">
-              <div id="letras_musicas"></div>
+
+            <div class="col-sm-12">
+
+                {% for item in lista_final %}
+                <table class="paginavel table">
+                  <thead class="table-dark">
+                    <tr class="text-center">
+                      <th scope="col" class="align-middle fs-5">{{item['data']}}</th>
+                      <th scope="col" class="align-middle fs-5">{{item['semana']}}</th>
+                      <th scope="col" class="align-middle fs-5">{{item['tema']}}</th>
+                      <th scope="col" class="align-middle">{{item['OBS']}}</th>
+                      <th scope="col" class="align-middle"><a href="{{item['url']}}"><i class="fa-brands fa-youtube fa-2x btn-youtube btn-youtube"></i></a></th>
+                    </tr>                
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="5">
+                        <table class="table table-striped table-bordered table-hover">
+                          <tbody>
+                            {% for evento in item['eventos'] %}
+                            <tr class="{{evento['cor']}}">
+                              <td class="text-center">{{evento['tipo']}}</td>
+                              <td class="text-center">{{evento['desc_item']}}</td>
+                              <td class="text-center">{{evento['departamento']}}</td>
+                              <td class="text-center">{{evento['formato']}}</td>  
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                {% endfor %}
             </div>
-            <div class="col-sm-6">
-              <div id="detalhes_musicas"></div>
-            </div>            
           </div>
         </section>
       </div>
@@ -238,13 +228,29 @@
   <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+
+  <!-- Pagination.js -->
+  <script src="https://pagination.js.org/dist/2.1.5/pagination.min.js"></script>  
   
   <script>
 
     window.onload = function() {
-      $("#loading").remove();
+      $("#loading").remove();      
     };
+
+    $(document).ready(function () {
+      const blocos = $('.paginavel').toArray(); // Todos os blocos pagináveis
+
+      $('#pagination-container').pagination({
+        dataSource: blocos,
+        pageSize: 5, // número de blocos por página
+        showSizeChanger: true,
+        callback: function (data, pagination) {
+          $('.paginavel').hide(); // Esconde todos
+          $(data).show();         // Mostra apenas os da página atual
+        }
+      });
+  });    
 
   </script>
       

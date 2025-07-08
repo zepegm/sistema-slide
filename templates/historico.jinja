@@ -108,6 +108,14 @@
         margin-top: 20px;
       }
 
+      #tb-detalhes .titulo-item
+      {
+          max-width: 10vw;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+      }      
+
       .form-custom {
         border: solid 1px black;
         border-color: #DEE2E6;
@@ -141,6 +149,29 @@
       border: solid black;
     }  
 
+    .cdx-marker {
+        color:rgba(192,0,0);
+        font-weight:bold;
+        background:rgba(0,0,0,0);
+      }
+
+      .cdx-underline-view {
+          text-decoration: underline;
+          text-decoration-color: rgb(0,0,0,0.5);
+      }   
+
+      .cdx-marker .cdx-underline-view {
+          text-decoration-color: rgb(192,0,0,0.5);
+      }    
+
+    .cdx-num {
+      color:#0070C0;
+    }
+
+    .red {
+      color:#FF0000;
+    }          
+
     </style>
   </head>
 
@@ -162,6 +193,25 @@
         sidebar.classList.add("active");
       }
     </script>
+
+    <div class="modal fade" id="show_musica" tabindex="-1" role="dialog" aria-labelledby="showMusicaLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="showMusicaLabel">Detalhes do Hino/Música</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="letras_musicas" class="text"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
     
 
       <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog">
@@ -375,6 +425,7 @@
     <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/modulo_view.js') }}"></script>
     
     <script>
 
@@ -652,7 +703,7 @@
             for (let i = 0; i < itens.length; i++) {
               tbody += `<tr class="${itens[i]['cor']}">`;
               tbody += `<td>${itens[i]['tipo']}</td>`;
-              tbody += `<td>${itens[i]['desc_item']}</td>`;
+              tbody += `<td class="titulo-item"><a href="javascript:visualizar(${itens[i]['id_item']}, '${itens[i]['tipo']}')"><i class="fa-solid fa-eye"></i></a> ${itens[i]['desc_item']}</td>`;
               tbody += `<td>${itens[i]['departamento']}</td>`;
               tbody += `<td>${itens[i]['formato']}</td>`;
               tbody += "</tr>";
