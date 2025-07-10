@@ -625,7 +625,6 @@ def historico():
     if request.method == 'POST':
         if request.is_json:
             info = request.json
-            print(info)
 
             if info['destino'] == 1:
 
@@ -698,9 +697,37 @@ def historico():
                         titulo = banco.executarConsultaVetor('SELECT titulo FROM musicas WHERE id = %s' % id)[0]
                         letras = banco.executarConsulta('SELECT pagina, paragrafo, replace(replace(replace(texto, "<mark ", "<span "), "</mark>", "</span> "), "cdx-underline", "cdx-underline-view") as texto FROM letras WHERE id_musica = %s ORDER BY pagina, paragrafo' % id)
                         return jsonify({'titulo':titulo, 'letras':letras, 'destino':'abrir_musica'})
-                    #case 'Biblia': # Biblia
+                    case 'Leitura Bíblica': # Biblia
+                        tabelas = banco.executarConsultaVetor('select * from lista_tabelas_biblia')
 
-                return jsonify('teste')
+                        lista_final = []
+                        lista_intermediaria = {}
+                        total = []
+
+                        livro = id.split('-')[0]
+                        cap = id.split('-')[1] if len(id.split('-')) > 1 else '1'
+
+                        for item in tabelas:
+                            texto = banco.executarConsultaVetor('select texto from %s where livro = %s and cap = %s order by ver' % (item, livro, cap))
+                            lista_intermediaria[item] = texto
+                            total.append(len(texto))
+
+                        maximo = max(total)
+
+                        for i in range(0, maximo):
+                            dict_aux = {'ver':i + 1}
+
+                            for item in tabelas:
+                                try:
+                                    dict_aux[item] = lista_intermediaria[item][i]
+                                except:
+                                    dict_aux[item] = '-'
+
+                            lista_final.append(dict_aux)
+
+                        return jsonify({'lista':lista_final, 'destino':'abrir_biblia', 'cap':cap, 'livro':livro, 'titulo':banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % livro)[0], 'versoes':tabelas})
+
+                return jsonify(None)
 
         elif 'Tema' in request.form:
 
@@ -728,6 +755,11 @@ def historico():
             query = f'''SELECT 
                         id_roteiro,
                         Historico_Evento.descricao AS tipo,
+                        CASE
+                            WHEN id_tipo_evento = 1 THEN id_livro_biblia || '-' || cap_biblia
+                            WHEN id_tipo_evento = 2 THEN harpa.id
+                            WHEN id_tipo_evento = 3 THEN musicas.id
+                        END AS id_item,                        
                         CASE
                             WHEN id_tipo_evento = 1 THEN livro_biblia.descricao || ', ' || cap_biblia
                             WHEN id_tipo_evento = 2 THEN harpa.id || ' - ' || harpa.descricao
@@ -763,7 +795,7 @@ def historico():
             eventos_indexados = {}
             for item in lista_eventos:
                 key = (item['id_roteiro'])
-                eventos_indexados.setdefault(key, []).append({'desc_item': item['desc_item'], 'tipo': item['tipo'], 'departamento': item['departamento'], 'formato': item['formato'], 'cor': item['cor']})
+                eventos_indexados.setdefault(key, []).append({'desc_item': item['desc_item'], 'tipo': item['tipo'], 'departamento': item['departamento'], 'formato': item['formato'], 'cor': item['cor'], 'id_item': item['id_item']})
 
             for item in roteiros:
                 eventos = eventos_indexados.get((item['id']), [])

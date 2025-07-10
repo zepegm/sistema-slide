@@ -147,6 +147,59 @@
       color: rgb(174, 88, 255);
     }
 
+    .cdx-marker {
+        color:rgba(192,0,0);
+        font-weight:bold;
+        background:rgba(0,0,0,0);
+      }
+
+      .cdx-underline-view {
+          text-decoration: underline;
+          text-decoration-color: rgb(0,0,0,0.5);
+      }   
+
+      .cdx-marker .cdx-underline-view {
+          text-decoration-color: rgb(192,0,0,0.5);
+      }    
+
+    .cdx-num {
+      color:#0070C0;
+    }
+
+    .red {
+      color:#FF0000;
+    }      
+       
+    .nd {
+      font-variant: small-caps;
+    }
+
+    .add {
+      font-style: italic;
+    }
+
+    .sc {
+      font-variant: small-caps;
+    }
+
+    .heading {
+      font-weight: bold;
+    }
+
+    .wj {
+      color: red;
+    }    
+
+    .t_vers {
+      font-size: 30px;
+    }
+
+    .auto_hifen {
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
+    }
+
     </style>
 
     
@@ -161,7 +214,46 @@
 		<div class="wrapper d-flex align-items-stretch">
     {% block menu_lateral %}
       {% include 'menu_lateral.html' %}
-    {% endblock %}    
+    {% endblock %}   
+
+
+      <div class="modal fade" id="show_biblia" tabindex="-1" role="dialog" aria-labelledby="showBibliaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="showBibliaLabel">Detalhes do Capítulo</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div id="texto_biblia" class="text"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
+          </div>
+        </div>
+      </div>    
+
+      <div class="modal fade" id="show_musica" tabindex="-1" role="dialog" aria-labelledby="showMusicaLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="showMusicaLabel">Detalhes do Hino/Música</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div id="letras_musicas" class="text"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5 pt-5">
@@ -204,7 +296,7 @@
                             {% for evento in item['eventos'] %}
                             <tr class="{{evento['cor']}}">
                               <td class="text-center">{{evento['tipo']}}</td>
-                              <td class="text-center">{{evento['desc_item']}}</td>
+                              <td class="text-center"><a href="javascript:visualizar('{{evento['id_item']}}', '{{evento['tipo']}}')"><i class="fa-solid fa-eye"></i></a> {{evento['desc_item']}}</td>
                               <td class="text-center">{{evento['departamento']}}</td>
                               <td class="text-center">{{evento['formato']}}</td>  
                             </tr>
@@ -228,6 +320,7 @@
   <!-- <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/modulo_view.js') }}"></script>
 
   <!-- Pagination.js -->
   <script src="https://pagination.js.org/dist/2.1.5/pagination.min.js"></script>  
