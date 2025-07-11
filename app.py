@@ -817,6 +817,9 @@ def historico():
     musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
     harpa = banco.executarConsulta('select id, descricao as titulo from harpa order by id')
     livros = banco.executarConsulta('select id, descricao as titulo from livro_biblia order by id')
+    top_10_harpa = banco.executarConsulta('select id_harpa, harpa.descricao as titulo, count(*) as qtd from Historico_Registro_Eventos inner join harpa on harpa.id = Historico_Registro_Eventos.id_harpa where id_tipo_evento = 2 group by id_harpa, titulo order by qtd desc limit 10')
+    top_10_musicas = banco.executarConsulta('select id_musica, musicas.titulo as titulo, count(*) as qtd from Historico_Registro_Eventos inner join musicas on musicas.id = Historico_Registro_Eventos.id_musica where id_tipo_evento = 3 group by id_musica, titulo order by qtd desc limit 10')
+    top_10_biblia = banco.executarConsulta('select livro_biblia.descricao || ", " || Historico_Registro_Eventos.cap_biblia as titulo, count(*) as qtd from Historico_Registro_Eventos inner join livro_biblia on livro_biblia.id = Historico_Registro_Eventos.id_livro_biblia where id_tipo_evento = 1 group by (titulo) order by qtd desc limit 10')
 
     for item in musicas:
 
@@ -827,7 +830,7 @@ def historico():
         if len(item['titulo']) > 26:
             item['titulo'] = item['titulo'][:23] + "..."
 
-    return render_template('historico.jinja', anos=anos, eventos=eventos, semana_sqlite=semana_sqlite, filtro_temas=filtro_temas, filtro_eventos=filtro_eventos, filtro_departamentos=filtro_departamentos, filtro_cat_musicas=filtro_cat_musicas, musicas=musicas, harpa=harpa, filtro_tipos_leitura=filtro_tipos_leitura, livros=livros, feedback=status)
+    return render_template('historico.jinja', anos=anos, eventos=eventos, semana_sqlite=semana_sqlite, filtro_temas=filtro_temas, filtro_eventos=filtro_eventos, filtro_departamentos=filtro_departamentos, filtro_cat_musicas=filtro_cat_musicas, musicas=musicas, harpa=harpa, filtro_tipos_leitura=filtro_tipos_leitura, livros=livros, feedback=status, top_10_harpa=top_10_harpa, top_10_musicas=top_10_musicas, top_10_biblia=top_10_biblia)
 
 @app.route('/controlador', methods=['GET', 'POST'])
 def controlador():

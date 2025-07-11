@@ -462,7 +462,13 @@
               </div>
             </div>
 
-            <div id="painel_detalhes" class="col-sm-8"></div>
+            <div id="painel_detalhes" class="col-sm-8">
+              <!-- Enquanto não exibe os detalhes de um evento específico, mostra os top 10 das categorias -->
+              <h3>Top 10 - Itens mais executados</h3>
+              <canvas id="chart_harpa"></canvas>
+              <canvas id="chart_musicas"></canvas>
+              <canvas id="chart_biblia"></canvas>
+            </div>
 
           </div>
 
@@ -476,8 +482,129 @@
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/modulo_view.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
     
     <script>
+
+        const top10Harpa = {{ top_10_harpa|tojson }};
+        const top10Musicas = {{ top_10_musicas|tojson }};
+        const top10Biblia = {{ top_10_biblia|tojson }};
+
+        const myChart_harpa = new Chart(document.getElementById('chart_harpa'), {
+          type: 'bar',
+          data: {
+            labels: top10Harpa.map(item => item.id_harpa + '. ' + item.titulo),
+            datasets: [{
+              label: 'Quantidade de Eventos',
+              data: top10Harpa.map(item => item.qtd),
+              backgroundColor: 'rgba(255, 122, 89, 0.5)',
+              borderColor: 'rgba(255, 122, 89, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            scales: {
+              x: {
+                ticks: {
+                  stepSize: 1,
+                  precision: 0
+                },
+                beginAtZero: true
+              }
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Top 10 - Harpa Cristã',
+                font: {
+                  size: 24
+                }              
+              },
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+
+
+        const myChart_musicas = new Chart(document.getElementById('chart_musicas'), {
+          type: 'bar',
+          data: {
+            labels: top10Musicas.map(item => item.titulo),
+            datasets: [{
+              label: 'Quantidade de Eventos',
+              data: top10Musicas.map(item => item.qtd),
+              backgroundColor: 'rgba(89, 131, 255, 0.5)',
+              borderColor: 'rgba(89, 131, 255, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            scales: {
+              x: {
+                ticks: {
+                  stepSize: 1,
+                  precision: 0
+                },
+                beginAtZero: true
+              }
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Top 10 - Músicas',
+                font: {
+                  size: 24
+                }              
+              },
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+
+        const myChart_biblia = new Chart(document.getElementById('chart_biblia'), {
+          type: 'bar',
+          data: {
+            labels: top10Biblia.map(item => item.titulo),
+            datasets: [{
+              label: 'Quantidade de Eventos',
+              data: top10Biblia.map(item => item.qtd),
+              backgroundColor: 'rgba(0, 192, 0, 0.5)',
+              borderColor: 'rgba(0, 192, 0, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            scales: {
+              x: {
+                ticks: {
+                  stepSize: 1,
+                  precision: 0
+                },
+                beginAtZero: true
+              }
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Top 10 - Livros da Bíblia',
+                font: {
+                  size: 24
+                }              
+              },
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+
 
       window.onload = function() {
         $("#painel_filtro_musicas").hide();
