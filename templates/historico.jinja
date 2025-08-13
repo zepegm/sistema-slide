@@ -808,7 +808,7 @@
         const ano = $(this).val();
 
         $("#ls-principal").empty();
-        $("#painel_detalhes").empty();        
+        $("#painel_detalhes").empty();
 
         $.ajax({
           type: "POST",
@@ -820,7 +820,7 @@
             console.log(response);
 
             for (let i = 0; i < response.length; i++) {
-              $("#ls-principal").append(`<a href="#" class="list-group-item list-group-item-action ${response[i]['tema_id']}" data-id="${response[i]['id']}" data-mes="${response[i]['mes']}" data-ano="${response[i]['ano']}">${response[i]['data']} <b>(${response[i]['semana']})</b> - ${response[i]['tema']}</a>`);
+              $("#ls-principal").append(`<a href="#" class="list-group-item list-group-item-action ${response[i]['tema_id']}" data-id="${response[i]['id']}" data-mes="${response[i]['mes']}" data-ano="${response[i]['ano']}">${response[i]['data']} <b>(${response[i]['semana'].substring(0, 3)})</b> - ${response[i]['tema']}</a>`);
             }
 
 
