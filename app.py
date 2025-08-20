@@ -729,6 +729,19 @@ def historico():
 
                 return jsonify(None)
 
+            elif info['destino'] == 4:
+
+                if info['ano'] == '0':
+                    top_10_harpa = banco.executarConsulta('select id_harpa, harpa.descricao as titulo, count(*) as qtd from Historico_Registro_Eventos inner join harpa on harpa.id = Historico_Registro_Eventos.id_harpa where id_tipo_evento = 2 group by id_harpa, titulo order by qtd desc limit 10')
+                    top_10_musicas = banco.executarConsulta('select id_musica, musicas.titulo as titulo, count(*) as qtd from Historico_Registro_Eventos inner join musicas on musicas.id = Historico_Registro_Eventos.id_musica where id_tipo_evento = 3 group by id_musica, titulo order by qtd desc limit 10')
+                    top_10_biblia = banco.executarConsulta('select livro_biblia.descricao || ", " || Historico_Registro_Eventos.cap_biblia as titulo, count(*) as qtd from Historico_Registro_Eventos inner join livro_biblia on livro_biblia.id = Historico_Registro_Eventos.id_livro_biblia where id_tipo_evento = 1 group by (titulo) order by qtd desc limit 10')                
+                else:
+                    top_10_harpa = banco.executarConsulta(f'''select id_harpa, harpa.descricao as titulo, count(*) as qtd from Historico_Registro_Eventos inner join harpa on harpa.id = Historico_Registro_Eventos.id_harpa inner join Historico_Roteiro on Historico_Roteiro.id = Historico_Registro_Eventos.id_roteiro where id_tipo_evento = 2 and strftime('%Y', Dia) = '{info['ano']}' group by id_harpa, titulo order by qtd desc limit 10''')
+                    top_10_musicas = banco.executarConsulta(f'''select id_musica, musicas.titulo as titulo, count(*) as qtd from Historico_Registro_Eventos inner join musicas on musicas.id = Historico_Registro_Eventos.id_musica inner join Historico_Roteiro on Historico_Roteiro.id = Historico_Registro_Eventos.id_roteiro where id_tipo_evento = 3 and strftime('%Y', Dia) = '{info['ano']}' group by id_musica, titulo order by qtd desc limit 10''')
+                    top_10_biblia = banco.executarConsulta(f'''select livro_biblia.descricao || ", " || Historico_Registro_Eventos.cap_biblia as titulo, count(*) as qtd from Historico_Registro_Eventos inner join livro_biblia on livro_biblia.id = Historico_Registro_Eventos.id_livro_biblia inner join Historico_Roteiro on Historico_Roteiro.id = Historico_Registro_Eventos.id_roteiro where id_tipo_evento = 1 and strftime('%Y', Dia) = '{info['ano']}' group by (titulo) order by qtd desc limit 10''')
+
+                return jsonify({'biblia':top_10_biblia, 'harpa':top_10_harpa, 'musicas':top_10_musicas})
+
         elif 'Tema' in request.form:
 
             tema = request.form['Tema']
@@ -3931,8 +3944,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True, port=80)
-    #serve(app, host='0.0.0.0', port=80, threads=8)
+    #app.run(debug=True, use_reloader=True, port=80)
+    serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

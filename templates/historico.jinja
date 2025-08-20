@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.88.1">
-    <title>Adicionar Registro de Evento</title>
+    <title>Histórico de Eventos</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/album/">
 
@@ -398,14 +398,14 @@
                   </ul>
                 </div>
 
-                <span class="input-group-text" id="basic-addon4">Depart:</span>
+                <span class="input-group-text" id="basic-addon6">Depart:</span>
                 <select class="form-select" name="id_departamento">
                   <option value="0">Todos</option>
                   {% for item in filtro_departamentos %}
                   <option value="{{item['id']}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>
-                <span class="input-group-text" id="basic-addon5">Cat:</span>
+                <span class="input-group-text" id="basic-addon7">Cat:</span>
                 <select class="form-select" name="id_cat_musica">
                   <option value="0">Todos</option>
                   {% for item in filtro_cat_musicas %}
@@ -433,14 +433,14 @@
                   </ul>
                 </div>
 
-                <span class="input-group-text" id="basic-addon4">Tipo Leitura:</span>
+                <span class="input-group-text" id="basic-addon8">Tipo Leitura:</span>
                 <select class="form-select" name="id_cat_biblia">
                   <option value="0">Todos</option>
                   {% for item in filtro_tipos_leitura %}
                   <option value="{{item[id]}}">{{item['descricao']}}</option>
                   {% endfor %}
                 </select>
-                <span class="input-group-text" id="basic-addon5">Cap:</span>
+                <span class="input-group-text" id="basic-addon9">Cap:</span>
                 <input id="txt_cap" type="number" class="form-control form-custom" name="cap_biblia" placeholder="Capítulo" min="1" max="150">
 
             </div>
@@ -462,12 +462,33 @@
               </div>
             </div>
 
+
+
             <div id="painel_detalhes" class="col-sm-8">
               <!-- Enquanto não exibe os detalhes de um evento específico, mostra os top 10 das categorias -->
-              <h3>Top 10 - Itens mais executados</h3>
-              <canvas id="chart_harpa"></canvas>
-              <canvas id="chart_musicas"></canvas>
-              <canvas id="chart_biblia"></canvas>
+              <div class="row">
+                <div class="col-sm-12">
+                  <h3>Top 10 - Itens mais executados:</h3>
+                </div>
+
+                <div class="col-sm-6">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon10">Período:</span>
+                    <select class="form-select" id="cb_ano_grafico">
+                      <option value="0">Todos os anos</option>
+                      {% for ano in anos %}
+                      <option value="{{ano}}">Ano de {{ano}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>                  
+                </div>
+
+                <div class="col-sm-12" id="painel_graficos">
+                  <canvas id="chart_harpa"></canvas>
+                  <canvas id="chart_musicas"></canvas>
+                  <canvas id="chart_biblia"></canvas>                  
+                </div>
+              </div>
             </div>
 
           </div>
@@ -489,6 +510,7 @@
         const top10Harpa = {{ top_10_harpa|tojson }};
         const top10Musicas = {{ top_10_musicas|tojson }};
         const top10Biblia = {{ top_10_biblia|tojson }};
+        const anos = {{anos}};
 
         const myChart_harpa = new Chart(document.getElementById('chart_harpa'), {
           type: 'bar',
@@ -675,6 +697,13 @@
         }        
       }
 
+      $("#painel_detalhes").on('change', "#cb_ano_grafico", function() {
+        const ano = $(this).val();
+        $("#painel_graficos").empty();
+        $("#painel_graficos").append('<canvas id="chart_harpa"></canvas><canvas id="chart_musicas"></canvas><canvas id="chart_biblia"></canvas>');
+        carregarGraficos(ano);
+      });
+
       $("#btn_limpar").on('click', function() {
         /*$("#painel_filtro_musicas").hide();
         $("#painel_filtro_harpa").hide();
@@ -820,11 +849,40 @@
             console.log(response);
 
             for (let i = 0; i < response.length; i++) {
-              $("#ls-principal").append(`<a href="#" class="list-group-item list-group-item-action ${response[i]['tema_id']}" data-id="${response[i]['id']}" data-mes="${response[i]['mes']}" data-ano="${response[i]['ano']}">${response[i]['data']} <b>(${response[i]['semana'].substring(0, 3)})</b> - ${response[i]['tema']}</a>`);
+              $("#ls-principal").append(`<a href="#" class="list-group-item list-group-item-action ${response[i]['tema_id']}" data-id="${response[i]['id']}" data-mes="${response[i]['mes']}" data-ano="${response[i]['ano']}">${response[i]['data']} <b>(${response[i]['semana'].substr(0, 3)})</b> - ${response[i]['tema']}</a>`);
             }
 
 
             filtrarMes($("#cb_mes").val());
+            
+            const detalhe_painel = '<div class="row">' +
+                                  '<div class="col-sm-12">' + 
+                                    '<h3>Top 10 - Itens mais executados:</h3>' +
+                                  '</div>' +
+
+                                  '<div class="col-sm-6">' +
+                                    '<div class="input-group mb-3">' +
+                                      '<span class="input-group-text" id="basic-addon10">Período:</span>' +
+                                      '<select class="form-select" id="cb_ano_grafico">' +
+                                        '<option value="0">Todos os anos</option>' +
+                                      '</select>' +
+                                    '</div>' +
+                                  '</div>' +
+
+                                  '<div class="col-sm-12" id="painel_graficos">' +
+                                    '<canvas id="chart_harpa"></canvas>' +
+                                    '<canvas id="chart_musicas"></canvas>' +
+                                    '<canvas id="chart_biblia"></canvas>' +
+                                  '</div>' +
+                                '</div>';
+
+            $("#painel_detalhes").append(detalhe_painel);
+
+            for (let i = 0; i < anos.length; i++) {
+              $("#cb_ano_grafico").append(`<option value="${anos[i]}">Ano de ${anos[i]}</option>`);
+            }
+
+            carregarGraficos('0');
           },
           error: function(err) {
             console.log(err);
@@ -848,6 +906,144 @@
         
           });
         }
+      }
+
+      function carregarGraficos(ano) {
+
+        let titulo = '';
+
+        if (ano != '0') {
+          titulo = " - " + ano;
+        }
+
+        // pegar os dados
+        $.ajax({
+          type: "POST",
+          url: "{{ url_for('historico') }}",
+          contentType: "application/json",
+          data: JSON.stringify({destino:4, ano:ano}),
+          dataType: "json",
+          success: function(response) {
+            let myChart_harpa_new = new Chart(document.getElementById('chart_harpa'), {
+              type: 'bar',
+              data: {
+                labels: response['harpa'].map(item => item.id_harpa + '. ' + item.titulo),
+                datasets: [{
+                  label: 'Quantidade de Eventos',
+                  data: response['harpa'].map(item => item.qtd),
+                  backgroundColor: 'rgba(255, 122, 89, 0.5)',
+                  borderColor: 'rgba(255, 122, 89, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                indexAxis: 'y',
+                scales: {
+                  x: {
+                    ticks: {
+                      stepSize: 1,
+                      precision: 0
+                    },
+                    beginAtZero: true
+                  }
+                },
+                plugins: {
+                  title: {
+                    display: true,
+                    text: 'Top 10 - Harpa Cristã' + titulo,
+                    font: {
+                      size: 24
+                    }              
+                  },
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+
+
+            let myChart_musicas_new = new Chart(document.getElementById('chart_musicas'), {
+              type: 'bar',
+              data: {
+                labels: response['musicas'].map(item => item.titulo),
+                datasets: [{
+                  label: 'Quantidade de Eventos',
+                  data: response['musicas'].map(item => item.qtd),
+                  backgroundColor: 'rgba(89, 131, 255, 0.5)',
+                  borderColor: 'rgba(89, 131, 255, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                indexAxis: 'y',
+                scales: {
+                  x: {
+                    ticks: {
+                      stepSize: 1,
+                      precision: 0
+                    },
+                    beginAtZero: true
+                  }
+                },
+                plugins: {
+                  title: {
+                    display: true,
+                    text: 'Top 10 - Músicas' + titulo,
+                    font: {
+                      size: 24
+                    }              
+                  },
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+
+            let myChart_biblia_new = new Chart(document.getElementById('chart_biblia'), {
+              type: 'bar',
+              data: {
+                labels: response['biblia'].map(item => item.titulo),
+                datasets: [{
+                  label: 'Quantidade de Eventos',
+                  data: response['biblia'].map(item => item.qtd),
+                  backgroundColor: 'rgba(0, 192, 0, 0.5)',
+                  borderColor: 'rgba(0, 192, 0, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                indexAxis: 'y',
+                scales: {
+                  x: {
+                    ticks: {
+                      stepSize: 1,
+                      precision: 0
+                    },
+                    beginAtZero: true
+                  }
+                },
+                plugins: {
+                  title: {
+                    display: true,
+                    text: 'Top 10 - Livros da Bíblia' + titulo,
+                    font: {
+                      size: 24
+                    }              
+                  },
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });
+
       }
 
       $("#cb_mes").on('change', function() {
