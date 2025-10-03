@@ -1251,17 +1251,19 @@ def abrir_musica():
     musicas = banco.executarConsulta('select id, titulo, (select group_concat(id_vinculo) from vinculos_x_musicas where id_musica = id) as vinc from musicas')
     musicas.sort(key=lambda t: (locale.strxfrm(t['titulo'])))
     categoria = banco.executarConsulta('select * from categoria_departamentos')
+    config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
     for item in categoria:
         item['subcategoria'] = banco.executarConsulta('select id, descricao from subcategoria_departamentos where supercategoria = %s' % item['id'])
 
-    return render_template('musicas.jinja', musicas=musicas, status='', categoria=categoria)
+    return render_template('musicas.jinja', musicas=musicas, status='', categoria=categoria, config=config)
 
 @app.route('/abrir_harpa', methods=['GET', 'POST'])
 def abrir_harpa():
 
     harpa = banco.executarConsulta('select * from harpa order by id')
+    config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-harpa-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-harpa-fundo'")[0]['valor'], 'num':banco.executarConsulta("select valor from config where id = 'cor-harpa-num'")[0]['valor'], 'red':banco.executarConsulta("select valor from config where id = 'cor-harpa-red'")[0]['valor']}
 
-    return render_template('harpa.jinja', status='', harpa=harpa)
+    return render_template('harpa.jinja', status='', harpa=harpa, config=config)
 
 
 
@@ -2800,9 +2802,9 @@ def get_info_harpa():
             titulo = banco.executarConsultaVetor('select descricao from harpa where id = %s' % id['id'])[0]
             autor = banco.executarConsultaVetor('select nome from autor_harpa where id = (select autor from harpa where id = %s)' % id['id'])[0]
             versoes = banco.executarConsulta('select id, titulo_versao, desc_versao from harpa_versionada where id_harpa = %s' % id['id'])
+            lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides_harpa where id_harpa = %s order by pos" % id['id'])
 
-
-            return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor, 'versoes':versoes})
+            return jsonify({'letras':letras, 'numero':numero, 'titulo':titulo, 'autor':autor, 'versoes':versoes, 'lista_slides':lista_slides})
         
 @app.route('/get_info_harpa_versionada', methods=['GET', 'POST'])
 def get_info_harpa_versionada():
@@ -2854,7 +2856,9 @@ def get_info_musica():
             else:
                 capa = '/static/images/upload_image.jpg'
 
-            return jsonify({'vinculos':vinculos, 'letras':letras, 'capa':capa})
+            lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides where id_musica = %s order by pos" % id['id'])
+
+            return jsonify({'vinculos':vinculos, 'letras':letras, 'capa':capa, 'lista_slides':lista_slides})
 
 @app.route('/verificarSenha', methods=['GET', 'POST'])
 def verificarSenha():
@@ -3675,9 +3679,11 @@ def iniciar_apresentacao():
 
             if info['tipo'] == 'musicas':
                 estado = 1
+                index = int(info['index'])
                 insert_log(5, 2, info['id'], 0)
             elif info['tipo'] == 'harpa':
                 estado = 3
+                index = int(info['index'])
                 insert_log(5, 3, info['id'], 0)
             elif info['tipo'] == 'harpa_versionada':
                 estado = 4
@@ -3944,8 +3950,8 @@ def update_roteiro():
 
 
 if __name__ == '__main__':
-    #app.run(debug=True, use_reloader=True, port=80)
-    serve(app, host='0.0.0.0', port=80, threads=8)
+    app.run(debug=True, use_reloader=True, port=80)
+    #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

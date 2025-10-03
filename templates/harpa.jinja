@@ -43,7 +43,14 @@
       .box-index {
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
         color: blue;
-        font-weight: bold;
+      }
+
+      .letra {
+        background-color: {{config['fundo']}};
+        background-size: 100% 100%;
+        color:{{config['letra']}};
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: normal; 
       }
 
       .paragrafo {
@@ -217,6 +224,10 @@
       transform: translateY(-50%);
     }
 
+    .big-box {
+      cursor: pointer;
+    }    
+
     </style>
     
   </head>
@@ -313,6 +324,7 @@
                 <p>
                   <button id="btn_iniciar_apresentacao" class="btn btn-info" disabled><i class="fa-solid fa-circle-play"></i> Iniciar Apresentação</button>
                   <button id="btn_adicionar_roteiro" class="btn btn-success" disabled><i class="fa-solid fa-list-check"></i> Adicionar ao Roteiro</button>
+                  <button id="btn_ver_slides" class="btn btn-warning" disabled><i class="fa-solid fa-eye"></i> Ver Slides</button>
                 </p>           
             </div>          
 
@@ -330,6 +342,7 @@
             </div>
             <div id="letras_musicas" class="col-sm-5"></div>
             <div id="detalhes_musicas" class="col-sm-4"></div>
+            <div id="detalhes_slides" class="col-sm-9" hidden></div>
           </div>
         </section>
       </div>
@@ -351,6 +364,32 @@
       var s = "000000000" + num;
       return s.substr(s.length-size);
   }
+
+  $("#detalhes_slides").on('click', '.card', function() {
+      $(".card").removeClass('box-index');
+      $(".card").addClass('shadow-sm')
+      $(this).addClass('box-index');
+      $(this).removeClass('shadow-sm');      
+  });
+
+  $("#btn_ver_slides").on('click', function() {
+
+    if ($(this).text() == ' Ocultar Slides') {
+      $("#detalhes_slides").attr('hidden', '');
+      $("#btn_ver_slides").html('<i class="fa-solid fa-eye"></i> Ver Slides');
+      $("#letras_musicas").removeAttr('hidden');
+      $("#detalhes_musicas").removeAttr('hidden');
+      $("#btn_adicionar_roteiro").removeAttr('disabled');
+    } else {
+      $("#detalhes_slides").removeAttr('hidden');
+      $("#btn_ver_slides").html('<i class="fa-solid fa-eye-slash"></i> Ocultar Slides');
+      $("#letras_musicas").attr('hidden', '');
+      $("#detalhes_musicas").attr('hidden', '');
+      $("#btn_adicionar_roteiro").attr('disabled', '');
+      textFit($(".mini-box"), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100})
+    }
+
+  });
 
   $("#btn_gerar_pdf").on('click', function() {    
 
@@ -458,7 +497,7 @@
 
   $("#btn_iniciar_apresentacao").on('click', function() {
 
-    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'harpa'};
+    info = {'id':$("#lista_geral a.active").attr('data-id'), 'tipo':'harpa', 'index':$(".box-index").attr('data-index')};
     status = '<div class="alert alert-success alert-dismissible fade show" role="alert">Apresentação do hino <strong>' + $("#lista_geral a.active").text() + '</strong> iniciada com sucesso. <a href="/controlador">Clique aqui</a> para abrir o Controlador.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
 
     if (typeof $("#cb_versao").val() !== 'undefined') {
@@ -531,6 +570,10 @@
         success: function(data) {
             //console.log(data);
 
+            $("#letras_musicas").removeAttr('hidden');
+            $("#detalhes_musicas").removeAttr('hidden');
+            $("#detalhes_slides").attr('hidden', '');            
+
             // adicionar imagem da capa
             $("#detalhes_musicas").append("<img src='/static/images/Harpa.jpg'></img><br>");
             $("#detalhes_musicas").append("<div id='lb_numero'>" + data['numero'] + "</div>");
@@ -580,9 +623,34 @@
               $("#pagina_texto").append('<p>' + data['letras'][letra]['texto'].replaceAll('<mark ', '<span ').replaceAll('</mark>', '</span> ') + '</p>');
             }
 
+            let html = '<div class="row">';
+
+            for (slide in data['lista_slides']) {
+
+              let class_text = 'big-box card shadow-sm';
+
+              if (slide == 0) {
+                class_text = 'big-box card box-index';
+              }
+
+              html += '<div class="col-sm-3 mb-4">';
+              html += '<div id="box' + (parseInt(slide) + 1) + '" data-index="' + (parseInt(slide) + 1) + '" class="' + class_text + '">';
+              if ([2, 4].includes(data['lista_slides'][slide]['categoria'])) {
+                html += '<div class="letra coro mini-box text-center" style="height: 110px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+              } else {
+                html += '<div class="letra mini-box text-center" style="height: 110px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+              }
+               html += '<div class="card-body" style="background-color:#dbdbdb"><h4 class="card-text text-center">Slide: ' + (parseInt(slide) + 1) + '</h4></div></div></div>';
+            }
+            html += '</div>';
+
+            $("#detalhes_slides").html(html);            
+
             $("#btn_editar_musica").removeAttr('disabled');
             $("#btn_iniciar_apresentacao").removeAttr('disabled');
             $("#btn_adicionar_roteiro").removeAttr('disabled');
+            $("#btn_ver_slides").removeAttr('disabled');
+            $("#btn_ver_slides").html('<i class="fa-solid fa-eye"></i> Ver Slides');            
         },
     });    
 
