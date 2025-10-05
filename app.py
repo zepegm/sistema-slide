@@ -3385,7 +3385,7 @@ def open_window_slide():
         try:
             # Call the form_interaction.py script with parameters
             window_browser = subprocess.Popen(
-                ['python', path],
+                ['pythonw', path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
