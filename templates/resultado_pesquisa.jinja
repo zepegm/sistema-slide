@@ -51,8 +51,8 @@
 
       .box-index {
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
-        color: blue;
-        font-weight: bold;
+        /*color: blue;
+        font-weight: bold;*/
       }
 
       .line-result {
@@ -137,7 +137,33 @@
       border-radius: 5px;
       padding: 1%;
       margin-top: 10px;
-    }        
+    }
+
+    .mini-box {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .big-box {
+      cursor: pointer;
+    }
+
+    .letra {
+      background-color: {{config['fundo']}};
+      background-size: 100% 100%;
+      color:{{config['letra']}};
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: normal;
+    }     
+
+    .coro {
+      color:{{config['mark']}};
+    }
+
+    .capa {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+    }       
 
     </style>
 
@@ -190,17 +216,15 @@
             <div class="col-sm-12">
               <button id="btn_iniciar_apresentacao" class="btn btn-info" disabled><i class="fa-solid fa-circle-play"></i> Iniciar Apresentação</button>
               <button id="btn_adicionar_roteiro" class="btn btn-success" disabled><i class="fa-solid fa-list-check"></i> Adicionar ao Roteiro</button>
+              <button id="btn_ver_slides" class="btn btn-warning" disabled><i class="fa-solid fa-eye"></i> Ver Slides</button>              
               <button id="btn_retornar" class="btn btn-secondary"><i class="fa-solid fa-circle-left"></i> Sair da Pesquisa</button>
             </div>
             <div class="col-sm-12"><hr></div>
           </div>
           <div class="row">
-            <div class="col-sm-6">
-              <div id="letras_musicas"></div>
-            </div>
-            <div class="col-sm-6">
-              <div id="detalhes_musicas"></div>
-            </div>            
+            <div class="col-sm-6" id="letras_musicas"></div>
+            <div class="col-sm-6" id="detalhes_musicas"></div>
+            <div class="col-sm-12" id="detalhes_slides" hidden></div>
           </div>
         </section>
       </div>
@@ -212,6 +236,7 @@
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
   
   <script>
 
@@ -225,12 +250,43 @@
       window.location.href = "abrir_musica";
     });
 
+    $("#detalhes_slides").on('click', '.card', function() {
+        $(".card").removeClass('box-index');
+        $(".card").addClass('shadow-sm')
+        $(this).addClass('box-index');
+        $(this).removeClass('shadow-sm');      
+    });    
+
+    $("#btn_ver_slides").on('click', function() {
+
+      if ($(this).text() == ' Ocultar Slides') {
+        $("#detalhes_slides").attr('hidden', '');
+        $("#btn_ver_slides").html('<i class="fa-solid fa-eye"></i> Ver Slides');
+        $("#letras_musicas").removeAttr('hidden');
+        $("#detalhes_musicas").removeAttr('hidden');
+        $("#btn_adicionar_roteiro").removeAttr('disabled');
+      } else {
+        $("#detalhes_slides").removeAttr('hidden');
+        $("#btn_ver_slides").html('<i class="fa-solid fa-eye-slash"></i> Ocultar Slides');
+        $("#letras_musicas").attr('hidden', '');
+        $("#detalhes_musicas").attr('hidden', '');
+        $("#btn_adicionar_roteiro").attr('disabled', '');
+        textFit($(".mini-box"), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100})
+      }
+
+    });    
+
     $(".line-result").on('click', function() {
       dataTable.$(".line-result").removeClass('table-primary');
       $(this).addClass('table-primary');
 
       $("#btn_iniciar_apresentacao").removeAttr('disabled');
       $("#btn_adicionar_roteiro").removeAttr('disabled');
+      $("#btn_ver_slides").removeAttr('disabled');
+      $("#btn_ver_slides").html('<i class="fa-solid fa-eye"></i> Ver Slides');
+      $("#detalhes_slides").attr('hidden', true);
+      $("#letras_musicas").removeAttr('hidden');
+      $("#detalhes_musicas").removeAttr('hidden');
 
       $("#letras_musicas").empty();
       $("#detalhes_musicas").empty();
@@ -264,6 +320,25 @@
               for (letra in data['letras']) {
                 $("#pagina_texto").append('<p>' + data['letras'][letra]['texto'].replaceAll('<mark ', '<span ').replaceAll('</mark>', '</span> ') + '</p>');
               }
+
+              let html = '<div class="row">';
+
+              html += '<div class="col-sm-3 mb-4"><div id="box0" data-index="0" class="card box-index big-box"><div class="capa mini-box" style="height: 140px; width=100%; background-image: url(\'' + data['capa'] + '\');"></div><div class="card-body"><h4 class="card-text text-center">Slide: 1</h4></div></div></div>';
+
+              for (slide in data['lista_slides']) {
+                html += '<div class="col-sm-3 mb-4">';
+                html += '<div id="box' + (parseInt(slide) + 1) + '" data-index="' + (parseInt(slide) + 1) + '" class="big-box card shadow-sm">';
+                if ([2, 4].includes(data['lista_slides'][slide]['categoria'])) {
+                  html += '<div class="letra coro mini-box text-center" style="height: 140px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+                } else {
+                  html += '<div class="letra mini-box text-center" style="height: 140px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+                }
+                html += '<div class="card-body"><h4 class="card-text text-center">Slide: ' + (parseInt(slide) + 2) + '</h4></div></div></div>';
+              }
+              html += '</div>';
+
+              $("#detalhes_slides").html(html);
+
           },
       });      
     });
@@ -291,7 +366,7 @@
         });     
 
     $("#btn_iniciar_apresentacao").on('click', function() {
-      info = {'id':selecionado['id'], 'tipo':'musicas'};
+      info = {'id':selecionado['id'], 'tipo':'musicas', 'index':$(".box-index").attr('data-index')};
       console.log(info)
       
       $.ajax({

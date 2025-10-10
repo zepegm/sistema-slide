@@ -59,8 +59,16 @@
 
       .box-index {
         box-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;
-        color: blue;
-        font-weight: bold;
+        /*color: blue;
+        font-weight: bold;*/
+      }
+
+      .letra {
+        background-color: {{config['fundo']}};
+        background-size: 100% 100%;
+        color:{{config['letra']}};
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: normal; 
       }
 
       .line-result {
@@ -118,7 +126,7 @@
     }  
 
     #letras_musicas,
-    #detalhes_musicas {
+    #detalhes_slides {
       color: black;
     }
 
@@ -145,7 +153,25 @@
       border-radius: 5px;
       padding: 1%;
       margin-top: 10px;
-    }        
+    }
+
+    .big-box {
+      cursor: pointer;
+    }    
+
+    .capa {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+    }
+
+    #mini-title {
+      color:black;
+      font-weight: bold;
+      font-size: 2vh;
+      text-align: center;
+      margin-top: 30%;
+    }    
 
     </style>
 
@@ -205,11 +231,11 @@
             <div class="col-sm-12"><hr></div>
           </div>
           <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-4">
               <div id="letras_musicas"></div>
             </div>
-            <div class="col-sm-6">
-              <div id="detalhes_musicas"></div>
+            <div class="col-sm-8">
+              <div id="detalhes_slides"></div>
             </div>            
           </div>
         </section>
@@ -222,6 +248,7 @@
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script src="{{ url_for('static', filename='datatable/datatables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
   
   <script>
 
@@ -236,6 +263,13 @@
       $("#loading").remove();
     };
 
+    $("#detalhes_slides").on('click', '.card', function() {
+        $(".card").removeClass('box-index');
+        $(".card").addClass('shadow-sm')
+        $(this).addClass('box-index');
+        $(this).removeClass('shadow-sm');      
+    });
+
     $("#btn_retornar").on('click', function() {
       window.location.href = "abrir_harpa";
     });
@@ -248,13 +282,14 @@
       $("#btn_adicionar_roteiro").removeAttr('disabled');
 
       $("#letras_musicas").empty();
-      $("#detalhes_musicas").empty();
+      $("#detalhes_slides").empty();
       $("#letras_musicas").append('<h4><span class="fw-bold">Título: </span><span class="text-primary">' + $(this).attr('data-titulo') + '</span></h4>');
 
       selecionado['id'] = $(this).attr('data-id');
       selecionado['titulo'] = $(this).attr('data-titulo');
 
       info = {'id':selecionado['id']};
+      const id_hino = selecionado['id'];
 
       $.ajax({
           type: "POST",
@@ -263,7 +298,7 @@
           data: JSON.stringify(info),
           dataType: "json",
           success: function(data) {
-              //console.log(data);
+              console.log(data);
 
               // adicionar imagem da capa
               //$("#detalhes_musicas").append("<img src='" + data['capa'] + "'></img><br>");
@@ -275,6 +310,28 @@
               for (letra in data['letras']) {
                 $("#pagina_texto").append('<p>' + data['letras'][letra]['texto'].replaceAll('<mark ', '<span ').replaceAll('</mark>', '</span> ') + '</p>');
               }
+
+              // detalhes dos slides
+              let html = '<div class="row">';
+
+              html += '<div class="col-sm-4 mb-4"><div id="box0" data-index="0" class="card box-index big-box"><div class="capa mini-box" style="height: 140px; width=100%; background-image: url(\'/static/images/harpa_mini_preview.jpg\');"><p id="mini-title">HINO ' + id_hino.padStart(3, '0') + '</p></div><div class="card-body"><h4 class="card-text text-center">Slide: 1</h4></div></div></div>';
+
+              for (slide in data['lista_slides']) {
+
+                html += '<div class="col-sm-4 mb-4">';
+                html += '<div id="box' + (parseInt(slide) + 1) + '" data-index="' + (parseInt(slide) + 1) + '" class="big-box card shadow-sm">';
+                if ([2, 4].includes(data['lista_slides'][slide]['categoria'])) {
+                  html += '<div class="letra coro mini-box text-center" style="height: 140px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+                } else {
+                  html += '<div class="letra mini-box text-center" style="height: 140px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+                }
+                html += '<div class="card-body" style="background-color:#dbdbdb"><h4 class="card-text text-center">Slide: ' + (parseInt(slide) + 2) + '</h4></div></div></div>';
+              }
+              html += '</div>';
+
+              $("#detalhes_slides").html(html);
+
+              textFit($(".mini-box"), {alignVert: true, multiLine: true, minFontSize: 10, maxFontSize: 100})              
           },
       });      
     });
@@ -302,7 +359,7 @@
         });     
 
     $("#btn_iniciar_apresentacao").on('click', function() {
-      info = {'id':selecionado['id'], 'tipo':'harpa'};
+      info = {'id':selecionado['id'], 'tipo':'harpa', 'index':$(".box-index").attr('data-index')};
       //console.log(info)
       
       $.ajax({
