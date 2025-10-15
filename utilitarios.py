@@ -1,6 +1,7 @@
 import numpy as np
 import datetime
 import os
+from pathlib import Path
 
 def pegarListaSemanas(ano, mes):
     # Defina o ano e o mês desejados (por exemplo, maio de 2022)
@@ -83,3 +84,13 @@ def pegarLicoes(data):
 # Função para verificar se um arquivo existe
 def verificar_arquivo_existe(caminho_arquivo):
     return os.path.isfile(caminho_arquivo)
+
+
+def listar_diretorios(caminho, prefixo=""):
+    with open("estrutura.txt", "w", encoding="utf-8") as f:
+        def listar(caminho, prefixo=""):
+            for item in caminho.iterdir():
+                f.write(prefixo + "|-- " + item.name + "\n")
+                if item.is_dir():
+                    listar(item, prefixo + "    ")
+        listar(Path("."))
