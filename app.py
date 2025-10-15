@@ -3951,8 +3951,14 @@ def update_roteiro():
             return jsonify(len(roteiro))
 
 
+# testar integração com react
+@app.route('/api/musicas')
+def listar_musicas():
+    return jsonify(["Vem, esta é a hora", "Santo Espírito", "Agnus Dei"])
+
+
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True, port=80)
+    app.run(debug=True, use_reloader=True, port=5000)
     #serve(app, host='0.0.0.0', port=80, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
