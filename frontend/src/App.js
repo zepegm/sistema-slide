@@ -1,15 +1,16 @@
-import logo from './logo.svg';
-import './App.css';
-import Musicas from './Musicas';
+import React from 'react';
+import SlideShow from './components/SlideShow';
+import slideData from './data/slides.json'; // ou use fetch se preferir
 
-
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <h1>Meu sistema React + Flask</h1>
-      <Musicas />
-    </div>
+    <SlideShow
+      slides={slideData}
+      config={{ letra: '#fff', fundo: '#000', mark: '#ffcc00' }}
+      fundo="images/fundo_padrao.jpg"
+      socketUrl="http://localhost:5000"
+    />
   );
-}
+};
 
 export default App;

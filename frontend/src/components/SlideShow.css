@@ -1,0 +1,169 @@
+body {
+  background-color: black;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.slide {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, Helvetica, sans-serif;
+  color: white;
+  line-height: normal;
+  text-shadow: 0 0 10px black;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* Estados de animação */
+.in {
+  animation: fade-in 0.5s forwards;
+}
+
+.out {
+  animation: fade-out 0.5s forwards;
+}
+
+.first-in {
+  animation: fade-in 4s forwards;
+}
+
+.final-out {
+  animation: fade-final 4s forwards;
+  opacity: 0;
+}
+
+/* Tipos de slide */
+.capa {
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.letra {
+  font-size: 4vw;
+  color: white;
+  text-shadow: 0 0 15px black;
+  padding: 2rem;
+  white-space: pre-wrap;
+}
+
+.coro {
+  color: gold;
+}
+
+/* Animações */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-final {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Notas musicais animadas 🎵 */
+.muzieknootjes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.noot-1,
+.noot-2,
+.noot-3,
+.noot-4 {
+  position: absolute;
+  animation: notes 5s infinite linear;
+  font-size: 8rem;
+  opacity: 0;
+  color: white;
+  text-shadow: 0 0 40px white;
+}
+
+.noot-1 {
+  top: 30%;
+  left: 5%;
+  animation-delay: 0.5s;
+}
+
+.noot-2 {
+  top: 60%;
+  left: 30%;
+  animation-delay: 1s;
+}
+
+.noot-3 {
+  top: 30%;
+  left: 50%;
+  animation-delay: 1.5s;
+}
+
+.noot-4 {
+  top: 60%;
+  left: 80%;
+  animation-delay: 2s;
+}
+
+@keyframes notes {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5) translate(50%, -50%);
+  }
+  80% {
+    opacity: 0;
+    transform: scale(1.5) translate(100%, -100%);
+  }
+  100% {
+    transform: scale(1.5) translate(100%, -100%);
+    opacity: 0;
+  }
+}
+
+/* Tela final “Fim...” */
+#fim {
+  position: fixed;
+  min-width: 100%;
+  min-height: 100%;
+  top: 0;
+  left: 0;
+  color: white;
+  text-align: center;
+  font-size: 5vw;
+}

@@ -31,7 +31,7 @@ app=Flask(__name__)
 app.secret_key = "abc123"
 app.config['SECRET_KEY'] = 'justasecretkeythatishouldputhere'
 #app.config['UPLOAD_FOLDER'] = r'C:\Users\Operador\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Backup\sistema-slide\static\uploads'
-socketio = SocketIO(app, async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 #socketio = SocketIO(app)
 CORS(app)
 
