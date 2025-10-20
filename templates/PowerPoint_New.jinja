@@ -278,6 +278,7 @@
 
         const slides = document.querySelectorAll('.slide');
         let current_index = {{index}};
+        let key_final = false;
 
         function nextSlide(new_index) {
             const current = slides[current_index];
@@ -310,6 +311,10 @@
         var socket = io();
         socket.on('update', function(index) {
 
+            if (key_final == true) {
+                location.reload();
+            }
+
             if (current_index == index) {
                 return;
             } else if (current_index < index) {
@@ -318,19 +323,6 @@
                 previousSlide(index)
             }
 
-            /*if (key_final == true) {
-                location.reload();
-            } else {
-                changeComponent(vetor_slides[key1], vetor_slides[key2], index);
-
-                if (key1 == 0) {
-                    key1 = 1;
-                    key2 = 0;
-                } else {
-                    key1 = 0;
-                    key2 = 1;
-                }
-            }*/
         });        
      
         socket.on('refresh', function(result) {
