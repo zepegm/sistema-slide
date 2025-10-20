@@ -38,22 +38,33 @@ body {
   align-items: center;
   clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
   opacity: 0;
+  font-size: 14rem;
 }
 
 /* Slide visível com animação de entrada */
-.slide.in {
-  animation: reveal-in 1s ease-in-out forwards;
+.slide.in-esquerda {
+  animation: reveal-in-esquerda 0.5s ease-in-out forwards;
 }
 
 /* Slide saindo com animação reversa */
-.slide.out {
-  animation: reveal-out 1s ease-in-out forwards;
+.slide.out-direita {
+  animation: reveal-out-direita 0.5s ease-in-out forwards;
+}
+
+/* Slide visível com animação de entrada */
+.slide.in-direita {
+  animation: reveal-in-direita 0.5s ease-in-out forwards;
+}
+
+/* Slide saindo com animação reversa */
+.slide.out-esquerda {
+  animation: reveal-out-esquerda 0.5s ease-in-out forwards;
 }
 
 /* === ANIMAÇÕES === */
 
 /* Entrar da esquerda para a direita */
-@keyframes reveal-in {
+@keyframes reveal-in-esquerda {
   0% {
     clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
     opacity: 0;
@@ -67,8 +78,20 @@ body {
   }
 }
 
+/* Entrar da direita para a esquerda */
+@keyframes reveal-in-direita {
+  0% {
+    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+    opacity: 0;
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    opacity: 1;
+  }
+}
+
 /* Sair da direita para a esquerda */
-@keyframes reveal-out {
+@keyframes reveal-out-direita {
   0% {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
     opacity: 1;
@@ -79,24 +102,37 @@ body {
   }
 }
 
+/* Sair da esquerda para a direita */
+@keyframes reveal-out-esquerda {
+  0% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    opacity: 1;
+  }
+  100% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    opacity: 0;
+  }
+}
+
+
 /* Apenas para visual */
-.bg1 { background: linear-gradient(135deg, #ff4081, #ff9100); }
+/*.bg1 { background: linear-gradient(135deg, #ff4081, #ff9100); }
 .bg2 { background: linear-gradient(135deg, #00e676, #00b0ff); }
-.bg3 { background: linear-gradient(135deg, #8e24aa, #d500f9); }
+.bg3 { background: linear-gradient(135deg, #8e24aa, #d500f9); }*/
 
 </style>
 </head>
 <body>
 
 <div class="slide-container">
-  <div class="slide bg1 in">🎵 Louvai ao Senhor</div>
+  <div class="slide bg1 in-esquerda">🎵 Louvai ao Senhor</div>
   <div class="slide bg2">🙌 Santo, Santo, Santo</div>
   <div class="slide bg3">🎶 Glória a Deus nas alturas</div>
 </div>
 
 <div class="pn-buttons">
     <button onclick="nextSlide()">Próximo Slide</button>
-    <button onclick="alert('Função de slide anterior não implementada')">Slide Anterior</button>
+    <button onclick="previousSlide()">Slide Anterior</button>
 </div>
 
 
@@ -107,13 +143,24 @@ let index = 0;
 
 function nextSlide() {
   const current = slides[index];
-  current.classList.remove('in');
-  current.classList.add('out');
+  /*current.classList.remove('in');
+  current.classList.add('out');*/
+  current.className = 'slide out-esquerda';
 
   index = (index + 1) % slides.length;
   const next = slides[index];
-  next.classList.remove('out');
-  next.classList.add('in');
+  /*next.classList.remove('out');
+  next.classList.add('in');*/
+  next.className = 'slide in-direita';
+}
+
+function previousSlide() {
+  const current = slides[index];
+  current.className = 'slide out-direita';
+
+  index = (index - 1 + slides.length) % slides.length;
+  const prev = slides[index];
+  prev.className = 'slide in-esquerda';
 }
 
 // Troca de slide a cada 3 segundos

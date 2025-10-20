@@ -1,0 +1,398 @@
+<html lang="pt-BR">
+    <head>
+        <title>SlideShow</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+        <style>
+
+            body {
+                background-color: {{config['fundo']}};
+                overflow: hidden;
+            }
+
+            .glow {
+                text-shadow: rebeccapurple 0 0 10px;
+            }
+
+            .cdx-marker {
+                color:{{config['mark']}};
+                font-weight:bold;
+                background:rgba(0,0,0,0);
+                /* margin-right: 20px;  */
+            }
+
+            .capa {
+                background-image: url("{{ url_for('static', filename=fundo) }}");  
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-size: 100% 100%;
+            }
+
+            .letra {
+                color:{{config['letra']}};
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: normal; 
+                text-align: center;
+                text-shadow: 0 0 10px {{config['fundo']}};
+            }
+
+            .slide {
+                background-size: contain;
+                background-repeat: no-repeat;
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+                background-size: 100% 100%;
+                top:0%;    
+                left:0%;     
+                opacity: 0;  
+                /*clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);*/
+            }     
+            
+            .first-in {
+                animation-name: fade-in;
+                animation-duration: 4s;
+                opacity: 1;
+            }
+
+            .in {
+                animation-name: fade-in;
+                animation-duration: 0.5s;
+            }
+            
+            .out {
+                animation-name: fade-out;
+                animation-duration: 0.5s;
+                opacity: 0;
+            }   
+            
+            .final-out {
+                animation-name: fade-final;
+                animation-duration: 4s;
+                opacity: 0;
+            }
+
+            /* Slide visível com animação de entrada */
+            .slide.in-esquerda {
+                animation: reveal-in-esquerda 0.5s ease-in-out forwards;
+            }
+
+            /* Slide saindo com animação reversa */
+            .slide.out-direita {
+                animation: reveal-out-direita 0.5s ease-in-out forwards;
+            }
+
+            /* Slide visível com animação de entrada */
+            .slide.in-direita {
+                animation: reveal-in-direita 0.5s ease-in-out forwards;
+            }
+
+            /* Slide saindo com animação reversa */
+            .slide.out-esquerda {
+                animation: reveal-out-esquerda 0.5s ease-in-out forwards;
+            }            
+
+			#fim {
+                position: fixed;
+                min-width: 100%;               
+                min-height: 100%;
+			}
+
+            .muzieknootjes {
+              display: block;
+              margin: auto;
+              position: absolute;
+              width: 100%;
+              height: 100%  ;
+              border: 0px solid {{config['fundo']}};
+            }
+
+            .noot-1,
+            .noot-2,
+            .noot-3,
+            .noot-4 {
+              position: absolute;
+              animation: notes 2s infinite linear;
+              font-size: 200px;
+              opacity: 0;
+              color:{{config['letra']}};
+              text-shadow: {{config['letra']}} 0 0 40px;
+              animation-duration: 5s;
+            }
+
+            .noot-1 {
+              top: 30%;
+              left: 5%;
+              animation-delay: 0.5s;
+            }
+
+            .noot-2 {
+              top: 60%;
+              left: 30%;
+              animation-delay: 1s;
+            }
+
+            .noot-3 {
+              top: 30%;
+              left: 50%;
+              animation-delay: 1.5s;
+            }
+
+            .noot-4 {
+              top: 60%;
+              left: 80%;
+              animation-delay: 2s;
+            }
+
+            .coro {
+                color:{{config['mark']}};
+            }
+
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            } 
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            } 
+
+            @keyframes fade-final {
+                0% {
+                    opacity: 0;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            @keyframes notes {
+              0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 0;
+              }
+              50% {
+                opacity: 1;
+                transform: scale(1.5) translate(50%, -50%);
+              }
+              80% {
+                opacity: 0;
+                transform: scale(1.5) translate(100%, -100%);
+              }
+              100% {
+                transform: scale(1.5) translate(100%, -100%);
+                opacity: 0;
+              }
+            }   
+            
+            /* Entrar da esquerda para a direita */
+            @keyframes reveal-in-esquerda {
+                0% {
+                    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+                    opacity: 0;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                    opacity: 1;
+                }
+            }
+
+            /* Entrar da direita para a esquerda */
+            @keyframes reveal-in-direita {
+                0% {
+                    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+                    opacity: 0;
+                }
+                100% {
+                    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                    opacity: 1;
+                }
+            }
+
+            /* Sair da direita para a esquerda */
+            @keyframes reveal-out-direita {
+                0% {
+                    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                    opacity: 1;
+                }
+                100% {
+                    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+                    opacity: 0;
+                }
+            }
+
+            /* Sair da esquerda para a direita */
+            @keyframes reveal-out-esquerda {
+                0% {
+                    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                    opacity: 1;
+                }
+                100% {
+                    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+                    opacity: 0;
+                }
+            }            
+
+        </style>
+    </head>
+    <body>
+
+        <div id="notas" class="muzieknootjes">
+            {% if lista_slides|length > 0 and index < lista_slides|length %}
+            {% if lista_slides[index - 1]['categoria'] == 3 or lista_slides[index - 1]['categoria'] == 4 %}
+            <div class="noot-1">&#9835; &#9833;</div>
+            <div class="noot-2">&#9833;</div>
+            <div class="noot-3">&#9839; &#9834;</div>
+            <div class="noot-4">&#9834;</div>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Slides -->
+        {% for slide in lista_slides %}
+            <div id="slide_{{ loop.index0 }}" class="slide{% if loop.index0 == index %} first-in{% endif %}{% if loop.index0 == 0 %} capa{%else%} letra{% endif %}">
+                    {% if loop.index0 > 0 %}
+                        {{lista_slides[loop.index0 - 1]['text-slide'] | safe}}
+                    {% endif %}
+                </div>
+        {% endfor %}    
+
+        <div id="fim"></div>
+
+    <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
+    <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vara.min.js') }}"></script>
+    <script>
+
+        textFit(document.getElementsByClassName('letra'), {alignHoriz: true, alignVert: true, multiLine: true, detectMultiLine: true, maxFontSize: 1000, minFontSize: 20});
+
+        const slides = document.querySelectorAll('.slide');
+        let current_index = {{index}};
+
+        function nextSlide(new_index) {
+            const current = slides[current_index];
+            if (current_index == 0) {
+                current.className = 'slide out-esquerda capa';
+            } else {
+                current.className = 'slide out-esquerda letra';
+            }
+
+            const next = slides[new_index];
+            next.className = 'slide in-direita letra';
+
+            current_index = new_index;
+        }
+
+        function previousSlide(new_index) {
+            const current = slides[current_index];
+            current.className = 'slide out-direita letra';
+
+            const prev = slides[new_index];
+            if (new_index == 0) {
+                prev.className = 'slide in-esquerda capa';
+            } else {
+                prev.className = 'slide in-esquerda letra';
+            }
+
+            current_index = new_index;
+        }
+
+        var socket = io();
+        socket.on('update', function(index) {
+
+            if (current_index == index) {
+                return;
+            } else if (current_index < index) {
+                nextSlide(index);
+            } else {
+                previousSlide(index)
+            }
+
+            /*if (key_final == true) {
+                location.reload();
+            } else {
+                changeComponent(vetor_slides[key1], vetor_slides[key2], index);
+
+                if (key1 == 0) {
+                    key1 = 1;
+                    key2 = 0;
+                } else {
+                    key1 = 0;
+                    key2 = 1;
+                }
+            }*/
+        });        
+     
+        socket.on('refresh', function(result) {
+            location.reload();
+        });
+
+        socket.on('pix', function(result) {
+            window.location.replace("/slide_pix");
+        });
+
+        socket.on('wait_pptx', function(result) {
+            window.location.replace("/wait_pptx");
+        });        
+
+        socket.on('change_wallpaper', function(result) {
+            if (slides.length == 0) {
+                location.reload();
+            }
+        });        
+
+        var idealFontSize = 300, idealScreenSize = 1920, maxFontSize = 500, minFontSize = 100,
+        fontSize = (screen.width / idealScreenSize) * idealFontSize;
+
+        var vara = new Vara(
+            "#fim",
+
+            //"https://raw.githubusercontent.com/akzhy/Vara/master/fonts/Satisfy/SatisfySL.json",
+            ".{{ url_for('static', filename='fonts/Satisfy/SatisfySL.json') }}",
+            [
+                {
+                    text: 'Fim...',
+                    y:250,
+                    fromCurrentPosition:{y:false},
+                    duration:3000,
+                    autoAnimation:false,
+                    delay:4000,
+                    id:"draw"
+                }													
+            ],
+
+            {
+                strokeWidth: 2,
+                color:'#fff',
+                fontSize:fontSize,
+                textAlign:'center'
+            }
+        );
+
+        vara.ready(function() {
+            var erase = true;
+            vara.animationEnd(function(i, o) {
+                if (i == 'no_erase') erase = false;
+                if (erase) {
+                    o.container.style.transition = "opacity 1s 1s";
+                    o.container.style.opacity = 0;
+                }
+            });
+
+
+        });
+
+    </script>
+
+    </body>    
+</html>

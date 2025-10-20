@@ -1792,6 +1792,51 @@ def licoesebd():
     return render_template('ebd.jinja', trimestre=trimestre, capa=capa, now_txt=now_txt, licoes=licoes, livros=livros, msg=msg, licao_1_edit=licao_1_edit, lst_leitura=lst_leitura, dados=dados, leitura=leitura)
 
 
+@app.route('/slide_new', methods=['GET', 'POST'])
+def slide_new():
+    global estado
+    global current_presentation
+    global index
+
+    if estado == 0:
+        consulta = banco.executarConsulta("SELECT segundos, arquivos FROM slide_show_wallpaper WHERE id = (SELECT valor FROM config WHERE id = 'wallpaper_show_id')")[0]
+        imagens = eval(consulta['arquivos'])
+        segundos = consulta['segundos']
+
+        ls_final = []
+        id = 0
+
+        if len(imagens) > 1: # se for mais de uma imagem, definir a imagem inicial aleatoriamente
+            for item in imagens:
+                ls_final.append({'class':'hide', 'image':item})
+
+            random_id = random.randint(0, len(imagens) - 1)
+            ls_final[random_id]['class'] = 'in'
+            id = random_id
+
+        else:
+            ls_final.append({'class':'in', 'image':imagens[0]})
+        
+        return render_template('PowerPoint_StandBy.jinja', fundo=ls_final, id=id, segundos=segundos, limite=len(imagens) - 1)
+    elif estado == 1: # se iniciou uma apresentação de música
+
+        # estabelecer configuração da música
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+
+        if (current_presentation['tipo'] == 'musicas'):
+            fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
+
+            if len(fundo) < 1:
+                fundo = 'images/' + banco.executarConsulta("select valor from config where id = 'background'")[0]['valor']
+            else:
+                fundo = 'images/capas/' + fundo[0]['filename']
+
+            lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides where id_musica = %s order by pos' % current_presentation['id'])
+
+            return render_template('PowerPoint_New.jinja', fundo=fundo, lista_slides=lista_slides, index=index, config=config)
+
+
+
 @app.route('/slide', methods=['GET', 'POST'])
 def slide():
 
