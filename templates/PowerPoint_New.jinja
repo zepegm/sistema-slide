@@ -23,6 +23,18 @@
                 /* margin-right: 20px;  */
             }
 
+            .cdx-num {
+                color:{{config['num']}};
+                background:rgba(0,0,0,0);
+                /* margin-right: 20px;  */
+            }
+
+            .red {
+                color:{{config['red']}};
+                background:rgba(0,0,0,0);
+                /* margin-right: 20px;  */
+            }
+
             .capa {
                 background-image: url("{{ url_for('static', filename=fundo) }}");  
                 background-size: contain;
@@ -150,6 +162,66 @@
                 color:{{config['mark']}};
             }
 
+            #lb_numero {
+                text-align: left;
+                color:#978473;
+                font-size:11vw;
+                font-style: italic;
+                position: absolute;
+                top:-5%;
+                left:12%;
+            }            
+
+            #lb_titulo {
+                color:#978473;
+                font-weight: bold;
+                border:solid 1px rgb(0,0,0,0);
+                position:absolute;
+                text-align: center;
+                top: 30%;
+                left: 7%;
+
+                width: 70vw;
+                height: 20vh;
+            }
+
+            #lb_autor {
+                color:black;
+                border:solid 1px rgb(0,0,0,0);
+                position:absolute;
+                left: 7%;
+                top:50%;
+                text-align: center;
+
+                width: 70vw;
+                height: 15vh;      
+            }
+
+            #lb_versao {
+                color:black;
+                border:solid 1px rgb(0,0,0,0);
+                position:absolute;
+                left: 20%;
+                top:80%;
+                text-align: center;
+                font-weight: bold;
+                font-style: italic;
+
+                width: 60vw;
+                height: 15vh;      
+            }
+
+            .b_final_color {
+                animation-name: color-change;
+                animation-duration: 4s;
+                background-color: black;
+            }
+
+            @keyframes color-change {
+                from {background-color:white;}
+                to {background-color:black;}
+            }
+
             @keyframes fade-in {
                 from {opacity: 0;}
                 to {opacity: 1;}
@@ -257,16 +329,26 @@
             {% endif %}
         </div>
 
+        <!-- Capa -->
+        <div id="slide_0" class="slide capa{% if index == 0 %} first-in{% endif %}" data-cor="" data-tipo="capa">
+            <!-- Capa vazia -->
+            {% if info %}
+                <div id="lb_numero">{{num}}</div>
+                <div id="lb_titulo">{{info['nome']}}</div>
+                <div id="lb_autor">{{info['autor']}}</div>
+                <div id="lb_versao">{{titulo_versao}}</div>            
+            {% endif %}
+        </div>
+
         <!-- Slides -->
         {% for slide in lista_slides %}
-            <div id="slide_{{ loop.index0 }}" class="slide{% if loop.index0 == index %} first-in{% endif %}{% if loop.index0 == 0 %} capa{%else%} letra{% endif %}">
-                    {% if loop.index0 > 0 %}
-                        {{lista_slides[loop.index0 - 1]['text-slide'] | safe}}
-                    {% endif %}
-                </div>
+            <div id="slide_{{ loop.index }}" class="slide{% if loop.index == index %} first-in{% endif %} letra {% if slide['categoria']|int in (2, 4) %}coro{% endif %}" data-cor="{% if slide['categoria']|int in (2, 4) %}coro{% endif %}" data-tipo="letra" data-pausa="{% if slide['categoria']|int in (3, 4) %}true{% else %}false{% endif %}">
+                {{slide['text-slide'] | safe}}
+            </div>
         {% endfor %}    
 
         <div id="fim"></div>
+
 
     <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/textFit.min.js') }}"></script>
@@ -275,37 +357,78 @@
     <script>
 
         textFit(document.getElementsByClassName('letra'), {alignHoriz: true, alignVert: true, multiLine: true, detectMultiLine: true, maxFontSize: 1000, minFontSize: 20});
-
         const slides = document.querySelectorAll('.slide');
+        const notas = document.getElementById("notas");
         let current_index = {{index}};
         let key_final = false;
 
+        if (current_index >= slides.length) {
+            key_final = true;
+        }
+
+        const titulo = document.getElementById('lb_titulo');
+        const autor = document.getElementById('lb_autor');
+        const versao = document.getElementById('lb_versao');
+        const black_screen = document.getElementById('black_screen');
+
+        try {
+            // Code that may throw an error
+            textFit(titulo, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});
+            textFit(autor, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});
+            textFit(versao, {alignVert: true, multiLine: false, minFontSize: 5, maxFontSize: 2000});
+        } catch (error) {
+            // Code to handle the error
+            console.error("An error occurred:", error.message);
+        } finally {
+            // Code that will always run, regardless of an error
+            console.log("Execution completed.");
+        }
+
+
         function nextSlide(new_index) {
             const current = slides[current_index];
-            if (current_index == 0) {
-                current.className = 'slide out-esquerda capa';
-            } else {
-                current.className = 'slide out-esquerda letra';
-            }
-
+            current.className = 'slide out-esquerda ' + current.dataset.tipo + " " + current.dataset.cor;
             const next = slides[new_index];
-            next.className = 'slide in-direita letra';
+            next.className = 'slide in-direita ' + next.dataset.tipo + " " + next.dataset.cor;
 
             current_index = new_index;
+
+            if (next.dataset.pausa == "true") {
+                notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
+            } else {
+                notas.innerHTML = "";
+            }
         }
 
         function previousSlide(new_index) {
             const current = slides[current_index];
-            current.className = 'slide out-direita letra';
-
+            current.className = 'slide out-direita ' + current.dataset.tipo + " " + current.dataset.cor;    
             const prev = slides[new_index];
-            if (new_index == 0) {
-                prev.className = 'slide in-esquerda capa';
-            } else {
-                prev.className = 'slide in-esquerda letra';
-            }
+            prev.className = 'slide in-esquerda ' + prev.dataset.tipo + " " + prev.dataset.cor;
 
             current_index = new_index;
+
+            if (prev.dataset.pausa == "true") {
+                notas.innerHTML = '<div class="noot-1">&#9835; &#9833;</div><div class="noot-2">&#9833;</div><div class="noot-3">&#9839; &#9834;</div><div class="noot-4">&#9834;</div>';
+            } else {
+                notas.innerHTML = "";
+            }
+        }
+
+        function finalSlide() {
+            const current = slides[current_index];
+            current.className = 'slide out letra ' + current.dataset.tipo + " " + current.dataset.cor;    
+
+            const capa = slides[0];
+            capa.className = 'slide final-out capa';
+            
+            {% if info %}
+            document.body.classList.add('b_final_color');
+            {% endif %}
+
+            key_final = true;
+
+            vara.draw("draw");
         }
 
         var socket = io();
@@ -313,9 +436,9 @@
 
             if (key_final == true) {
                 location.reload();
-            }
-
-            if (current_index == index) {
+            } else if (index == slides.length) {
+                finalSlide();
+            } else if (current_index == index) {
                 return;
             } else if (current_index < index) {
                 nextSlide(index);

@@ -1821,7 +1821,9 @@ def slide_new():
     elif estado == 1: # se iniciou uma apresentação de música
 
         # estabelecer configuração da música
-        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+        rows = banco.executarConsulta("SELECT id, valor FROM config")
+        rows_dict = {row['id']: row['valor'] for row in rows}
+        config = {'letra':rows_dict['cor-musica-letra'], 'fundo':rows_dict['cor-musica-fundo'], 'mark':rows_dict['cor-musica-mark'],  'num':rows_dict['cor-harpa-num'], 'red':rows_dict['cor-harpa-red']}
 
         if (current_presentation['tipo'] == 'musicas'):
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
@@ -1834,6 +1836,284 @@ def slide_new():
             lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides where id_musica = %s order by pos' % current_presentation['id'])
 
             return render_template('PowerPoint_New.jinja', fundo=fundo, lista_slides=lista_slides, index=index, config=config)
+    elif estado == 2: # iniciou uma apresentação da Bíblia
+
+        livro = banco.executarConsultaVetor('select descricao from livro_biblia where id = %s' % current_presentation['id'])[0].replace('1', 'I').replace('2', 'II')
+        head = {'nome':livro, 'cap':current_presentation['cap'], 'versao':current_presentation['versao'].replace('biblia_', '').upper()}
+
+        lista = banco.executarConsultaVetor('select texto from %s where livro = %s and cap = %s order by ver' % (current_presentation['versao'], current_presentation['id'], current_presentation['cap']))
+
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-biblia-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-biblia-fundo'")[0]['valor'], 'seta':banco.executarConsulta("select valor from config where id = 'cor-biliba-arrow'")[0]['valor']}
+
+        if (index + 1) > len(lista):
+            index = len(lista) - 1        
+
+        return render_template('PowerPoint_Biblia.jinja', head=head, lista=lista, index=index, versiculo=index + 1, config=config)
+    elif estado == 3: #harpa
+        rows = banco.executarConsulta("SELECT id, valor FROM config")
+        rows_dict = {row['id']: row['valor'] for row in rows}
+        config = {'letra':rows_dict['cor-harpa-letra'], 'fundo':rows_dict['cor-harpa-fundo'], 'num':rows_dict['cor-harpa-num'], 'red':rows_dict['cor-harpa-red'], 'mark':rows_dict['cor-musica-mark']}
+        fundo = 'images/Harpa.jpg'
+        info = banco.executarConsulta('select harpa.descricao as nome, autor_harpa.nome as autor from harpa inner join autor_harpa on autor_harpa.id = harpa.autor where harpa.id = %s' % current_presentation['id'])[0]
+
+        lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides_harpa where id_harpa = %s order by pos' % current_presentation['id'])
+        numero = 'HINO %s' % '{0:03}'.format(int(current_presentation['id']))
+
+        return render_template('PowerPoint_New.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info, num=numero, titulo_versao='')
+
+    elif estado == 4: # harpa versionada
+        rows = banco.executarConsulta("SELECT id, valor FROM config")
+        rows_dict = {row['id']: row['valor'] for row in rows}        
+        config = {'letra':rows_dict['cor-harpa-letra'], 'fundo':rows_dict['cor-harpa-fundo'], 'num':rows_dict['cor-harpa-num'], 'red':rows_dict['cor-harpa-red'], 'mark':rows_dict['cor-musica-mark']}
+        fundo = 'images/Harpa.jpg'
+        info = banco.executarConsulta('select harpa.descricao as nome, autor_harpa.nome as autor from harpa inner join autor_harpa on autor_harpa.id = harpa.autor where harpa.id = (select id_harpa from harpa_versionada where id = %s)' % current_presentation['id'])[0]
+
+        lista_slides = banco.executarConsulta('select `text-slide`, categoria from slides_harpa_versionada where id_harpa_versionada = %s order by pos' % current_presentation['id'])
+        numero = 'HINO %s' % '{0:03}'.format(int(banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % current_presentation['id'])[0]))
+        titulo_versao = banco.executarConsultaVetor('select titulo_versao from harpa_versionada where id = %s' % current_presentation['id'])[0]
+
+        return render_template('PowerPoint_New.jinja', fundo=fundo, config=config, lista_slides=lista_slides, index=index, info=info, num=numero, titulo_versao=titulo_versao)    
+    elif estado == 5: # Arquivo pptx
+
+        return render_template('PowerPoint_Verdadeiro.jinja', index=index, total=current_presentation['total'])
+    
+    elif estado == 6: # Calendário
+
+        slides = []
+        semana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+        semana_sqlite = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+
+        # começar a criar o vetor com as informações
+        segunda = datetime.datetime.strptime(current_presentation['semana'], r"%Y-%m-%d").date()
+        domingo = segunda + datetime.timedelta(days=6)
+        
+        cont = 0
+
+        for i in range(7):
+            info = {}
+
+            dia = segunda + datetime.timedelta(days=i)
+            posicao_mensal = (dia.day - 1) // 7 + 1
+            
+            sql = 'SELECT id, texto, plain_text FROM calendario_semanal WHERE dia_semana = %s and (dia_mensal = 0 or dia_mensal = %s) and ativo = 1 UNION ALL ' % (i, posicao_mensal)
+            sql += "select id, texto, plain_text from calendario_mensal where '%s' between inicio and fim UNION ALL " % dia.strftime(r"%Y-%m-%d")
+            sql += "SELECT 0 as id, desc_longa as texto, plain_text FROM calendario_festa_dep_sede WHERE '%s' BETWEEN data_de AND date_ate UNION ALL " % dia.strftime(r"%Y-%m-%d")
+            sql += "SELECT id_congregacao as id, 'Às <b class=\"text-danger\">' || replace(replace(horario, ':', 'h'), 'h00','h') || ',</b> Festa de Dep. <b class=\"text-decoration-underline\">' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN '</b>, Culto com participação do <b class=""text-decoration-underline"">' ELSE '</b> - <b>' END || eventos.descricao_curta || '</b>' as text, " \
+                  "'Às ' || replace(replace(horario, ':', 'h'), 'h00','h') || ', Festa de Dep. ' || congregacoes.descricao || CASE WHEN eventos_festa_dep.id_evento NOT IN (7, 8) THEN ', Culto com participação do ' ELSE ' - ' END || eventos.descricao_curta as plain_text " \
+                  r"FROM eventos_festa_dep INNER JOIN congregacoes ON congregacoes.id = eventos_festa_dep.id_congregacao INNER JOIN eventos on eventos.id = eventos_festa_dep.id_evento WHERE dia_semana_sqlite = strftime('%w', '" + dia.strftime(r"%Y-%m-%d") + "') "
+            sql += "AND id_congregacao = (select id_congregacao from calendario_festa_dep where '%s' between inicio and fim) ORDER BY plain_text" % dia.strftime(r"%Y-%m-%d")
+
+            info['dia'] = dia.strftime('%d')
+            info['semana'] = semana[i]
+            info['eventos'] = executarConsultaCalendario(sql)
+            info['tipo'] = 'semanal'
+            info['pos'] = cont + 2
+
+            if len(info['eventos']) > 0:
+                slides.append(info)
+                cont += 1
+
+
+        # pegar agora os eventos mensais
+        mes = current_presentation['mes']
+        ano = current_presentation['id']
+
+        mes_desc = calendar.month_name[int(mes)]
+
+        sql = "SELECT id, inicio, fim, 'isolado' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_mensal WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now') group by(inicio) "
+        sql += "UNION ALL SELECT 0 as id, min(data_de) as inicio, max(date_ate) as fim, 'dep_jan' as tipo, strftime('%w', data_de) as semana, strftime('%w', date_ate) as semana_fim FROM calendario_festa_dep_sede WHERE strftime('%m', data_de) = '" + str(mes).zfill(2) + "' "
+        sql += "UNION ALL SELECT id_congregacao as id, inicio, fim, 'dep' as tipo, strftime('%w', inicio) as semana, strftime('%w', fim) as semana_fim FROM calendario_festa_dep WHERE strftime('%m', inicio) = '" + str(mes).zfill(2) + "' AND strftime('%Y', inicio) = '" + str(ano) + "' AND fim > date('now')  ORDER BY inicio"
+
+        eventos_mensais = executarConsultaCalendario(sql)
+
+        for evento in eventos_mensais:
+            info = {}
+
+            if evento['tipo'] == 'isolado':
+                if evento['inicio'] == evento['fim']:
+                    desc_dia = '<span class="text-dark fw-bold">%s (</span><span class="fw-bold text-primary">%s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], semana_sqlite[int(evento['semana'])])
+                else:
+                    desc_dia = '<span class="text-dark fw-bold">%s a %s (</span><span class="fw-bold text-primary">%s a %s</span><span class="fw-bold text-dark">)</span>' % (evento['inicio'][8:], evento['fim'][8:], semana_sqlite[int(evento['semana'])].replace('-feira', ''), semana_sqlite[int(evento['semana_fim'])].replace('-feira', ''))
+
+                ls_aux = []
+                for item in executarConsultaCalendario("SELECT texto FROM calendario_mensal where inicio = '%s' ORDER BY plain_text" % evento['inicio']):
+                    ls_aux.append(item['texto'])
+
+                info['tipo'] = evento['tipo']
+                info['desc_dia'] = desc_dia
+                info['eventos'] = ls_aux
+                info['pos'] = cont + 2
+                slides.append(info)
+                cont += 1
+
+            elif evento['tipo'] == 'dep':
+                descricao = '<span class="text-dark">RESUMO FESTA DE DEP. </span> - <span class="text-danger">%s</span>' % executarConsultaCalendario('select descricao from congregacoes where id = %s' % evento['id'])[0]['descricao'].upper()
+
+                ls_aux = []
+                temp_segunda = datetime.datetime.strptime(evento['inicio'], r"%Y-%m-%d").date()
+                temp_segunda = temp_segunda - datetime.timedelta(days=temp_segunda.weekday(), weeks=0)
+                for item in executarConsultaCalendario(r"select dia_semana, strftime('%Hh%M', horario) as horario, " + "id_evento, eventos.descricao_curta as evento from eventos_festa_dep inner join eventos on eventos.id = eventos_festa_dep.id_evento where id_congregacao = %s order by dia_semana, horario" % evento['id']):
+                    ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - Às <b class='text-danger'>%s, </b> <b class='text-decoration-underline'>%s</b>" % (int(temp_segunda.strftime("%d")) + item['dia_semana'], semana[int(item['dia_semana'])].replace('-feira', ''), item['horario'], item['evento']))
+                
+                info['tipo'] = evento['tipo']
+                info['desc_dia'] = descricao
+                info['eventos'] = ls_aux
+                info['pos'] = cont + 2
+                slides.append(info)
+                cont += 1
+
+            elif evento['tipo'] == 'dep_jan' and not evento['inicio'] is None:
+                descricao = '<span class="fw-bold">CONGRESSO UNIFICADO - </span><span class="text-danger fw-bold">IGREJA SEDE</span>'
+
+                ls_aux = []
+                eventos = executarConsultaCalendario(r'SELECT CASE WHEN data_de = date_ate THEN strftime("%d", data_de) ELSE strftime("%d", data_de) || " a " || strftime("%d", date_ate) END as dia, strftime("%w", data_de) as semana_inicio, strftime("%w", date_ate) as semana_fim, desc_curta as texto FROM calendario_festa_dep_sede ORDER BY data_de')
+
+                for item in eventos:
+                    dia_semana = semana_sqlite[int(item['semana_inicio'])][0:3]
+                    if item['semana_inicio'] != item['semana_fim']:
+                        dia_semana = semana_sqlite[int(item['semana_inicio'])][0:3] + ' a ' + semana_sqlite[int(item['semana_fim'])][0:3]
+
+                    ls_aux.append("<b>%s (<span class='text-primary'>%s</span>)</b> - %s" % (item['dia'], dia_semana, item['texto']))
+
+                info['tipo'] = 'dep'
+                info['desc_dia'] = descricao
+                info['eventos'] = ls_aux
+                info['pos'] = cont + 2
+                slides.append(info)
+
+                cont += 1  
+
+        # após tudo isso criar uma lista tbm com as imagens presentes na tela de wallpaper para serem visualizadas
+        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+
+        onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+        for file in onlyfiles:
+            slides.append({'url':file, 'tipo':'wallpaper', 'pos':cont + 2})
+            cont += 1
+
+        
+        return render_template('PowerPoint_Calendar.jinja', slides=slides, index=index, inicio='%s/%s' % (slides[0]['dia'], current_presentation['semana'][5:7]), fim='%s' % domingo.strftime(r"%d/%m/%Y"), ano=ano, mes_desc=mes_desc)
+
+
+    elif estado == 7:
+
+        return render_template('video_player.jinja')
+    
+    elif estado == 8:
+
+        dados = []
+        leitura = []
+        licoes = pegarLicoes(datetime.datetime.now())
+
+        data = licoes[int(current_presentation['id']) - 1]['dia'].strftime('%d/%m/%Y')
+
+        dados = banco.executarConsulta('select * from licao_ebd where id = %s' % current_presentation['id'])[0]
+        capa = banco.executarConsulta("select valor from config where id = 'capa_ebd'")[0]['valor']
+        leitura = json.loads(dados['leitura_biblica'])
+
+        total = 1
+
+        trimestre = pegarTrimestre(datetime.datetime.now())
+
+        for biblia in leitura:
+            biblia['desc_livro'] = banco.executarConsulta('select descricao from livro_biblia where id = %s' % biblia['livro'])[0]['descricao']
+            biblia['texto'] = banco.executarConsulta('select ver, texto from biblia_arc where livro = %s and cap = %s and ver BETWEEN %s and %s' % (biblia['livro'], biblia['cap'], biblia['ver1'], biblia['ver2']))
+
+            total += len(biblia['texto'])
+
+        return render_template('PowerPoint_EBD.jinja', dados=dados, leitura=leitura, data=data, licao='%02d' % int(current_presentation['id']), index=index, total=total, trimestre=trimestre, capa=capa)
+
+    elif estado == 9: # musical 
+        global ponteiro_musical
+
+        roteiro_musical = banco.executarConsulta(r"SELECT id_origem, `tabela-origem`, CASE WHEN capa_url IS NULL THEN CASE WHEN `tabela-origem` = 'poesia' THEN '[SEM_CAPA_POESIA]' WHEN `tabela-origem` = 'musicas' THEN 'images/capas/' || capas.filename ELSE '[SEM_CAPA_HARPA]' END ELSE capa_url END as capa_url FROM roteiro_musical LEFT JOIN musicas ON musicas.id = id_origem LEFT JOIN harpa ON harpa.id = id_origem LEFT JOIN capas ON capas.id_musica = musicas.id")
+
+        # adicionado capa principal
+        capa_padrao = banco.executarConsulta("select valor from config where id = 'capa_musical'")[0]['valor']
+
+        # rodando o loop de cada música
+        for item in roteiro_musical:
+            item['lista_final'] = []
+            item['lista_final'].append({'tipo':'capa_img', 'url':capa_padrao})
+            # adicionando capa
+            if item['capa_url'] == '[SEM_CAPA_HARPA]':
+
+                id_harpa = item['id_origem']
+
+                if item['tabela-origem'] == 'harpa_versionada':
+                    id_harpa = banco.executarConsultaVetor('select id_harpa from harpa_versionada where id = %s' % id_harpa)[0]
+
+                hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_harpa?id=%s' % (hostname, id_harpa), 'tipo':'capa'}
+
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
+
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
+
+                item['lista_final'].append({'tipo':'capa_base64', 'url':capa})
+
+            elif item['capa_url'] == '[SEM_CAPA_POESIA]':
+
+                hostname = request.headers.get('Host')
+                info = {'url':'http://%s/render_capa_poesia?id=%s' % (hostname, item['id_origem']), 'tipo':'capa'}
+
+
+                try:
+                    with sync_playwright() as playwright:
+                        capa = run_pdf_generation(playwright, info)
+                        capa = base64.b64encode(capa).decode('utf-8')
+
+                except Exception as e:
+                    print({"message": "Erro ao gerar Imagem", "error": str(e)}), 500
+
+                item['lista_final'].append({'tipo':'capa_base64', 'url':capa})
+
+            else:
+                item['lista_final'].append({'tipo':'capa_img', 'url':item['capa_url']})
+
+            # adicionando slides
+            if item['tabela-origem'] == 'musicas':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides where id_musica = %s' % item['id_origem'])
+                for sld in letras:
+                    item['lista_final'].append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-musica', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+            elif item['tabela-origem'] == 'harpa_versionada':
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa_versionada where id_harpa_versionada = %s' % item['id_origem'])
+                for sld in letras:
+                    item['lista_final'].append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
+            elif item['tabela-origem'] == 'poesia':
+                letras = banco.executarConsulta('select `text-slide`, ifnull(anotacao, "") as anotacao from slide_poesia where id_poesia = %s' % item['id_origem'])
+                for sld in letras:
+                    item['lista_final'].append({'tipo':'letra', 'cat':'poesia', 'categoria':'cat-poesia', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})            
+            else:
+                letras = banco.executarConsulta('select `text-slide`, categoria, ifnull(anotacao, "") as anotacao from slides_harpa where id_harpa = %s' % item['id_origem'])
+                for sld in letras:
+                    item['lista_final'].append({'tipo':'letra', 'cat':sld['categoria'], 'categoria':'cat-' + str(sld['categoria']) + '-harpa', 'anotacao':sld['anotacao'], 'texto':sld['text-slide']})
+
+            # adicionando capa inicial no final da música
+            item['lista_final'].append({'tipo':'capa_img', 'url':capa_padrao})
+
+        
+        # adicionando cores
+        cores = banco.executarConsulta("SELECT (SELECT valor FROM config WHERE id = 'cor-harpa-fundo') as cor_harpa_fundo, (SELECT valor FROM config WHERE id = 'cor-harpa-letra') as cor_harpa_letra, (SELECT valor FROM config WHERE id = 'cor-harpa-num') as cor_harpa_num, (SELECT valor FROM config WHERE id = 'cor-harpa-red') as cor_harpa_red, (SELECT valor FROM config WHERE id = 'cor-musica-fundo') as cor_musica_fundo, (SELECT valor FROM config WHERE id = 'cor-musica-letra') as cor_musica_letra, (SELECT valor FROM config WHERE id = 'cor-musica-mark') as cor_musica_mark")[0]
+
+        print(roteiro_musical[0]['lista_final'][0]['tipo'])
+
+        return render_template('PowerPoint_Musical.jinja', lista_final=roteiro_musical, cores=cores, index=index, ponteiro_musical=ponteiro_musical)
+
+    elif estado == 10: # Poesia
+        # estabelecer configuração da música
+        fundo = 'images/Poesia_Background.jpg'
+        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+
+        lista_slides = banco.executarConsulta('select `text-slide` from slide_poesia where id_poesia = %s order by pos' % current_presentation['id'])
+        titulo = banco.executarConsultaVetor('select titulo from poesia where id = %s' % current_presentation['id'])[0]
+
+        return render_template('PowerPoint_Poesia.jinja', lista_slides=lista_slides, index=index, config=config, fundo=fundo, titulo=titulo)    
 
 
 
