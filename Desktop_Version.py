@@ -41,7 +41,7 @@ def main():
         app = QApplication(sys.argv)
 
     # Configura a URL e abre a janela no segundo monitor
-    url = "http://localhost/slide"  # URL que será aberta
+    url = "http://localhost/slide_new"  # URL que será aberta
     second_screen_geometry = get_second_screen_geometry(app)
 
     window = BrowserWindow(url)
