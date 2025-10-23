@@ -50,24 +50,12 @@
 
 
     #slidePreview,
-    #slidePreview_multiple1,
-    #slidePreview_multiple2 {
-      width: 33.5vw; /* or whatever width you want. */
-      height: 35vh; /* or whatever width you want. */
-      transition: background-color 1s, color 1s;
+    #slidePreview2 {
+      width: 25vw; /* or whatever width you want. */
+      height: 25vh; /* or whatever width you want. */
     }
 
-    #slidePreview_multiple1 {
-      position: relative;
-      clip-path: polygon(40% 0, 100% 0, 100% 100%, 60% 100%);
-    }
-
-    #slidePreview_multiple2 {
-      position: absolute;
-      clip-path: polygon(0 0, 40% 0, 60% 100%, 0 100%);
-    }    
-
-    #slidePreview.letra {
+    .letra {
       background-color: {{config['fundo']}};
       background-size: 100% 100%;
       color:{{config['letra']}};
@@ -75,49 +63,24 @@
       line-height: normal; 
     }
 
-    #slidePreview_multiple1.letra {
-      background-color: black;
-      background-size: 100% 100%;
-      color:white;
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: normal;
-      animation: trocaCores 4s infinite ease-in-out;   
-    }
-
-    #slidePreview_multiple2.letra {
-      background-color: white;
-      background-size: 100% 100%;
-      color:black;
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: normal;
-      animation: trocaCores_2 4s infinite ease-in-out;
-    }  
-
     .cdx-marker {
       color:{{config['mark']}};
       font-weight:bold;
       background:rgba(0,0,0,0)
     }
 
-    #slidePreview_multiple1 mark.cdx-marker {
-      color:yellow;
-      transition: background-color 1s, color 1s;
-      animation: trocaCores_marker2 4s infinite ease-in-out;   
+    .cdx-num {
+        color:{{config['num']}};
+        /* margin-right: 20px;  */
     }
 
-    #slidePreview_multiple2 mark.cdx-marker {
-      color:red;
-      transition: background-color 1s, color 1s;
-      animation: trocaCores_marker 4s infinite ease-in-out;   
+    .red {
+        color:{{config['red']}};
+        /* margin-right: 20px;  */
     }     
 
-    #card_principal,
-    #card_principal_multiple {
-      width: 33.6vw; /* or whatever width you want. */
-    }
-
-    .hidden {
-      opacity: 0;
+    #card_principal {
+      width: 25.2vw; /* or whatever width you want. */
     }
 
     #loading {
@@ -128,10 +91,6 @@
       top: 0;
       width: 100%;
       z-index: 9999;
-    }
-
-    #coluna_preview {
-      position: absolute;
     }
 
     .loader {
@@ -151,48 +110,6 @@
     @keyframes spinner {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
-    }
-
-    /* Animação de troca */
-    @keyframes trocaCores {
-      0%, 100% {
-        background-color: black;
-        color: white;
-      }
-      50% {
-        background-color: white;
-        color: black;
-      }
-    } 
-    
-    @keyframes trocaCores_2 {
-      0%, 100% {
-        background-color: white;
-        color: black;
-      }
-      50% {
-        background-color: black;
-        color: white;
-      }
-    }  
-  
-    /* Animação de troca cdx-marker */
-    @keyframes trocaCores_marker {
-      0%, 100% {
-        color: red;
-      }
-      50% {
-        color: yellow;
-      }
-    } 
-    
-    @keyframes trocaCores_marker2 {
-      0%, 100% {
-        color: yellow;
-      }
-      50% {
-        color: red;
-      }
     }    
 
     #pausa_instrumental,
@@ -206,6 +123,10 @@
 
     .card-body {
       background-color: rgb(226, 226, 226);
+    }
+
+    .card-text {
+      font-size:2rem;
     }
 
     </style>
@@ -229,47 +150,44 @@
           <div id="loading"><div class="loader"></div></div>
           <h2 class="fw-bold text-center">Alterar Fundo da {{titulo}}</h2>
           <div class="row">
-
-              <div class="col-sm-7 text-center {{ 'hidden' if config['alternante'] == 'false' else '' }}" id="coluna_alternate">
-                <div id="card_principal_multiple" class="card shadow-sm">
-                      <div class="letra" id="slidePreview_multiple1">{{preview}}</div>
-                      <div class="letra" id="slidePreview_multiple2">{{preview}}</div>
-                  <div class="card-body">
-                    <h1 class="card-text text-center">Preview</h1>
-                  </div>
-                </div>        
-              </div>
-
-              <div class="col-sm-7 text-center {{ 'hidden' if config['alternante'] == 'true' else '' }}" id="coluna_preview">
+              <div class="col-sm-6 text-center">
                 <div id="card_principal" class="card shadow-sm">
-                      <div class="letra" id="slidePreview">{{preview}}</div>
+                      <div class="letra" id="slidePreview">{{preview['texto1']}}</div>
                   <div class="card-body">
-                    <h1 class="card-text text-center">Preview</h1>
+                    <h1 class="card-text text-center">Estrofe</h1>
                   </div>
                 </div>        
               </div>
-              <div class="col-sm-5">
+              <div class="col-sm-6 text-center">
+                <div id="card_principal" class="card shadow-sm">
+                      <div class="letra" id="slidePreview2">{{preview['texto2']}}</div>
+                  <div class="card-body">
+                    <h1 class="card-text text-center">Coro/Última Estrofe</h1>
+                  </div>
+                </div>        
+              </div>              
+              <div class="col-sm-5 mt-3">
                 <h4>Opções de Fundo</h4>
               <div class="form-check">
-                <input value="0" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" {{ 'checked' if config['letra'] == 'white' }}>
+                {% if config['letra'] == 'white' %}
+                <input value="0" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" checked>
+                {% else %}
+                <input value="0" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+                {% endif %}
                 <label class="form-check-label" for="flexRadioDefault1">
                   Escuro
                 </label>
               </div>
               <div class="form-check">
-                <input value="1" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" {{ 'checked' if config['letra'] == 'black' }}>
+                {% if config['letra'] == 'black' %}
+                <input value="1" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
+                {% else %}
+                <input value="1" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2">
+                {% endif %}
                 <label class="form-check-label" for="flexRadioDefault2">
                   Claro
                 </label>
-              </div>
-
-              <div class="form-check">
-                <input value="2" class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" {{ 'checked' if config['alternante'] == 'true' }}>
-                <label class="form-check-label" for="flexRadioDefault2">
-                  Alternante (De um slide pro outro)
-                </label>
-              </div> 
-
+              </div>                
               </div>            
           </div>
 
@@ -294,36 +212,22 @@
     };
 
     $(".form-check-input").on('change', function() {
-
-      if ($(this).val() == '2') {
-        $("#coluna_alternate").removeClass('hidden');
-        $("#coluna_preview").addClass('hidden');
-      } else {
-        $("#coluna_preview").removeClass('hidden');
-        $("#coluna_alternate").addClass('hidden');        
-      }
-
       if ($(this).val() == '0') {
         letra = 'white';
         fundo = 'black';
-        mark = 'yellow';
-        alternante = 'false';
-      } else if ($(this).val() == '1') {
+        num = '#01F9F9'
+        red = 'yellow'
+      } else {
         letra = 'black';
         fundo = 'white';
-        mark = 'red';
-        alternante = 'false';
-      } else {
-        letra = 'white'; // alternante salva o padrão da música
-        fundo = 'black';
-        mark = 'yellow';
-        alternante = 'true';
+        num = '#0070C0'
+        red = '#FF0000'
       }
       info = []
-      info.push({'id':"'cor-musica-letra'", 'valor':"'" + letra + "'"});
-      info.push({'id':"'cor-musica-fundo'", 'valor':"'" + fundo + "'"});
-      info.push({'id':"'cor-musica-mark'", 'valor':"'" + mark + "'"});
-      info.push({'id':"'cor-musica-alternante'", 'valor':"'" + alternante + "'"});
+      info.push({'id':"'cor-harpa-letra'", 'valor':"'" + letra + "'"});
+      info.push({'id':"'cor-harpa-fundo'", 'valor':"'" + fundo + "'"});
+      info.push({'id':"'cor-harpa-num'", 'valor':"'" + num + "'"});
+      info.push({'id':"'cor-harpa-red'", 'valor':"'" + red + "'"});
 
       $.ajax({
         type: "POST",
@@ -335,7 +239,8 @@
           if (data) {
             $(".letra").css('background-color', fundo);
             $(".letra").css('color', letra);
-            $(".cdx-marker").css('color', mark);
+            $(".cdx-num").css('color', num);
+            $(".red").css('color', red);
           }
         },
     });      

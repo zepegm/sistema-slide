@@ -78,6 +78,16 @@
       line-height: normal; 
     }
 
+    .alternante0 {
+      background-color: black;
+      color: white;
+    }
+
+    .alternante1 {
+      background-color: white;
+      color: black;
+    }
+
     #card_principal {
       width: 641px; /* or whatever width you want. */
     }
@@ -180,9 +190,9 @@
                       <div class="capa" id="slidePrincipal"></div>
                     {% else %}
                       {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
-                      <div class="letra coro" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
+                      <div class="letra coro {{'alternante' + ((index - 1) % 2)|string if config['alternante'] == 'true' }}" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
                       {% else %}
-                      <div class="letra" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
+                      <div class="letra {{'alternante' + ((index - 1) % 2)|string if config['alternante'] == 'true' }}" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
                       {% endif %}
                     {% endif %}
                   <div class="card-body">
@@ -269,9 +279,9 @@
                 <div id="box{{sld['pos']}}" data-index="{{sld['pos']}}" class="big-box card shadow-sm">
                 {% endif %}
                   {% if sld['categoria'] == 2 or sld['categoria'] == 4 %}
-                  <div class="letra coro mini-box">{{sld['text-slide']}}</div>
+                  <div class="letra coro mini-box {{'alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' }}">{{sld['text-slide']}}</div>
                   {% else %}
-                  <div class="letra mini-box">{{sld['text-slide']}}</div>
+                  <div class="letra mini-box {{'alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' }}">{{sld['text-slide']}}</div>
                   {% endif %}
                   <div class="card-body">
                     <h4 class="card-text text-center" id="proximoSlide">Slide: {{sld['pos'] + 1}}</h4>

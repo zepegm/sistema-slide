@@ -858,7 +858,9 @@ def controlador():
 
         if (current_presentation['tipo'] == 'musicas'):
 
-            config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+            rows = banco.executarConsulta("SELECT id, valor FROM config")
+            rows_dict = {row['id']: row['valor'] for row in rows}
+            config = {'letra':rows_dict['cor-musica-letra'], 'fundo':rows_dict['cor-musica-fundo'], 'mark':rows_dict['cor-musica-mark'],  'alternante':rows_dict['cor-musica-alternante']}
 
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
 
@@ -3686,16 +3688,26 @@ def alterar_fundo():
     destino = request.args.get('destino')
 
     if (destino == 'm'):
-
-        config = {'letra':banco.executarConsulta("select valor from config where id = 'cor-musica-letra'")[0]['valor'], 'fundo':banco.executarConsulta("select valor from config where id = 'cor-musica-fundo'")[0]['valor'], 'mark':banco.executarConsulta("select valor from config where id = 'cor-musica-mark'")[0]['valor']}
+        rows = banco.executarConsulta("SELECT id, valor FROM config")
+        rows_dict = {row['id']: row['valor'] for row in rows}
+        config = {'letra':rows_dict['cor-musica-letra'], 'fundo':rows_dict['cor-musica-fundo'], 'mark':rows_dict['cor-musica-mark'],  'num':rows_dict['cor-harpa-num'], 'red':rows_dict['cor-harpa-red'], 'alternante':rows_dict['cor-musica-alternante']}
 
         #pegar um texto aleatório pra testar o preview
-        texto = banco.executarConsulta("select * from slides where `text-slide` like '" + '%<mark class="cdx-marker">%' + "' and categoria = 1")
-        result = texto[random.randint(0, len(texto))]['text-slide']
+        texto = banco.executarConsulta('''SELECT `text-slide` FROM slides WHERE `text-slide` LIKE '%<mark class="cdx-marker">%' ORDER BY RANDOM() LIMIT 1''')[0]['text-slide']
 
-        return render_template('alterar_fundo.jinja', titulo='Música', preview=result, config=config)
+        return render_template('alterar_fundo.jinja', titulo='Música', preview=texto, config=config)
 
-    return 'yes'
+    elif (destino == 'h'):
+        rows = banco.executarConsulta("SELECT id, valor FROM config")
+        rows_dict = {row['id']: row['valor'] for row in rows}
+        config = {'letra':rows_dict['cor-harpa-letra'], 'fundo':rows_dict['cor-harpa-fundo'], 'num':rows_dict['cor-harpa-num'], 'red':rows_dict['cor-harpa-red']}
+    
+        # texto aleatório início de estrofe
+        texto_1 = banco.executarConsulta('''SELECT `text-slide` FROM slides_harpa WHERE `text-slide` LIKE '%<span class="cdx-num">%' ORDER BY RANDOM() LIMIT 1''')[0]['text-slide']
+        # texto aleatório com coro ou estrofe final
+        texto_2 = banco.executarConsulta('''SELECT `text-slide` FROM slides_harpa WHERE `text-slide` LIKE '%<span class="red">%' ORDER BY RANDOM() LIMIT 1''')[0]['text-slide']
+
+        return render_template('alterar_fundo_h.jinja', titulo='Harpa', preview={'texto1':texto_1, 'texto2':texto_2}, config=config)
 
 
 @app.route('/open_window_slide', methods=['GET', 'POST'])

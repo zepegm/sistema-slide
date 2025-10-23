@@ -3,169 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transição Horizontal - Slide</title>
-
+<title>Texto dividido</title>
 <style>
-body {
-  margin: 0;
-  background-color: white;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
-}
 
-/* Container do slide */
-.slide-container {
-  position: relative;
-  width: 1366px;
-  height: 768px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 4rem;
-  text-align: center;
-  background: #111;
-  overflow: hidden;
-}
-
-/* Estilo base dos slides */
-.slide {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
-  opacity: 0;
-  font-size: 14rem;
-}
-
-/* Slide visível com animação de entrada */
-.slide.in-esquerda {
-  animation: reveal-in-esquerda 0.5s ease-in-out forwards;
-}
-
-/* Slide saindo com animação reversa */
-.slide.out-direita {
-  animation: reveal-out-direita 0.5s ease-in-out forwards;
-}
-
-/* Slide visível com animação de entrada */
-.slide.in-direita {
-  animation: reveal-in-direita 0.5s ease-in-out forwards;
-}
-
-/* Slide saindo com animação reversa */
-.slide.out-esquerda {
-  animation: reveal-out-esquerda 0.5s ease-in-out forwards;
-}
-
-/* === ANIMAÇÕES === */
-
-/* Entrar da esquerda para a direita */
-@keyframes reveal-in-esquerda {
-  0% {
-    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
-    opacity: 0;
+  body {
+    background-color: beige;
   }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-    opacity: 1;
-  }
-}
 
-/* Entrar da direita para a esquerda */
-@keyframes reveal-in-direita {
-  0% {
-    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
-    opacity: 0;
+  .texto {
+    font-family: Arial, sans-serif;
+    font-size: 8vw; /* escala com a tela */
+    font-weight: 500;
+    width: 1366px;
+    height: 768px;
+    position: absolute;
+    text-align: center;
+    align-items: center;
+    transition: background-color 1s, color 1s;
   }
-  100% {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-    opacity: 1;
-  }
-}
 
-/* Sair da direita para a esquerda */
-@keyframes reveal-out-direita {
-  0% {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-    opacity: 1;
+  #quadro_1 {
+    background-color: black;
+    color:white;
+    clip-path: polygon(40% 0, 100% 0, 100% 100%, 60% 100%);
+    animation: trocaCores 4s infinite ease-in-out;
   }
-  100% {
-    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
-    opacity: 0;
-  }
-}
 
-/* Sair da esquerda para a direita */
-@keyframes reveal-out-esquerda {
-  0% {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-    opacity: 1;
+  #quadro_2 {
+    background-color: white;
+    color:black;
+    clip-path: polygon(0 0, 40% 0, 60% 100%, 0 100%);
+    animation: trocaCores_2 4s infinite ease-in-out;
   }
-  100% {
-    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
-    opacity: 0;
-  }
-}
 
-
-/* Apenas para visual */
-/*.bg1 { background: linear-gradient(135deg, #ff4081, #ff9100); }
-.bg2 { background: linear-gradient(135deg, #00e676, #00b0ff); }
-.bg3 { background: linear-gradient(135deg, #8e24aa, #d500f9); }*/
+  /* Animação de troca */
+  @keyframes trocaCores {
+    0%, 100% {
+      background-color: black;
+      color: white;
+    }
+    50% {
+      background-color: white;
+      color: black;
+    }
+  } 
+  
+  /* Animação de troca */
+  @keyframes trocaCores_2 {
+    0%, 100% {
+      background-color: white;
+      color: black;
+    }
+    50% {
+      background-color: black;
+      color: white;
+    }
+  }   
 
 </style>
 </head>
 <body>
-
-<div class="slide-container">
-  <div class="slide bg1 in-esquerda">🎵 Louvai ao Senhor</div>
-  <div class="slide bg2">🙌 Santo, Santo, Santo</div>
-  <div class="slide bg3">🎶 Glória a Deus nas alturas</div>
-</div>
-
-<div class="pn-buttons">
-    <button onclick="nextSlide()">Próximo Slide</button>
-    <button onclick="previousSlide()">Slide Anterior</button>
-</div>
-
-
-
-<script>
-const slides = document.querySelectorAll('.slide');
-let index = 0;
-
-function nextSlide() {
-  const current = slides[index];
-  /*current.classList.remove('in');
-  current.classList.add('out');*/
-  current.className = 'slide out-esquerda';
-
-  index = (index + 1) % slides.length;
-  const next = slides[index];
-  /*next.classList.remove('out');
-  next.classList.add('in');*/
-  next.className = 'slide in-direita';
-}
-
-function previousSlide() {
-  const current = slides[index];
-  current.className = 'slide out-direita';
-
-  index = (index - 1 + slides.length) % slides.length;
-  const prev = slides[index];
-  prev.className = 'slide in-esquerda';
-}
-
-// Troca de slide a cada 3 segundos
-//setInterval(nextSlide, 3000);
-</script>
-
+  <div class="texto" id="quadro_1">Hello World!</div>
+  <div class="texto" id="quadro_2">Hello World!</div>
 </body>
 </html>
