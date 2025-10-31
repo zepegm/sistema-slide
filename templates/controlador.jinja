@@ -111,6 +111,18 @@
       background:rgba(0,0,0,0)
     }
 
+    .alternante0 .cdx-marker {
+      color: yellow;
+      font-weight: bold;
+      background:rgba(0,0,0,0);
+    }
+
+    .alternante1 .cdx-marker {
+      color: red;
+      font-weight: bold;
+      background:rgba(0,0,0,0);
+    }    
+
     .arrow {
       font-size: xx-large;
       color:black;
@@ -154,6 +166,18 @@
       color:{{config['mark']}};
     }
 
+    .coro-alternante0 {
+      color: yellow;
+      /*font-weight: bold;
+      background:rgba(0,0,0,0);*/
+    }
+
+    .coro-alternante1 {
+      color: red;
+      /*font-weight: bold;
+      background:rgba(0,0,0,0);*/
+    }
+
     </style>
   </head>
 
@@ -190,7 +214,7 @@
                       <div class="capa" id="slidePrincipal"></div>
                     {% else %}
                       {% if lista_slides[index - 1]['categoria'] == 2 or lista_slides[index - 1]['categoria'] == 4 %}
-                      <div class="letra coro {{'alternante' + ((index - 1) % 2)|string if config['alternante'] == 'true' }}" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
+                      <div class="letra {{'coro-alternante' + ((index - 1) % 2)|string if config['alternante'] == 'true' else 'coro' }} {{'alternante' + ((index - 1) % 2)|string if config['alternante'] == 'true' }}" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
                       {% else %}
                       <div class="letra {{'alternante' + ((index - 1) % 2)|string if config['alternante'] == 'true' }}" id="slidePrincipal">{{lista_slides[index - 1]['text-slide']}}</div>
                       {% endif %}
@@ -212,9 +236,9 @@
             <div class="col-sm-5">
               <div id="card_prox" class="card shadow-sm">
                 {% if lista_slides[index]['categoria'] == 2 or lista_slides[index]['categoria'] == 4 %}
-                <div id="slideProx" class="letra coro">{{lista_slides[index]['text-slide']}}</div>
+                <div id="slideProx" class="letra {{'coro-alternante' + + ((index) % 2)|string if config['alternante'] == 'true' else 'coro' }} {{'alternante' + ((index) % 2)|string if config['alternante'] == 'true' }}">{{lista_slides[index]['text-slide']}}</div>
                 {% else %}
-                <div id="slideProx" class="letra">{{lista_slides[index]['text-slide']}}</div>
+                <div id="slideProx" class="letra {{'alternante' + ((index) % 2)|string if config['alternante'] == 'true' }}">{{lista_slides[index]['text-slide']}}</div>
                 {% endif %}
                 <div class="card-body">
                   <h4 class="card-text text-center" id="proximoSlide">Próximo Slide: {{index + 2}}</h4>
@@ -279,7 +303,7 @@
                 <div id="box{{sld['pos']}}" data-index="{{sld['pos']}}" class="big-box card shadow-sm">
                 {% endif %}
                   {% if sld['categoria'] == 2 or sld['categoria'] == 4 %}
-                  <div class="letra coro mini-box {{'alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' }}">{{sld['text-slide']}}</div>
+                  <div class="letra {{'coro-alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' else 'coro' }} mini-box {{'alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' }}">{{sld['text-slide']}}</div>
                   {% else %}
                   <div class="letra mini-box {{'alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' }}">{{sld['text-slide']}}</div>
                   {% endif %}
@@ -348,10 +372,16 @@
       // modificar slide Principal
       $("#slideAtual").text('Slide Atual: ' + (parseInt(index) + 1));
 
+      $("#anotacao").remove();
+      $("#pausa_instrumental").remove();
+
       if (index > 0) {
         $("#btn_previous").removeAttr('disabled');
-        $("#slidePrincipal").addClass('letra');
-        $("#slidePrincipal").removeClass('capa');
+        //$("#slidePrincipal").addClass('letra');
+        //$("#slidePrincipal").removeClass('capa');
+
+        $("#slidePrincipal").attr('class', $("#box" + index + ' div').attr('class')); // limpar todas as classes
+        $("#slidePrincipal").removeClass('mini-box');
 
         $("#slidePrincipal").empty();
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
@@ -359,16 +389,16 @@
         if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
           $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
         }
-        $("#slidePrincipal").removeClass('coro');
+        /*$("#slidePrincipal").removeClass('coro');
         if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
           $("#slidePrincipal").addClass('coro');        
-        }
+        }*/
 
         textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
       } else {
         $("#btn_previous").attr('disabled', '');
-        $("#slidePrincipal").addClass('capa');
-        $("#slidePrincipal").removeClass('letra');        
+        $("#slidePrincipal").attr('class', 'capa'); // limpar todas as classes
+        //$("#slidePrincipal").removeClass('letra');        
         $("#slidePrincipal").empty();
       }
 
@@ -378,20 +408,22 @@
         $("#proximoSlide").text('Próximo Slide: ' + (parseInt(index) + 2));
 
         if (index < slides.length) {
-          $("#slideProx").addClass('letra');
+          /*$("#slideProx").addClass('letra');
           $("#slideProx").removeClass('capa');
-
           $("#slideProx").removeClass('coro');
           if (slides[index]["categoria"] == 2 || slides[index]["categoria"] == 4) {
             $("#slideProx").addClass('coro');        
-          }
+          }*/
+
+          $("#slideProx").attr('class', $("#box" + (parseInt(index) + 1) + ' div').attr('class')); // limpar todas as classes
+          $("#slideProx").removeClass('mini-box');
 
           $("#slideProx").empty();
           $("#slideProx").html(slides[index]['text-slide']);
           textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
         } else {
-          $("#slideProx").addClass('capa');
-          $("#slideProx").removeClass('letra');        
+          $("#slideProx").attr('class', 'capa'); // limpar todas as classes
+          //$("#slideProx").removeClass('letra');        
           $("#slideProx").empty();          
         }
       }
@@ -423,32 +455,34 @@
       // verificar estado do slidePrincipal
 
       if (index == slides.length) {
-        $("#slidePrincipal").addClass('letra');
-        $("#slidePrincipal").removeClass('capa');     
+        $("#slidePrincipal").attr('class', $("#box" + index + ' div').attr('class')); // limpar todas as classes
+        $("#slidePrincipal").removeClass('mini-box'); 
 
         $("#slideProx").empty();
-        $("#slideProx").addClass('capa');
-        $("#slideProx").removeClass('letra');             
+        $("#slideProx").attr('class', 'capa');
+        //$("#slideProx").removeClass('letra');             
       } else {
-        $("#slideProx").addClass('letra');
-        $("#slideProx").removeClass('capa');
-        $("#slideProx").removeClass('coro');
+        $("#slideProx").attr('class', $("#box" + (parseInt(index) + 1) + ' div').attr('class')); // limpar todas as classes
+        $("#slideProx").removeClass('mini-box');
 
         $("#slideProx").html(slides[index]['text-slide']);
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});         
            
-        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
+        /*if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
           $("#slideProx").addClass('coro');
-        }
+        }*/
       }
 
       console.log(index);
 
       if (index == 0) {
         $("#slidePrincipal").empty();
-        $("#slidePrincipal").addClass('capa');
-        $("#slidePrincipal").removeClass('letra');        
+        $("#slidePrincipal").attr('class', 'capa');
+        //$("#slidePrincipal").removeClass('letra');
       } else {
+        $("#slidePrincipal").attr('class', $("#box" + index + ' div').attr('class')); // limpar todas as classes
+        $("#slidePrincipal").removeClass('mini-box'); 
+
         $("#slidePrincipal").html(slides[index - 1]['text-slide']);
         textFit($('#slidePrincipal'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 103});          
       }
@@ -472,9 +506,9 @@
           $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
         }
         $("#slidePrincipal").removeClass('coro');
-        if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
+        /*if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
           $("#slidePrincipal").addClass('coro');
-        }        
+        }*/       
       }
 
       changeBox(index);
@@ -501,9 +535,9 @@
       $("#slideAtual").text("Slide Atual: " + (index + 1));
       $("#proximoSlide").text('Próximo Slide: ' + (index + 2));
 
-      if (index == 1) { // preciso retirar o background da imagem
-        $("#slidePrincipal").addClass('letra');
-        $("#slidePrincipal").removeClass('capa');
+      if (index > 0) { // preciso retirar o background da imagem e colocar a letra
+        $("#slidePrincipal").attr('class', $("#box" + index + ' div').attr('class')); // limpar todas as classes
+        $("#slidePrincipal").removeClass('mini-box'); 
       }
 
       if (index <= slides.length) {
@@ -518,32 +552,36 @@
         if (slides[index - 1]["categoria"] == 3 || slides[index - 1]["categoria"] == 4) {
           $("#card_principal").append('<p id="pausa_instrumental"><strong>&#9835; Atenção </strong>Para a pausa Instrumental. <strong>&#9835;</strong></p>');
         } 
-        $("#slidePrincipal").removeClass('coro');
+        /*$("#slidePrincipal").removeClass('coro');
         if (slides[index - 1]["categoria"] == 2 || slides[index - 1]["categoria"] == 4) {
           $("#slidePrincipal").addClass('coro');
-        }
+        }*/
       } else { // recolocar o background da imagem
         $("#slidePrincipal").empty();
-        $("#slidePrincipal").addClass('capa');
-        $("#slidePrincipal").removeClass('letra');        
+        $("#slidePrincipal").attr('class', 'capa');
+        //$("#slidePrincipal").removeClass('letra');        
       }
 
-      $("#slideProx").removeClass('coro');
+      //$("#slideProx").removeClass('coro');
 
       if (index < slides.length) {
+
+        $("#slideProx").attr('class', $("#box" + (parseInt(index) + 1) + ' div').attr('class')); // limpar todas as classes
+        $("#slideProx").removeClass('mini-box');
+
         $("#slideProx").html(slides[index]['text-slide']);
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});
 
-        if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
+        /*if (slides[index]['categoria'] == 2 || slides[index]['categoria'] == 4) {
           $("#slideProx").addClass('coro');
-        }
+        }*/
       } else if (index == slides.length) {
         $("#slideProx").empty();
-        $("#slideProx").addClass('capa');
-        $("#slideProx").removeClass('letra');
+        $("#slideProx").attr('class', 'capa');
+        //$("#slideProx").removeClass('letra');
       } else {
-        $("#slideProx").addClass('letra');
-        $("#slideProx").removeClass('capa');
+        $("#slideProx").attr('class', 'letra');
+        //$("#slideProx").removeClass('capa');
         $("#slideProx").html('<b>Fim</b>');
         $("#proximoSlide").text('Próximo Slide: -');
         textFit($('#slideProx'), {alignVert: true, multiLine: true, minFontSize: 20, maxFontSize: 100});        

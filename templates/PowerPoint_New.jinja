@@ -23,6 +23,18 @@
                 /* margin-right: 20px;  */
             }
 
+            .alternante0 .cdx-marker {
+                color: yellow;
+                font-weight: bold;
+                background:rgba(0,0,0,0);
+            }
+
+            .alternante1 .cdx-marker {
+                color: red;
+                font-weight: bold;
+                background:rgba(0,0,0,0);
+            }             
+
             .cdx-num {
                 color:{{config['num']}};
                 background:rgba(0,0,0,0);
@@ -49,6 +61,18 @@
                 text-align: center;
                 text-shadow: 0 0 10px {{config['fundo']}};
             }
+
+            .alternante0 {
+                background-color: black;
+                color: white;
+                text-shadow: 0 0 10px black;
+            }
+
+            .alternante1 {
+                background-color: white;
+                color: black;
+                text-shadow: 0 0 10px white;
+            }            
 
             .slide {
                 background-size: contain;
@@ -161,6 +185,18 @@
             .coro {
                 color:{{config['mark']}};
             }
+
+            .coro-alternante0 {
+                color: yellow;
+                /*font-weight: bold;
+                background:rgba(0,0,0,0);*/
+            }
+
+            .coro-alternante1 {
+                color: red;
+                /*font-weight: bold;
+                background:rgba(0,0,0,0);*/
+            }              
 
             #lb_numero {
                 text-align: left;
@@ -330,7 +366,7 @@
         </div>
 
         <!-- Capa -->
-        <div id="slide_0" class="slide capa{% if index == 0 %} first-in{% endif %}" data-cor="" data-tipo="capa">
+        <div id="slide_0" class="slide capa{% if index == 0 %} first-in{% endif %}" data-cor="" data-tipo="capa" data-alt="">
             <!-- Capa vazia -->
             {% if info %}
                 <div id="lb_numero">{{num}}</div>
@@ -342,7 +378,7 @@
 
         <!-- Slides -->
         {% for slide in lista_slides %}
-            <div id="slide_{{ loop.index }}" class="slide{% if loop.index == index %} first-in{% endif %} letra {% if slide['categoria']|int in (2, 4) %}coro{% endif %}" data-cor="{% if slide['categoria']|int in (2, 4) %}coro{% endif %}" data-tipo="letra" data-pausa="{% if slide['categoria']|int in (3, 4) %}true{% else %}false{% endif %}">
+            <div id="slide_{{ loop.index }}" class="slide{% if loop.index == index %} first-in{% endif %} letra{% if slide['categoria']|int in (2, 4) %} {{' coro-alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' else ' coro' }}{% endif %}{{' alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' }}" data-cor="{% if slide['categoria']|int in (2, 4) %}{{'coro-alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' else 'coro' }}{% endif %}" data-tipo="letra" data-pausa="{% if slide['categoria']|int in (3, 4) %}true{% else %}false{% endif %}" data-alt="{{' alternante' + (loop.index0 % 2)|string if config['alternante'] == 'true' }}">
                 {{slide['text-slide'] | safe}}
             </div>
         {% endfor %}    
@@ -387,9 +423,9 @@
 
         function nextSlide(new_index) {
             const current = slides[current_index];
-            current.className = 'slide out-esquerda ' + current.dataset.tipo + " " + current.dataset.cor;
+            current.className = 'slide out-esquerda ' + current.dataset.tipo + " " + current.dataset.cor + current.dataset.alt;
             const next = slides[new_index];
-            next.className = 'slide in-direita ' + next.dataset.tipo + " " + next.dataset.cor;
+            next.className = 'slide in-direita ' + next.dataset.tipo + " " + next.dataset.cor + next.dataset.alt;
 
             current_index = new_index;
 
@@ -402,9 +438,9 @@
 
         function previousSlide(new_index) {
             const current = slides[current_index];
-            current.className = 'slide out-direita ' + current.dataset.tipo + " " + current.dataset.cor;    
+            current.className = 'slide out-direita ' + current.dataset.tipo + " " + current.dataset.cor + current.dataset.alt;
             const prev = slides[new_index];
-            prev.className = 'slide in-esquerda ' + prev.dataset.tipo + " " + prev.dataset.cor;
+            prev.className = 'slide in-esquerda ' + prev.dataset.tipo + " " + prev.dataset.cor + prev.dataset.alt;
 
             current_index = new_index;
 
@@ -417,7 +453,7 @@
 
         function finalSlide() {
             const current = slides[current_index];
-            current.className = 'slide out letra ' + current.dataset.tipo + " " + current.dataset.cor;    
+            current.className = 'slide out letra ' + current.dataset.tipo + " " + current.dataset.cor + current.dataset.alt;
 
             const capa = slides[0];
             capa.className = 'slide final-out capa';

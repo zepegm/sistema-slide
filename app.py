@@ -1825,7 +1825,7 @@ def slide_new():
         # estabelecer configuração da música
         rows = banco.executarConsulta("SELECT id, valor FROM config")
         rows_dict = {row['id']: row['valor'] for row in rows}
-        config = {'letra':rows_dict['cor-musica-letra'], 'fundo':rows_dict['cor-musica-fundo'], 'mark':rows_dict['cor-musica-mark'],  'num':rows_dict['cor-harpa-num'], 'red':rows_dict['cor-harpa-red']}
+        config = {'letra':rows_dict['cor-musica-letra'], 'fundo':rows_dict['cor-musica-fundo'], 'mark':rows_dict['cor-musica-mark'],  'num':rows_dict['cor-harpa-num'], 'red':rows_dict['cor-harpa-red'], 'alternante':rows_dict['cor-musica-alternante']}
 
         if (current_presentation['tipo'] == 'musicas'):
             fundo = banco.executarConsulta('select filename from capas where id_musica = %s' % current_presentation['id'])
@@ -3184,8 +3184,9 @@ def get_info_musica():
                 capa = '/static/images/upload_image.jpg'
 
             lista_slides = banco.executarConsulta("select `text-slide`, categoria, ifnull(anotacao, '') as anotacao, pos from slides where id_musica = %s order by pos" % id['id'])
+            alternante = (banco.executarConsulta("select * from config where id = 'cor-musica-alternante'")[0]['valor'] == "true")
 
-            return jsonify({'vinculos':vinculos, 'letras':letras, 'capa':capa, 'lista_slides':lista_slides})
+            return jsonify({'vinculos':vinculos, 'letras':letras, 'capa':capa, 'lista_slides':lista_slides, 'alternante':alternante})
 
 @app.route('/verificarSenha', methods=['GET', 'POST'])
 def verificarSenha():

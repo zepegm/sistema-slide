@@ -144,13 +144,25 @@
       color:rgba(192,0,0);
       font-weight:bold;
       background:rgba(0,0,0,0);
-    }
+    }  
 
     .cdx-marker-config {
       color:{{config['mark']}};
       font-weight:bold;
       background:rgba(0,0,0,0)
-    }    
+    } 
+    
+    .alternante0 .cdx-marker-config {
+      color: yellow;
+      font-weight: bold;
+      background:rgba(0,0,0,0);
+    }
+
+    .alternante1 .cdx-marker-config {
+      color: red;
+      font-weight: bold;
+      background:rgba(0,0,0,0);
+    }      
 
     #txt_pesquisa_letra,
     #txt_senha,
@@ -193,11 +205,33 @@
       color:{{config['letra']}};
       font-family: Arial, Helvetica, sans-serif;
       line-height: normal;
-    }     
+    }
+
+    .alternante0 {
+      background-color: black;
+      color: white;
+    }
+
+    .alternante1 {
+      background-color: white;
+      color: black;
+    }    
 
     .coro {
       color:{{config['mark']}};
     }
+
+    .coro-alternante0 {
+      color: yellow;
+      /*font-weight: bold;
+      background:rgba(0,0,0,0);*/
+    }
+
+    .coro-alternante1 {
+      color: red;
+      /*font-weight: bold;
+      background:rgba(0,0,0,0);*/
+    }    
 
     .capa {
       background-size: contain;
@@ -632,12 +666,22 @@
             html += '<div class="col-sm-3 mb-4"><div id="box0" data-index="0" class="card box-index big-box"><div class="capa mini-box" style="height: 110px; width=100%; background-image: url(\'' + data['capa'] + '\');"></div><div class="card-body"><h4 class="card-text text-center">Slide: 1</h4></div></div></div>';
 
             for (slide in data['lista_slides']) {
+              
+
+              let class_text = 'letra';
+              let class_coro = 'coro';
+
+              if (data['alternante']) {
+                class_text += ' alternante' + slide % 2;
+                class_coro += ' coro-alternante' + slide % 2;
+              }
+
               html += '<div class="col-sm-3 mb-4">';
               html += '<div id="box' + (parseInt(slide) + 1) + '" data-index="' + (parseInt(slide) + 1) + '" class="big-box card shadow-sm">';
               if ([2, 4].includes(data['lista_slides'][slide]['categoria'])) {
-                html += '<div class="letra coro mini-box text-center" style="height: 110px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+                html += '<div class="' + class_text + ' ' + class_coro + ' mini-box text-center" style="height: 110px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
               } else {
-                html += '<div class="letra mini-box text-center" style="height: 110px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
+                html += '<div class="' + class_text + ' mini-box text-center" style="height: 110px; width=100%">' + data['lista_slides'][slide]['text-slide'].replaceAll('class="cdx-marker"', 'class="cdx-marker-config"') + '</div>';
               }
                html += '<div class="card-body"><h4 class="card-text text-center">Slide: ' + (parseInt(slide) + 2) + '</h4></div></div></div>';
             }
