@@ -18,7 +18,7 @@ def run_pdf_generation(playwright: Playwright, info: dict) -> str:
 
     page.goto(info['url'], wait_until="load", timeout=15000)
 
-    output_dir = "static/docs"
+    output_dir = "static\\docs"
     os.makedirs(output_dir, exist_ok=True)
 
     tipo = info.get("tipo")

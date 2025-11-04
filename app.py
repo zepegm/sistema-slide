@@ -20,6 +20,7 @@ import random
 import calendar
 import base64
 import subprocess
+import fitz
 from pptx_file import ppt_to_png
 from utils_crip import encriptar
 from utilitarios import pegarListaSemanas, pegarTrimestre, pegarLicoes
@@ -263,21 +264,41 @@ def render_pdf():
         'FROM letras ORDER BY id_musica, pagina, paragrafo'
     )
 
-    # Indexar por música e página
+    # Buscar todas os vínculos antes do loop principal
+    todos_vinculos = banco.executarConsulta(
+        'SELECT id_musica, id_vinculo, id_status, ' + 
+        'categoria_departamentos.descricao as categoria, ' +
+        'subcategoria_departamentos.descricao as dep, ' +
+        'status_vinculo.descricao as status, ' + 
+        'vinculos_x_musicas.descricao ' + 
+        'FROM vinculos_x_musicas ' +
+        'INNER JOIN status_vinculo ON status_vinculo.id = id_status ' + 
+        'INNER JOIN subcategoria_departamentos ON subcategoria_departamentos.id = id_vinculo ' +
+        'INNER JOIN categoria_departamentos ON categoria_departamentos.id = subcategoria_departamentos.supercategoria ' + 
+        'ORDER BY id_musica, id_vinculo, id_status'
+    )
+
+    # Indexar por música, página e vínculos
     letras_indexadas = {}
     for linha in todas_letras:
         key = (linha['id_musica'], linha['pagina'])
         letras_indexadas.setdefault(key, []).append({'texto': linha['texto']})
 
+    vinculos_indexados = {}
+    for linha in todos_vinculos:
+        key = (linha['id_musica'])
+        vinculos_indexados.setdefault(key, []).append({'cat':linha['categoria'], 'dep':linha['dep'], 'status':linha['status'], 'descricao':linha['descricao']})
+
     for item in lista_musicas:
         letras = letras_indexadas.get((item['id'], 1), [])
         letras_2 = letras_indexadas.get((item['id'], 2), [])
+        vinculos = vinculos_indexados.get((item['id']), [])
         
         titulo_sumario = item['titulo']
         if len(titulo_sumario) > 26:
             titulo_sumario = titulo_sumario[:23] + "..."
         
-        lista_final.append({'id':item['id'], 'titulo':item['titulo'], 'titulo_sumario':titulo_sumario, 'letras':letras, 'letras_2':letras_2, 'cont':'{:02d}'.format(cont), 'pag':page})
+        lista_final.append({'id':item['id'], 'titulo':item['titulo'], 'titulo_sumario':titulo_sumario, 'letras':letras, 'letras_2':letras_2, 'cont':'{:02d}'.format(cont), 'pag':page, 'vinculos':vinculos})
         
         if (len(letras_2) > 0):
             page += 1
@@ -315,6 +336,10 @@ def render_pdf():
     for categoria, subcats in sumario_categorico.items():
         for subcat_key in subcats:
             subcats[subcat_key].sort(key=lambda m: locale.strxfrm(m['titulo']))        
+
+    # Escrevendo lista final em um arquivo JSON
+    with open("dados_sumario_hinario.json", "w", encoding="utf-8") as arquivo:
+        json.dump(lista_final, arquivo, indent=4, ensure_ascii=False)    
 
     return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje, pages_sumario=pages_sumario, start_sumario_pages=start_sumario_pages, sumario_final=sumario_categorico, pagina_final=page)
 
@@ -3455,6 +3480,34 @@ def gerar_pdf():
         with sync_playwright() as playwright:
             pdf_path = run_pdf_generation(playwright, info)
 
+            print(pdf_path)
+
+            try:
+                doc = fitz.open(pdf_path)
+
+                with open('dados_sumario_hinario.json', 'r', encoding='utf-8') as arquivo:
+                    # Usa json.load() para carregar o conteúdo do arquivo
+                    # e convertê-lo em um objeto Python (geralmente um dicionário ou lista)
+                    lista = json.load(arquivo)
+
+                    for musica in lista:
+                        page = doc[musica['pag']]
+
+                        annot = page.add_text_annot((100, 150), "Essa é uma nota de teste!")
+
+
+                    doc.save("static\\docs\\output_with_notes.pdf")
+                    return send_file("static\\docs\\output_with_notes.pdf", as_attachment=True, mimetype="application/pdf")
+
+
+            except FileNotFoundError:
+                print(f"Erro: O arquivo 'dados_sumario_hinario' não foi encontrado.")
+            except json.JSONDecodeError:
+                print(f"Erro: Não foi possível decodificar o arquivo JSON. Verifique a sintaxe.")
+            except Exception as e:
+                print(f"Ocorreu um erro: {e}")
+
+
         return send_file(pdf_path, as_attachment=True, mimetype="application/pdf")
 
     except Exception as e:
@@ -3469,7 +3522,7 @@ def gerar_pdf_harpa():
 
     try:
         with sync_playwright() as playwright:
-            pdf_path = run_pdf_generation(playwright, info)
+            pdf_path = run_pdf_generation(playwright, info)            
 
         return send_file(pdf_path, as_attachment=True, mimetype="application/pdf")
 
