@@ -338,7 +338,7 @@ def render_pdf():
             subcats[subcat_key].sort(key=lambda m: locale.strxfrm(m['titulo']))        
 
     # Escrevendo lista final em um arquivo JSON
-    with open("dados_sumario_hinario.json", "w", encoding="utf-8") as arquivo:
+    with open("static\\docs\\dados_sumario_hinario.json", "w", encoding="utf-8") as arquivo:
         json.dump(lista_final, arquivo, indent=4, ensure_ascii=False)    
 
     return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje, pages_sumario=pages_sumario, start_sumario_pages=start_sumario_pages, sumario_final=sumario_categorico, pagina_final=page)
@@ -3480,20 +3480,36 @@ def gerar_pdf():
         with sync_playwright() as playwright:
             pdf_path = run_pdf_generation(playwright, info)
 
-            print(pdf_path)
+            status_index = {'Forte': (0.69, 0.83, 1), 'Médio': (1, 0.99, 0.84), 'Fraco': (1, 0.91, 1)}
 
             try:
                 doc = fitz.open(pdf_path)
 
-                with open('dados_sumario_hinario.json', 'r', encoding='utf-8') as arquivo:
+                with open('static\\docs\\dados_sumario_hinario.json', 'r', encoding='utf-8') as arquivo:
                     # Usa json.load() para carregar o conteúdo do arquivo
                     # e convertê-lo em um objeto Python (geralmente um dicionário ou lista)
                     lista = json.load(arquivo)
 
                     for musica in lista:
-                        page = doc[musica['pag']]
+                        page = doc[musica['pag'] - 1]
+                        
+                        y  = 30
+                        i = 1
 
-                        annot = page.add_text_annot((100, 150), "Essa é uma nota de teste!")
+                        for item in musica['vinculos']:
+
+                            texto = item['cat'] + " - " + item['dep'] + '\n'
+                            texto += "Descrição: " + item['descricao']
+
+                            annot = page.add_text_annot((380, y), texto)
+                            annot.set_info({
+                                "title": "Vínculo %s" % i,
+                                "subject": "Revisão"
+                            })
+                            annot.set_colors(stroke=status_index[item['status']], fill=(1, 0.5, 0))  # azul, laranja ou rosa
+                            annot.update()      
+                            y += 30
+                            i += 1
 
 
                     doc.save("static\\docs\\output_with_notes.pdf")
