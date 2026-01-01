@@ -30,7 +30,7 @@
             } 
 
             .titulo {
-                color:#1F604C;
+                color:#6d5748;
                 font-size: 10vw;
                 text-align: center;
                 padding: 0%;
@@ -61,7 +61,7 @@
             }
 
             .titulo_oracao {
-                color:#1F604C;
+                color:#6d5748;
                 font-size: 11vw;
                 position: absolute;
                 top: -15vh;
@@ -79,7 +79,7 @@
 
             .text-primary,
             .blue {
-                color:#629380;
+                color:#aa8652;
             }
 
             .fw-bold {
@@ -87,7 +87,7 @@
             }
 
             .text-danger {
-                color:#629380;
+                color:#aa8652;
             }
 
             .red {
@@ -96,7 +96,7 @@
 
             .text-success,
             .green {
-                color:#1F604C;
+                color:#6d5748;
             }
 
             .text-dark {
@@ -133,7 +133,7 @@
                 top: -2vh;
                 left: 14vw;
                 font-family:'BebasKai', sans-serif;
-                color:#1F604C;           
+                color:#6d5748;
             }
 
             .paragrafo {
@@ -231,7 +231,7 @@
 
         <!-- Slide da Oração -->
         <div class="slide {{'hide' if index != 1 else 'in' }}" id="sld1">
-            <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
+            <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Marron.png') }}">
             <p class="titulo_oracao">CALENDÁRIO DE ORAÇÃO</p>
             <ul class="text">
                 <li class="paragrafo">Todas as <b class="blue">Terças</b>, <b class="blue">Quintas</b> e <b class="blue">Sábados</b> às <b class="red">7h</b> e <b class="blue">Domingo</b> às <b class="red">08h30</b>.</li>
@@ -244,7 +244,7 @@
             {% if sld['tipo'] == 'semanal' %}
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
                 <div class="blank_rect">
-                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Marron.png') }}">
                     <p class="titulo_semanal">CALENDÁRIO SEMANAL - <span class="red">{{inicio}}</span> A <span class="red">{{fim}}</span></p>
                     <p class="titulo_dia_semanal"><b>{{sld['dia']}} (<span class="blue">{{sld['semana']}}</span>)</b></p>                
                 </div>
@@ -257,7 +257,7 @@
             {% elif sld['tipo'] == 'isolado' %}
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
                 <div class="blank_rect">
-                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Marron.png') }}">
                     <p class="titulo_mensal"><span class="green">CALENDÁRIO MENSAL</span> - <span class="text-danger">{{mes_desc}} DE {{ano}}</span></span></p>
                     <p class="titulo_dia_semanal">{{sld['desc_dia']}}</p>
                 </div>
@@ -271,7 +271,7 @@
 
             <div class="slide {{'hide' if index != sld['pos'] else 'in' }}" id="sld{{sld['pos']}}">
                 <div class="blank_rect">
-                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Green.png') }}">
+                    <img class="logo_padrao" src="{{ url_for('static', filename='images/Logo Marron.png') }}">
                     <p class="titulo_mensal">{{sld['desc_dia']}}</p>
                 </div>
                 <ul class="text text-item-dep">
