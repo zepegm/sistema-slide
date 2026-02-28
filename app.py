@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 #from threading import Lock
 from waitress import serve
-from PowerPoint import getListText, getListTextHarpa
+#from PowerPoint import getListText, getListTextHarpa
 from read_csv import readCSVHarpa
 #from MySQL import db
 from SQLite_DB import db
@@ -21,7 +21,7 @@ import calendar
 import base64
 import subprocess
 import fitz
-from pptx_file import ppt_to_png
+#from pptx_file import ppt_to_png
 from utils_crip import encriptar
 from utilitarios import pegarListaSemanas, pegarTrimestre, pegarLicoes
 from playwright.sync_api import sync_playwright
@@ -45,8 +45,8 @@ roteiro = []
 temp_pdf = None
 window_browser = None
 
-musicas_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro' + '\\'
-harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\HARPA' + '\\'
+#musicas_dir = r"C:\Users" + "\\" + os.getenv("USERNAME") + r"\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro" + "\\"
+#harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\HARPA' + '\\'
 locale.setlocale(locale.LC_ALL, "")
 banco = db()
 
@@ -4365,8 +4365,8 @@ def listar_musicas():
 
 
 if __name__ == '__main__':
-    #app.run(debug=True, use_reloader=True, port=5000)
-    serve(app, host='0.0.0.0', port=5000, threads=8)
+    app.run(debug=True, use_reloader=True, port=5000)
+    #serve(app, host='0.0.0.0', port=5000, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

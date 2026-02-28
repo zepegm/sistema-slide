@@ -1,5 +1,5 @@
 from pptx import Presentation
-import win32com.client
+#import win32com.client
 import pythoncom
 import os
 import re

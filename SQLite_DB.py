@@ -6,10 +6,10 @@ import shutil
 from utilitarios import verificar_arquivo_existe
 from HTML_U import converHTML_to_PlainText
 
-caminho = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Sistema-slide.db'
-caminho_hook = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\log\\hook.db'
-caminho_calendario = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Calendario.db'
-caminho_old_musicas = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\Músicas\\NewMusicas.db'
+caminho = "database/Sistema-slide.db"
+caminho_hook = "database/hook.db"
+caminho_calendario = "database/Calendario.db"
+caminho_old_musicas = "database/NewMusicas.db"
 
 class db:
     def __init__(self):
