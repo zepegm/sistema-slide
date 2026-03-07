@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/addons/p5.sound.min.js"></script>
+  <style>
+    body { margin: 0; background: #000; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <script>
+let mic, fft, amp;
+let currentRadius = 150; // Raio atual (para suavização)
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  
+  mic = new p5.AudioIn();
+  mic.start();
+
+  fft = new p5.FFT();
+  fft.setInput(mic);
+
+  // Analisador de amplitude (volume)
+  amp = new p5.Amplitude();
+  amp.setInput(mic);
+}
+
+function draw() {
+  background(0, 0, 0, 40); // Rastro um pouco mais curto para clareza
+  
+  let level = amp.getLevel(); // Pega o volume (0.0 a 1.0)
+  let waveform = fft.waveform();
+  
+  // --- CONFIGURAÇÃO DE SENSIBILIDADE ---
+  let threshold = 0.05; // Ajuste isso: quanto MAIOR, mais alto o som precisa ser para pulsar
+  let targetRadius = 150; // Tamanho base quando está quieto
+
+  if (level > threshold) {
+    // Se o som for alto, o raio aumenta proporcionalmente ao volume
+    targetRadius = map(level, threshold, 0.5, 150, 450); 
+  }
+
+  // Suaviza a transição do raio (interpolação) para não ficar "tremido"
+  currentRadius = lerp(currentRadius, targetRadius, 0.2);
+
+  translate(width / 2, height / 2);
+  noFill();
+  stroke(0, 255, 200);
+  strokeWeight(3);
+
+  beginShape();
+  for (let i = 0; i < waveform.length; i++) {
+    let angle = map(i, 0, waveform.length, 0, TWO_PI);
+    
+    // A onda sonora agora apenas adiciona um pequeno detalhe sobre o raio pulsante
+    let r = currentRadius + waveform[i] * 50; 
+    
+    let x = r * cos(angle);
+    let y = r * sin(angle);
+    vertex(x, y);
+  }
+  endShape(CLOSE);
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+function touchStarted() {
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+}
+  </script>
+</body>
+</html>

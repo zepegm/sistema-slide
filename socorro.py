@@ -16,7 +16,7 @@ dados = banco.executarConsulta('select %s from %s order by %s' % (campos, tabela
 
 #print(dados)
 
-caminho = os.path.expanduser('~') + '\\' + 'OneDrive - Secretaria da Educação do Estado de São Paulo\\IGREJA\\sistema-slide_db\\Sistema-slide.db'
+caminho = os.path.expanduser('~') + '/' + 'OneDrive - Secretaria da Educação do Estado de São Paulo/IGREJA/sistema-slide_db/Sistema-slide.db'
 
 con = sqlite3.connect(caminho)
 cur = con.cursor()

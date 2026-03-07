@@ -45,8 +45,6 @@ roteiro = []
 temp_pdf = None
 window_browser = None
 
-#musicas_dir = r"C:\Users" + "\\" + os.getenv("USERNAME") + r"\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\Músicas\Escuro" + "\\"
-#harpa_dir = r'C:\Users' + '\\' + os.getenv("USERNAME") + r'\OneDrive - Secretaria da Educação do Estado de São Paulo\IGREJA\HARPA' + '\\'
 locale.setlocale(locale.LC_ALL, "")
 banco = db()
 
@@ -338,7 +336,7 @@ def render_pdf():
             subcats[subcat_key].sort(key=lambda m: locale.strxfrm(m['titulo']))        
 
     # Escrevendo lista final em um arquivo JSON
-    with open("static\\docs\\dados_sumario_hinario.json", "w", encoding="utf-8") as arquivo:
+    with open("static/docs/dados_sumario_hinario.json", "w", encoding="utf-8") as arquivo:
         json.dump(lista_final, arquivo, indent=4, ensure_ascii=False)    
 
     return render_template('render_pdf.jinja', lista=lista_final, completo='true', lista_categoria=lista_categoria, total=len(lista_final), data=hoje, pages_sumario=pages_sumario, start_sumario_pages=start_sumario_pages, sumario_final=sumario_categorico, pagina_final=page)
@@ -1056,7 +1054,7 @@ def controlador():
                 cont += 1              
 
         # após tudo isso criar uma lista tbm com as imagens presentes na tela de wallpaper para serem visualizadas
-        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+        path = os.path.dirname(os.path.realpath(__file__)) + '/static/images/Wallpaper'
 
         onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
@@ -2011,7 +2009,7 @@ def slide_new():
                 cont += 1  
 
         # após tudo isso criar uma lista tbm com as imagens presentes na tela de wallpaper para serem visualizadas
-        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+        path = os.path.dirname(os.path.realpath(__file__)) + '/static/images/Wallpaper'
 
         onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
@@ -2333,7 +2331,7 @@ def slide():
                 cont += 1  
 
         # após tudo isso criar uma lista tbm com as imagens presentes na tela de wallpaper para serem visualizadas
-        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+        path = os.path.dirname(os.path.realpath(__file__)) + '/static/images/Wallpaper'
 
         onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
@@ -3485,7 +3483,7 @@ def gerar_pdf():
             try:
                 doc = fitz.open(pdf_path)
 
-                with open('static\\docs\\dados_sumario_hinario.json', 'r', encoding='utf-8') as arquivo:
+                with open('static/docs/dados_sumario_hinario.json', 'r', encoding='utf-8') as arquivo:
                     # Usa json.load() para carregar o conteúdo do arquivo
                     # e convertê-lo em um objeto Python (geralmente um dicionário ou lista)
                     lista = json.load(arquivo)
@@ -3512,8 +3510,8 @@ def gerar_pdf():
                             i += 1
 
 
-                    doc.save("static\\docs\\output_with_notes.pdf")
-                    return send_file("static\\docs\\output_with_notes.pdf", as_attachment=True, mimetype="application/pdf")
+                    doc.save("static/docs/output_with_notes.pdf")
+                    return send_file("static/docs/output_with_notes.pdf", as_attachment=True, mimetype="application/pdf")
 
 
             except FileNotFoundError:
@@ -3785,7 +3783,7 @@ def open_window_slide():
 
     if request.method == 'POST': # significa que precisa mandar abrir a janela
 
-        path = os.path.dirname(os.path.realpath(__file__)) + "\\Desktop_Version.py"
+        path = os.path.dirname(os.path.realpath(__file__)) + "/Desktop_Version.py"
         global window_browser
 
         if window_browser is not None:
@@ -3841,7 +3839,7 @@ def wallpaper_new():
 
                 arquivos_selecionados = banco.executarConsulta('select arquivos, segundos from slide_show_wallpaper where id = %s' % id)[0]
 
-                path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+                path = os.path.dirname(os.path.realpath(__file__)) + '/static/images/Wallpaper'
                 files_folder = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
                 file_list = eval(arquivos_selecionados['arquivos'])
 
@@ -3919,7 +3917,7 @@ def wallpaper_new():
 
     arquivos_selecionados = banco.executarConsulta('select arquivos, segundos from slide_show_wallpaper where id = %s' % selecionado)[0]
 
-    path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+    path = os.path.dirname(os.path.realpath(__file__)) + '/static/images/Wallpaper'
     files_folder = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     file_list = eval(arquivos_selecionados['arquivos'])
 
@@ -3952,7 +3950,7 @@ def wallpaper():
             
             
 
-    path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\Wallpaper'
+    path = os.path.dirname(os.path.realpath(__file__)) + '/static/images/Wallpaper'
 
     onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     atual = '/static/images/Wallpaper/' + banco.executarConsultaVetor("select valor from config where id='wallpaper'")[0]
@@ -3971,11 +3969,11 @@ def abrir_video():
 
         file = request.files.get('file')
 
-        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\uploads\\video.mp4'
+        path = os.path.dirname(os.path.realpath(__file__)) + '/static/uploads/video.mp4'
         file.save(path) # processo de salvamento do arquivo
 
         estado = 7
-        current_presentation['file'] = '\\static\\uploads\\video.mp4'
+        current_presentation['file'] = '/static/uploads/video.mp4'
 
         socketio.emit('refresh', 1)
 
@@ -3998,8 +3996,8 @@ def abrir_pptx():
 
         file = request.files.get('file')
 
-        path = os.path.dirname(os.path.realpath(__file__)) + '\\static\\uploads\\file.pptx'
-        path_img = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\SlidesPPTX'
+        path = os.path.dirname(os.path.realpath(__file__)) + '/static/uploads/file.pptx'
+        path_img = os.path.dirname(os.path.realpath(__file__)) + '/static/images/SlidesPPTX'
 
         file.save(path) # processo de salvamento do arquivo
 
@@ -4365,8 +4363,8 @@ def listar_musicas():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True, port=5000)
-    #serve(app, host='0.0.0.0', port=5000, threads=8)
+    #app.run(debug=True, use_reloader=True, port=5000)
+    serve(app, host='0.0.0.0', port=5000, threads=8)
     #eventlet.wsgi.server(eventlet.listen(('', 80)), app)
     #socketio.run(app, port=80,host='0.0.0.0', debug=True) 
     #monkey.patch_all()

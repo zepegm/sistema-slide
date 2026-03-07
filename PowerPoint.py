@@ -109,7 +109,7 @@ def getListText(dir):
 
     # antes de retornar o texto extrair a capa do slide e converter em jpg
     
-    path_img = os.path.dirname(os.path.realpath(__file__)) + '\\static\\images\\SlidesPPTX'
+    path_img = os.path.dirname(os.path.realpath(__file__)) + '/static/images/SlidesPPTX'
     image_path = os.path.join(path_img, "temp_capa.jpg")
     
     try:
